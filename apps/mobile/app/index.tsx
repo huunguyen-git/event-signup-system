@@ -1,98 +1,168 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+import React,{ useState } from "react";
+import {View,StyleSheet,TextInput,Text,Image,TouchableOpacity} from "react-native"
+import {MaterialCommunityIcons} from "@expo/vector-icons"
+import {Colors} from "../constants/theme"
+import { SafeAreaView } from 'react-native-safe-area-context';
+import HeaderText from "@/components/HeaderText";
 
-import { HelloWave } from '@/components/hello-wave';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Link } from 'expo-router';
 
-export default function HomeScreen() {
-  return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <Link href="/modal">
-          <Link.Trigger>
-            <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-          </Link.Trigger>
-          <Link.Preview />
-          <Link.Menu>
-            <Link.MenuAction title="Action" icon="cube" onPress={() => alert('Action pressed')} />
-            <Link.MenuAction
-              title="Share"
-              icon="square.and.arrow.up"
-              onPress={() => alert('Share pressed')}
-            />
-            <Link.Menu title="More" icon="ellipsis">
-              <Link.MenuAction
-                title="Delete"
-                icon="trash"
-                destructive
-                onPress={() => alert('Delete pressed')}
-              />
-            </Link.Menu>
-          </Link.Menu>
-        </Link>
+const LoginScreen = () =>{
 
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
-  );
+    const [username, setUsername] = useState("");
+    const [password, setPassword] = useState("");
+    const [showPassword, setShowPassword] = useState(false);
+
+    return <SafeAreaView style={styles.container}>
+        <View style={styles.header}>
+            <MaterialCommunityIcons name="domain" size={70} color={Colors.color.placeholder}/>
+            <HeaderText/>
+        </View>
+        <View style={styles.body}>
+            <Text style ={styles.welcomeText}>Welcome Back</Text>
+            <Text style = {styles.eventText}>Please log in to manage or attend events.</Text>
+            <View style={styles.input}>
+                <View style={styles.inputContainer}>
+                    <MaterialCommunityIcons name="account-outline" size={40} color={Colors.color.placeholder}/>
+                    <TextInput 
+                        placeholder="UserName / Email"
+                        placeholderTextColor={Colors.color.placeholder}
+                        value={username}
+                        onChangeText={(value) => setUsername(value)}
+                        style={styles.textInput}/>
+                </View>
+            </View>
+            <View style={styles.input}>
+                <View style={styles.inputContainer}>
+                    <MaterialCommunityIcons name="lock-outline" size={40} color={Colors.color.placeholder}/>
+                    <TextInput 
+                        placeholder="Password"
+                        placeholderTextColor={Colors.color.placeholder}
+                        secureTextEntry={!showPassword}
+                        value={password}
+                        onChangeText={(value) => setPassword(value)}
+                        style={styles.textInput}/>
+                    <TouchableOpacity 
+                        style={styles.eyeIcon}
+                        onPress={() => setShowPassword(!showPassword)}> 
+                        <MaterialCommunityIcons name={showPassword ? "eye" : "eye-off"} size={40} color={Colors.color.placeholder} />
+                    </TouchableOpacity>
+                </View>
+            </View>
+            <TouchableOpacity style={styles.loginButton}>
+                <Text style={styles.loginButtonText}>LOGIN</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.forgotButton}>
+                <Text style={styles.forgotButtonText}>Forget password?</Text>
+            </TouchableOpacity>
+        </View>
+        <View style={styles.footer}>
+            <TouchableOpacity style={styles.registerButton}>
+                <Text style={styles.registerButtonText}>Register for an account</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.recoverButton}>
+                <Text style={styles.recoverButtonText}>Recover Password</Text>
+            </TouchableOpacity>
+        </View>
+    </SafeAreaView>
 }
-
-const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
-  },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
-  },
-});
+export default LoginScreen;
+const styles=StyleSheet.create({
+    container: {
+        flex: 1,
+        backgroundColor: Colors.color.white,
+    },
+    header:{
+        height:170,
+        justifyContent: "center",
+        backgroundColor: Colors.color.primary,
+        alignItems: "center",
+        padding:10,
+    },
+    logo:{
+        height: 70,
+        width: 70,
+    },
+    body:{
+        flex: 1,
+        padding:10,
+        alignItems: "center",
+        borderBottomColor: Colors.color.placeholder,
+        borderBottomWidth: 1,
+    },
+    welcomeText:{
+        fontSize: 32,
+        fontWeight: "bold",
+    },
+    eventText:{
+        fontSize: 16,
+        color: Colors.color.text,
+        marginBottom: 40,
+    },
+    input:{
+        width:"90%",
+        marginBottom:10,
+    },
+    inputContainer:{
+        flexDirection: 'row',
+        alignItems: 'center',
+        borderBottomWidth: 1,
+        borderBottomColor: Colors.color.placeholder,
+        marginBottom: 10,
+    },
+    textInput:{
+        flex: 1,
+        fontSize: 16,
+        marginLeft: 10,
+    },
+    eyeIcon:{
+        marginLeft: 'auto',
+    },
+    loginButton:{
+        width: "90%",
+        height: 50,
+        alignItems: "center",
+        justifyContent: "center",
+        backgroundColor: Colors.color.primary,
+        borderRadius: 30,
+        marginBottom: 10,
+    },
+    loginButtonText:{
+        color: Colors.color.white,
+        fontSize: 16,
+    },
+    forgotButton:{
+        width: "90%",
+        height: 50,
+        alignItems: "center",
+        justifyContent: "center",
+    },
+    forgotButtonText:{
+        color: Colors.color.primary,
+        fontSize: 16,
+    },
+    footer:{
+        width: "91%",
+        height: 100,
+        flexDirection: "row",
+        justifyContent: "space-between",
+        alignSelf: "center",
+    },
+    registerButton:{
+        width:"55%",
+        alignItems: "center",
+        padding: 10,
+    },
+    recoverButton:{
+        width:"45%",
+        alignItems: "center",
+        padding: 10,
+    },
+    registerButtonText:{
+        color: Colors.color.primary,
+        fontSize: 16,
+    },
+    recoverButtonText:{
+        color: Colors.color.primary,
+        fontSize: 16,
+    }
+})
