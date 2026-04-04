@@ -30,6 +30,7 @@ export const Colors = {
     white: '#FFFFFF',
     text: '#333333',
     placeholder: '#A1A1A1',
+    background: "#F5F5F5",
   }
 };
 

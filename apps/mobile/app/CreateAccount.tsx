@@ -1,5 +1,5 @@
 import React,{ useState } from "react";
-import {View,StyleSheet,TextInput,Text,Image,TouchableOpacity} from "react-native"
+import {View,StyleSheet,TextInput,Text,TouchableOpacity} from "react-native"
 import {MaterialCommunityIcons} from "@expo/vector-icons"
 import {Colors} from "../constants/theme"
 import { SafeAreaView } from 'react-native-safe-area-context';
