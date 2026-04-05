@@ -15,7 +15,6 @@ export default function RootLayout() {
         <Stack initialRouteName="HomeScreen">
         <Stack.Screen name="HomeScreen" options={{ headerShown: false }} />
         <Stack.Screen name="CreateAccount" options={{ headerShown: false }} />
-        <Stack.Screen name="ForgotPasswordScreen" options={{ headerShown: false }} />
         <Stack.Screen name="index" options={{ headerShown: false }} />
         <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
         <Stack.Screen name="screen" />

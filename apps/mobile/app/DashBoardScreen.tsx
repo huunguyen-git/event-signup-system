@@ -4,28 +4,36 @@ import {MaterialCommunityIcons} from "@expo/vector-icons"
 import {Colors} from "../constants/theme"
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { FlatList, ScrollView } from "react-native-gesture-handler";
-import EventItem from "@/components/EventItem";
-import { useRouter } from "expo-router";
-const HomeScreen = () =>{
+import MyEventItem from "@/components/MyEventItem";
+import { Stack, useRouter } from "expo-router";
+
+const DashBoardScreen = () =>{
     const router = useRouter();
     const DATA = [
   {
     id: '1',
+    eventCategory: 'Technology',
     eventName: 'International Tech Summit',
     eventDate: 'Jan 2023 - 7:30 pm',
+    eventStatus: 'Registration Open',
   },
   {
     id: '2',
+    eventCategory: 'Food & Beverage',
     eventName: 'City Food Festival',
     eventDate: 'Jan 2023 - 7:30 pm',
+    eventStatus: 'Sold Out',
   },
   {
     id: '3',
+    eventCategory: 'Art & Culture',
     eventName: 'International Art Festival',
     eventDate: 'Jan 2023 - 7:30 pm',
   },
 ];
-    return <SafeAreaView style={styles.container}>
+    return <>
+    <Stack.Screen options={{ headerShown: false }} />
+    <SafeAreaView style={styles.container}>
         <View style={styles.header}>
             <MaterialCommunityIcons name="domain" size={40} color={Colors.color.white}/>
             <Text style={styles.connect}> <Text style={styles.event}>EVENT </Text>CONNECT</Text>
@@ -39,23 +47,25 @@ const HomeScreen = () =>{
                 <MaterialCommunityIcons name="magnify" size={30} color={Colors.color.placeholder}/>
                 <TextInput style={styles.searchText} placeholder="Search by event name, date or location..." placeholderTextColor={Colors.color.placeholder}/>
             </View>
-            <Text style={styles.upcomingEvent}>Upcoming Event</Text>
+            <Text style={styles.upcomingEvent}>My Event</Text>
             <FlatList          
                 data={DATA}
                 renderItem={({ item }) => (
-              <EventItem 
+              <MyEventItem 
+                eventCategory={item.eventCategory}
                 eventName={item.eventName}
                 eventDate={item.eventDate}
+                eventStatus={item.eventStatus}
               />
             )}
             keyExtractor={(item) => item.id}/>
         </View>
         <View style={styles.footer}>
-            <TouchableOpacity style={styles.footerItem} >
+            <TouchableOpacity style={styles.footerItem} onPress={()=> router.replace("/HomeScreen")}>
                 <MaterialCommunityIcons name="home" size={30} color={Colors.color.placeholder}/>
                 <Text style={styles.footerText}>Home</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.footerItem} onPress={()=> router.replace("/DashBoardScreen")}>
+            <TouchableOpacity style={styles.footerItem}>
                 <MaterialCommunityIcons name="view-dashboard" size={30} color={Colors.color.placeholder}/>
                 <Text style={styles.footerText}>Dashboard</Text>
             </TouchableOpacity>
@@ -73,8 +83,9 @@ const HomeScreen = () =>{
             </TouchableOpacity>
         </View>
     </SafeAreaView>
+    </>
 };
-export default HomeScreen;
+export default DashBoardScreen;
 const styles = StyleSheet.create({
     container: {
         flex: 1,

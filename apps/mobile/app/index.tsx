@@ -1,16 +1,16 @@
 import React,{ useState } from "react";
-import {View,StyleSheet,TextInput,Text,Image,TouchableOpacity} from "react-native"
+import {View,StyleSheet,TextInput,Text,TouchableOpacity} from "react-native"
 import {MaterialCommunityIcons} from "@expo/vector-icons"
 import {Colors} from "../constants/theme"
 import { SafeAreaView } from 'react-native-safe-area-context';
 import HeaderText from "@/components/HeaderText";
-
-
+import { useRouter } from "expo-router";
 const LoginScreen = () =>{
 
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
     const [showPassword, setShowPassword] = useState(false);
+    const router = useRouter();
 
     return <SafeAreaView style={styles.container}>
         <View style={styles.header}>
@@ -48,15 +48,15 @@ const LoginScreen = () =>{
                     </TouchableOpacity>
                 </View>
             </View>
-            <TouchableOpacity style={styles.loginButton}>
+            <TouchableOpacity style={styles.loginButton} onPress={()=> router.push("/HomeScreen")}>
                 <Text style={styles.loginButtonText}>LOGIN</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.forgotButton}>
+            <TouchableOpacity style={styles.forgotButton } onPress={()=> router.push("/ForgotPasswordScreen")}>
                 <Text style={styles.forgotButtonText}>Forget password?</Text>
             </TouchableOpacity>
         </View>
         <View style={styles.footer}>
-            <TouchableOpacity style={styles.registerButton}>
+            <TouchableOpacity style={styles.registerButton} onPress={()=> router.push("/CreateAccount")}>
                 <Text style={styles.registerButtonText}>Register for an account</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.recoverButton}>
@@ -145,7 +145,6 @@ const styles=StyleSheet.create({
         height: 100,
         flexDirection: "row",
         justifyContent: "space-between",
-        alignSelf: "center",
     },
     registerButton:{
         width:"55%",
