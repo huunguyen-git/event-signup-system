@@ -1,11 +1,10 @@
-import React,{ useState } from "react";
+import React from "react";
 import {View,StyleSheet,Image,Text,TouchableOpacity} from "react-native"
 import {MaterialCommunityIcons} from "@expo/vector-icons"
-import {Colors} from "../constants/theme"
+import {Colors} from "../../constants/theme"
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Stack, useRouter } from "expo-router";
+import { Stack } from "expo-router";
 const HomeScreen = () =>{
-    const router = useRouter();
 
     return <>
     <Stack.Screen options={{ headerShown: false }} />
@@ -21,7 +20,7 @@ const HomeScreen = () =>{
         <View style={styles.body}>
             <Text style={styles.profileOverview}>Profile Overview</Text>
             <View style={styles.profileInfo}>
-                <Image source={require('../assets/images/favicon.png')} style={styles.profileImage}/>
+                <Image source={require('../../assets/images/favicon.png')} style={styles.profileImage}/>
                 <View>
                     <Text style={styles.profileName}>John Doe</Text>
                     <Text style={styles.profileJob}>Event Organizer</Text>
@@ -97,28 +96,6 @@ const HomeScreen = () =>{
                 </View>
             </View>
         </View>
-        <View style={styles.footer}>
-            <TouchableOpacity style={styles.footerItem} >
-                <MaterialCommunityIcons name="home" size={30} color={Colors.color.placeholder}/>
-                <Text style={styles.footerText}>Home</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.footerItem} onPress={()=> router.replace("/DashBoardScreen")}>
-                <MaterialCommunityIcons name="view-dashboard" size={30} color={Colors.color.placeholder}/>
-                <Text style={styles.footerText}>Dashboard</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.footerItem} onPress={()=> router.replace("/ScanQrScreen")}>
-                <MaterialCommunityIcons name="qrcode-scan" size={30} color={Colors.color.placeholder}/>
-                <Text style={styles.footerText}>Scan QR</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.footerItem} onPress={()=> router.replace("/SavedScreen")}>
-                <MaterialCommunityIcons name="heart-outline" size={30} color={Colors.color.placeholder}/>
-                <Text style={styles.footerText}>Saved</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={[styles.footerItem, { backgroundColor: Colors.color.lightblue }]} onPress={()=> router.replace("/AccountScreen")}>
-                <MaterialCommunityIcons name="account-outline" size={30} color={Colors.color.primary}/>
-                <Text style={[styles.footerText, { color: Colors.color.primary }]}>Account</Text>
-            </TouchableOpacity>
-        </View>
     </SafeAreaView>
     </>
 };
@@ -164,22 +141,6 @@ const styles = StyleSheet.create({
         fontWeight: "bold",
         marginRight: "auto",
         marginVertical: 10,
-    },
-    footer:{
-        height: 60,
-        backgroundColor: Colors.color.white,
-        flexDirection: "row",
-        gap: 5,
-        padding:5,
-    },
-    footerItem:{
-        flex: 1,
-        alignItems: "center",
-        justifyContent: "center",
-    },
-    footerText:{
-        color: Colors.color.placeholder,
-        fontSize: 12,
     },
     profileInfo:{
         flexDirection: "row",

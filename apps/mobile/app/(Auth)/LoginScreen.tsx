@@ -1,7 +1,7 @@
 import React,{ useState } from "react";
 import {View,StyleSheet,TextInput,Text,TouchableOpacity} from "react-native"
 import {MaterialCommunityIcons} from "@expo/vector-icons"
-import {Colors} from "../constants/theme"
+import {Colors} from "../../constants/theme"
 import { SafeAreaView } from 'react-native-safe-area-context';
 import HeaderText from "@/components/HeaderText";
 import { useRouter } from "expo-router";
@@ -145,6 +145,7 @@ const styles=StyleSheet.create({
         height: 100,
         flexDirection: "row",
         justifyContent: "space-between",
+        marginStart: 15,
     },
     registerButton:{
         width:"55%",

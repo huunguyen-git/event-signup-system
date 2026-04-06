@@ -1,36 +1,15 @@
-import React,{ useState } from "react";
-import {View,StyleSheet,TextInput,Text,TouchableOpacity} from "react-native"
+import React from "react";
+import {View,StyleSheet,TextInput,Text} from "react-native"
 import {MaterialCommunityIcons} from "@expo/vector-icons"
-import {Colors} from "../constants/theme"
+import {Colors} from "../../constants/theme"
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { FlatList, ScrollView } from "react-native-gesture-handler";
+import { FlatList} from "react-native-gesture-handler";
 import MyEventItem from "@/components/MyEventItem";
-import { Stack, useRouter } from "expo-router";
+import { Stack } from "expo-router";
+import { DashBoardData } from "../../scripts/data";
 
 const DashBoardScreen = () =>{
-    const router = useRouter();
-    const DATA = [
-  {
-    id: '1',
-    eventCategory: 'Technology',
-    eventName: 'International Tech Summit',
-    eventDate: 'Jan 2023 - 7:30 pm',
-    eventStatus: 'Registration Open',
-  },
-  {
-    id: '2',
-    eventCategory: 'Food & Beverage',
-    eventName: 'City Food Festival',
-    eventDate: 'Jan 2023 - 7:30 pm',
-    eventStatus: 'Sold Out',
-  },
-  {
-    id: '3',
-    eventCategory: 'Art & Culture',
-    eventName: 'International Art Festival',
-    eventDate: 'Jan 2023 - 7:30 pm',
-  },
-];
+    
     return <>
     <Stack.Screen options={{ headerShown: false }} />
     <SafeAreaView style={styles.container}>
@@ -49,11 +28,11 @@ const DashBoardScreen = () =>{
             </View>
             <View style ={styles.headerBody}>
                 <Text style={styles.upcomingEvent}>My Event</Text>
-                <Text style={styles.eventCount}>Total Event: {DATA.length}</Text>
+                <Text style={styles.eventCount}>Total Event: {DashBoardData.length}</Text>
             </View>
             
             <FlatList          
-                data={DATA}
+                data={DashBoardData}
                 renderItem={({ item }) => (
               <MyEventItem 
                 eventCategory={item.eventCategory}
@@ -63,28 +42,6 @@ const DashBoardScreen = () =>{
               />
             )}
             keyExtractor={(item) => item.id}/>
-        </View>
-        <View style={styles.footer}>
-            <TouchableOpacity style={styles.footerItem} onPress={()=> router.replace("/HomeScreen")}>
-                <MaterialCommunityIcons name="home" size={30} color={Colors.color.placeholder}/>
-                <Text style={styles.footerText}>Home</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={[styles.footerItem, { backgroundColor: Colors.color.lightblue }]}>
-                <MaterialCommunityIcons name="view-dashboard" size={30} color={Colors.color.primary}/>
-                <Text style={[styles.footerText, { color: Colors.color.primary }]}>Dashboard</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.footerItem} onPress={()=> router.replace("/ScanQrScreen")}>
-                <MaterialCommunityIcons name="qrcode-scan" size={30} color={Colors.color.placeholder}/>
-                <Text style={styles.footerText}>Scan QR</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.footerItem} onPress={()=> router.replace("/SavedScreen")}>
-                <MaterialCommunityIcons name="heart-outline" size={30} color={Colors.color.placeholder}/>
-                <Text style={styles.footerText}>Saved</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.footerItem} onPress={()=> router.replace("/AccountScreen")}>
-                <MaterialCommunityIcons name="account-outline" size={30} color={Colors.color.placeholder}/>
-                <Text style={styles.footerText}>Account</Text>
-            </TouchableOpacity>
         </View>
     </SafeAreaView>
     </>
@@ -150,22 +107,6 @@ const styles = StyleSheet.create({
         fontSize: 20,
         fontWeight: "bold",
         marginRight: "auto",
-    },
-    footer:{
-        height: 60,
-        backgroundColor: Colors.color.white,
-        flexDirection: "row",
-        gap: 5,
-        padding:5,
-    },
-    footerItem:{
-        flex: 1,
-        alignItems: "center",
-        justifyContent: "center",
-    },
-    footerText:{
-        color: Colors.color.placeholder,
-        fontSize: 12,
     },
     headerBody:{
         flexDirection: "row",

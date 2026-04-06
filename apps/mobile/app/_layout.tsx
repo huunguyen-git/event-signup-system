@@ -1,22 +1,18 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { Stack } from 'expo-router';
-import { StatusBar } from 'expo-status-bar';
-import 'react-native-reanimated';
-
-import { useColorScheme } from '@/hooks/use-color-scheme';
+import {Stack} from "expo-router"
+import { Colors } from "../constants/theme";
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 export default function RootLayout() {
-  const colorScheme = useColorScheme();
-
-  return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <GestureHandlerRootView style={{ flex: 1 }}>
-        <Stack initialRouteName="LoginScreen">
-        <Stack.Screen name="LoginScreen" options={{ headerShown: false }} />
-      </Stack>
-    </GestureHandlerRootView>
-      <StatusBar style="auto" />
-    </ThemeProvider>
-  );
-}
+    return (
+        <GestureHandlerRootView style={{ flex: 1 }}>
+            <Stack screenOptions={{
+                headerShown: false,
+                headerStyle: { backgroundColor: Colors.color.primary },
+                headerTintColor: Colors.color.white,
+            }}>
+                <Stack.Screen name="(Auth)/LoginScreen" options={{ headerShown: false }}/>
+                <Stack.Screen name="(tabs)" options={{ headerShown: false }}/>
+            </Stack>
+        </GestureHandlerRootView>
+    )
+};

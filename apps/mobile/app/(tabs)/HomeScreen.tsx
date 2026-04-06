@@ -1,13 +1,12 @@
-import React,{ useState } from "react";
-import {View,StyleSheet,TextInput,Text,TouchableOpacity} from "react-native"
+import React from "react";
+import {View,StyleSheet,TextInput,Text} from "react-native"
 import {MaterialCommunityIcons} from "@expo/vector-icons"
-import {Colors} from "../constants/theme"
+import {Colors} from "../../constants/theme"
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { FlatList, ScrollView } from "react-native-gesture-handler";
+import { FlatList } from "react-native-gesture-handler";
 import EventItem from "@/components/EventItem";
-import { Stack, useRouter } from "expo-router";
+import { Stack } from "expo-router";
 const HomeScreen = () =>{
-    const router = useRouter();
     const DATA = [
   {
     id: '1',
@@ -39,7 +38,10 @@ const HomeScreen = () =>{
         <View style={styles.body}>
             <View style={styles.searchBar}>
                 <MaterialCommunityIcons name="magnify" size={30} color={Colors.color.placeholder}/>
-                <TextInput style={styles.searchText} placeholder="Search by event name, date or location..." placeholderTextColor={Colors.color.placeholder}/>
+                <TextInput style={styles.searchText} 
+                placeholder="Search by event name, date or location..." 
+                placeholderTextColor={Colors.color.placeholder}
+                scrollEnabled={false}/>
             </View>
             <Text style={styles.upcomingEvent}>Upcoming Event</Text>
             <FlatList          
@@ -51,28 +53,6 @@ const HomeScreen = () =>{
               />
             )}
             keyExtractor={(item) => item.id}/>
-        </View>
-        <View style={styles.footer}>
-            <TouchableOpacity style={[styles.footerItem, { backgroundColor: Colors.color.lightblue }]} >
-                <MaterialCommunityIcons name="home" size={30} color={Colors.color.primary}/>
-                <Text style={[styles.footerText, { color: Colors.color.primary }]}>Home</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.footerItem} onPress={()=> router.replace("/DashBoardScreen")}>
-                <MaterialCommunityIcons name="view-dashboard" size={30} color={Colors.color.placeholder}/>
-                <Text style={styles.footerText}>Dashboard</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.footerItem} onPress={()=> router.replace("/ScanQrScreen")}>
-                <MaterialCommunityIcons name="qrcode-scan" size={30} color={Colors.color.placeholder}/>
-                <Text style={styles.footerText}>Scan QR</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.footerItem} onPress={()=> router.replace("/SavedScreen")}>
-                <MaterialCommunityIcons name="heart-outline" size={30} color={Colors.color.placeholder}/>
-                <Text style={styles.footerText}>Saved</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.footerItem} onPress={()=> router.replace("/AccountScreen")}>
-                <MaterialCommunityIcons name="account-outline" size={30} color={Colors.color.placeholder}/>
-                <Text style={styles.footerText}>Account</Text>
-            </TouchableOpacity>
         </View>
     </SafeAreaView>
     </>
@@ -138,21 +118,5 @@ const styles = StyleSheet.create({
         fontSize: 20,
         fontWeight: "bold",
         marginRight: "auto",
-    },
-    footer:{
-        height: 60,
-        backgroundColor: Colors.color.white,
-        flexDirection: "row",
-        gap: 5,
-        padding:5,
-    },
-    footerItem:{
-        flex: 1,
-        alignItems: "center",
-        justifyContent: "center",
-    },
-    footerText:{
-        color: Colors.color.placeholder,
-        fontSize: 12,
     },
 }); 
