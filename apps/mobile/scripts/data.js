@@ -37,3 +37,20 @@ export const SavedData = [
     eventName: 'Creative Arts Festival'
   }
 ];
+export const HomeData = [
+  {
+    id: '1',
+    eventName: 'International Tech Summit',
+    eventDate: 'Jan 2023 - 7:30 pm',
+  },
+  {
+    id: '2',
+    eventName: 'City Food Festival',
+    eventDate: 'Jan 2023 - 7:30 pm',
+  },
+  {
+    id: '3',
+    eventName: 'International Art Festival',
+    eventDate: 'Jan 2023 - 7:30 pm',
+  },
+];

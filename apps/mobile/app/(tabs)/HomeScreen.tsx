@@ -6,24 +6,9 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { FlatList } from "react-native-gesture-handler";
 import EventItem from "@/components/EventItem";
 import { Stack } from "expo-router";
+import { HomeData } from "../../scripts/data"; 
 const HomeScreen = () =>{
-    const DATA = [
-  {
-    id: '1',
-    eventName: 'International Tech Summit',
-    eventDate: 'Jan 2023 - 7:30 pm',
-  },
-  {
-    id: '2',
-    eventName: 'City Food Festival',
-    eventDate: 'Jan 2023 - 7:30 pm',
-  },
-  {
-    id: '3',
-    eventName: 'International Art Festival',
-    eventDate: 'Jan 2023 - 7:30 pm',
-  },
-];
+    
     return <>
     <Stack.Screen options={{ headerShown: false }} />
     <SafeAreaView style={styles.container}>
@@ -45,7 +30,7 @@ const HomeScreen = () =>{
             </View>
             <Text style={styles.upcomingEvent}>Upcoming Event</Text>
             <FlatList          
-                data={DATA}
+                data={HomeData}
                 renderItem={({ item }) => (
               <EventItem 
                 eventName={item.eventName}
