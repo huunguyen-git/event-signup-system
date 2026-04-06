@@ -3,28 +3,10 @@ import {View,StyleSheet,TextInput,Text,TouchableOpacity} from "react-native"
 import {MaterialCommunityIcons} from "@expo/vector-icons"
 import {Colors} from "../constants/theme"
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { FlatList, ScrollView } from "react-native-gesture-handler";
-import EventItem from "@/components/EventItem";
 import { Stack, useRouter } from "expo-router";
 const HomeScreen = () =>{
     const router = useRouter();
-    const DATA = [
-  {
-    id: '1',
-    eventName: 'International Tech Summit',
-    eventDate: 'Jan 2023 - 7:30 pm',
-  },
-  {
-    id: '2',
-    eventName: 'City Food Festival',
-    eventDate: 'Jan 2023 - 7:30 pm',
-  },
-  {
-    id: '3',
-    eventName: 'International Art Festival',
-    eventDate: 'Jan 2023 - 7:30 pm',
-  },
-];
+
     return <>
     <Stack.Screen options={{ headerShown: false }} />
     <SafeAreaView style={styles.container}>
@@ -37,33 +19,20 @@ const HomeScreen = () =>{
             </View>
         </View>
         <View style={styles.body}>
-            <View style={styles.searchBar}>
-                <MaterialCommunityIcons name="magnify" size={30} color={Colors.color.placeholder}/>
-                <TextInput style={styles.searchText} placeholder="Search by event name, date or location..." placeholderTextColor={Colors.color.placeholder}/>
-            </View>
-            <Text style={styles.upcomingEvent}>Upcoming Event</Text>
-            <FlatList          
-                data={DATA}
-                renderItem={({ item }) => (
-              <EventItem 
-                eventName={item.eventName}
-                eventDate={item.eventDate}
-              />
-            )}
-            keyExtractor={(item) => item.id}/>
+            <Text style={styles.ScanQr}>Scan Qr</Text>
         </View>
         <View style={styles.footer}>
-            <TouchableOpacity style={[styles.footerItem, { backgroundColor: Colors.color.lightblue }]} >
-                <MaterialCommunityIcons name="home" size={30} color={Colors.color.primary}/>
-                <Text style={[styles.footerText, { color: Colors.color.primary }]}>Home</Text>
+            <TouchableOpacity style={styles.footerItem} onPress={()=> router.replace("/HomeScreen")}>
+                <MaterialCommunityIcons name="home" size={30} color={Colors.color.placeholder}/>
+                <Text style={styles.footerText}>Home</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.footerItem} onPress={()=> router.replace("/DashBoardScreen")}>
                 <MaterialCommunityIcons name="view-dashboard" size={30} color={Colors.color.placeholder}/>
                 <Text style={styles.footerText}>Dashboard</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.footerItem} onPress={()=> router.replace("/ScanQrScreen")}>
-                <MaterialCommunityIcons name="qrcode-scan" size={30} color={Colors.color.placeholder}/>
-                <Text style={styles.footerText}>Scan QR</Text>
+            <TouchableOpacity style={[styles.footerItem, { backgroundColor: Colors.color.lightblue }]} >
+                <MaterialCommunityIcons name="qrcode-scan" size={30} color={Colors.color.primary}/>
+                <Text style={[styles.footerText, { color: Colors.color.primary }]}>Scan QR</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.footerItem} onPress={()=> router.replace("/SavedScreen")}>
                 <MaterialCommunityIcons name="heart-outline" size={30} color={Colors.color.placeholder}/>
@@ -100,7 +69,7 @@ const styles = StyleSheet.create({
     },
     accountIcon:{
         height: 40,
-        backgroundColor: Colors.color.lightblue,
+        backgroundColor: "#afc5e1",
         borderRadius: 20,
     },
     Icon:{
@@ -114,27 +83,7 @@ const styles = StyleSheet.create({
         flex: 1,
         padding:10,
     },
-    searchBar:{
-        height: 40,
-        width: "100%",
-        flexDirection: "row",
-        justifyContent: "center",
-        alignItems: "center",
-        borderWidth: 1,
-        borderColor: Colors.color.placeholder,
-        borderRadius: 30,
-        backgroundColor: Colors.color.white,
-        gap: 5,
-        marginTop: 10,
-        marginBottom: 20,
-        paddingStart: 15,
-    },
-    searchText:{
-        flex: 1,
-        color: Colors.color.placeholder,
-        fontSize: 16,
-    },
-    upcomingEvent:{
+    ScanQr:{
         fontSize: 20,
         fontWeight: "bold",
         marginRight: "auto",

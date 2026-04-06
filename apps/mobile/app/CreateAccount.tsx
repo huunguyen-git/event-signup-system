@@ -4,6 +4,7 @@ import {MaterialCommunityIcons} from "@expo/vector-icons"
 import {Colors} from "../constants/theme"
 import { SafeAreaView } from 'react-native-safe-area-context';
 import HeaderText from "@/components/HeaderText";
+import { Stack, useRouter } from "expo-router";
 
 const ForgotPasswordScreen = () =>{
     const [username, setUsername] = useState("");
@@ -12,7 +13,9 @@ const ForgotPasswordScreen = () =>{
     const [showPassword, setShowPassword] = useState(false);
     const [confirmPassword, setConfirmPassword] = useState("");
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-    return <SafeAreaView style={styles.container}>
+    return <>
+    <Stack.Screen options={{ headerShown: false }} />
+    <SafeAreaView style={styles.container}>
             <View style={styles.header}>
                 <MaterialCommunityIcons name="domain" size={70} color={Colors.color.placeholder}/>
                 <HeaderText/>
@@ -95,6 +98,7 @@ const ForgotPasswordScreen = () =>{
             </View>
             
         </SafeAreaView>
+        </>
 };
 export default ForgotPasswordScreen;
 const styles = StyleSheet.create({

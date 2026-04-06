@@ -31,6 +31,7 @@ export const Colors = {
     text: '#333333',
     placeholder: '#A1A1A1',
     background: "#F5F5F5",
+    lightblue: "#c6e3f7",
   }
 };
 

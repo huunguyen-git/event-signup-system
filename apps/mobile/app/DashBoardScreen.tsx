@@ -47,7 +47,11 @@ const DashBoardScreen = () =>{
                 <MaterialCommunityIcons name="magnify" size={30} color={Colors.color.placeholder}/>
                 <TextInput style={styles.searchText} placeholder="Search by event name, date or location..." placeholderTextColor={Colors.color.placeholder}/>
             </View>
-            <Text style={styles.upcomingEvent}>My Event</Text>
+            <View style ={styles.headerBody}>
+                <Text style={styles.upcomingEvent}>My Event</Text>
+                <Text style={styles.eventCount}>Total Event: {DATA.length}</Text>
+            </View>
+            
             <FlatList          
                 data={DATA}
                 renderItem={({ item }) => (
@@ -65,19 +69,19 @@ const DashBoardScreen = () =>{
                 <MaterialCommunityIcons name="home" size={30} color={Colors.color.placeholder}/>
                 <Text style={styles.footerText}>Home</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.footerItem}>
-                <MaterialCommunityIcons name="view-dashboard" size={30} color={Colors.color.placeholder}/>
-                <Text style={styles.footerText}>Dashboard</Text>
+            <TouchableOpacity style={[styles.footerItem, { backgroundColor: Colors.color.lightblue }]}>
+                <MaterialCommunityIcons name="view-dashboard" size={30} color={Colors.color.primary}/>
+                <Text style={[styles.footerText, { color: Colors.color.primary }]}>Dashboard</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.footerItem}>
+            <TouchableOpacity style={styles.footerItem} onPress={()=> router.replace("/ScanQrScreen")}>
                 <MaterialCommunityIcons name="qrcode-scan" size={30} color={Colors.color.placeholder}/>
                 <Text style={styles.footerText}>Scan QR</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.footerItem}>
+            <TouchableOpacity style={styles.footerItem} onPress={()=> router.replace("/SavedScreen")}>
                 <MaterialCommunityIcons name="heart-outline" size={30} color={Colors.color.placeholder}/>
                 <Text style={styles.footerText}>Saved</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.footerItem}>
+            <TouchableOpacity style={styles.footerItem} onPress={()=> router.replace("/AccountScreen")}>
                 <MaterialCommunityIcons name="account-outline" size={30} color={Colors.color.placeholder}/>
                 <Text style={styles.footerText}>Account</Text>
             </TouchableOpacity>
@@ -135,6 +139,7 @@ const styles = StyleSheet.create({
         gap: 5,
         marginTop: 10,
         marginBottom: 20,
+        paddingStart: 15,
     },
     searchText:{
         flex: 1,
@@ -162,4 +167,13 @@ const styles = StyleSheet.create({
         color: Colors.color.placeholder,
         fontSize: 12,
     },
+    headerBody:{
+        flexDirection: "row",
+    },
+    eventCount:{
+        fontSize: 20,
+        fontWeight: "bold",
+        marginLeft: "auto",
+    },
+
 }); 

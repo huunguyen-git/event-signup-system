@@ -12,12 +12,8 @@ export default function RootLayout() {
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
       <GestureHandlerRootView style={{ flex: 1 }}>
-        <Stack initialRouteName="HomeScreen">
-        <Stack.Screen name="HomeScreen" options={{ headerShown: false }} />
-        <Stack.Screen name="CreateAccount" options={{ headerShown: false }} />
-        <Stack.Screen name="index" options={{ headerShown: false }} />
-        <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
-        <Stack.Screen name="screen" />
+        <Stack initialRouteName="LoginScreen">
+        <Stack.Screen name="LoginScreen" options={{ headerShown: false }} />
       </Stack>
     </GestureHandlerRootView>
       <StatusBar style="auto" />

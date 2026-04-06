@@ -4,27 +4,28 @@ import {MaterialCommunityIcons} from "@expo/vector-icons"
 import {Colors} from "../constants/theme"
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { FlatList, ScrollView } from "react-native-gesture-handler";
-import EventItem from "@/components/EventItem";
+import SavedEventItem from "@/components/SavedEventItem";
 import { Stack, useRouter } from "expo-router";
-const HomeScreen = () =>{
+const SavedScreen = () =>{
     const router = useRouter();
     const DATA = [
   {
     id: '1',
-    eventName: 'International Tech Summit',
-    eventDate: 'Jan 2023 - 7:30 pm',
+    organizer: 'tim-ed',
+    eventName: 'Global AI Tech Summit - Keynote'
   },
   {
     id: '2',
-    eventName: 'City Food Festival',
-    eventDate: 'Jan 2023 - 7:30 pm',
+    organizer: 'tim-ed',
+    eventName: 'Urban Planning Workshop'
   },
   {
     id: '3',
-    eventName: 'International Art Festival',
-    eventDate: 'Jan 2023 - 7:30 pm',
-  },
+    organizer: 'tim-ed',
+    eventName: 'Creative Arts Festival'
+  }
 ];
+
     return <>
     <Stack.Screen options={{ headerShown: false }} />
     <SafeAreaView style={styles.container}>
@@ -37,24 +38,21 @@ const HomeScreen = () =>{
             </View>
         </View>
         <View style={styles.body}>
-            <View style={styles.searchBar}>
-                <MaterialCommunityIcons name="magnify" size={30} color={Colors.color.placeholder}/>
-                <TextInput style={styles.searchText} placeholder="Search by event name, date or location..." placeholderTextColor={Colors.color.placeholder}/>
-            </View>
-            <Text style={styles.upcomingEvent}>Upcoming Event</Text>
-            <FlatList          
+            <Text style={styles.saveEvent}>Saved Events</Text>
+            <Text style={styles.eventCount}>Total Event: {DATA.length}</Text>
+            <FlatList
                 data={DATA}
                 renderItem={({ item }) => (
-              <EventItem 
-                eventName={item.eventName}
-                eventDate={item.eventDate}
-              />
+              <SavedEventItem
+                organizer={item.organizer}
+                eventName={item.eventName}/>
             )}
-            keyExtractor={(item) => item.id}/>
+            keyExtractor={(item) => item.eventName}/>
+
         </View>
         <View style={styles.footer}>
-            <TouchableOpacity style={[styles.footerItem, { backgroundColor: Colors.color.lightblue }]} >
-                <MaterialCommunityIcons name="home" size={30} color={Colors.color.primary}/>
+            <TouchableOpacity style={styles.footerItem}  onPress={()=> router.replace("/HomeScreen")}>
+                <MaterialCommunityIcons name="home" size={30} color={Colors.color.placeholder}/>
                 <Text style={[styles.footerText, { color: Colors.color.primary }]}>Home</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.footerItem} onPress={()=> router.replace("/DashBoardScreen")}>
@@ -65,9 +63,9 @@ const HomeScreen = () =>{
                 <MaterialCommunityIcons name="qrcode-scan" size={30} color={Colors.color.placeholder}/>
                 <Text style={styles.footerText}>Scan QR</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.footerItem} onPress={()=> router.replace("/SavedScreen")}>
-                <MaterialCommunityIcons name="heart-outline" size={30} color={Colors.color.placeholder}/>
-                <Text style={styles.footerText}>Saved</Text>
+            <TouchableOpacity style={[styles.footerItem, { backgroundColor: Colors.color.lightblue }]} >
+                <MaterialCommunityIcons name="heart-outline" size={30} color={Colors.color.primary}/>
+                <Text style={[styles.footerText, { color: Colors.color.primary }]}>Saved</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.footerItem} onPress={()=> router.replace("/AccountScreen")}>
                 <MaterialCommunityIcons name="account-outline" size={30} color={Colors.color.placeholder}/>
@@ -77,7 +75,7 @@ const HomeScreen = () =>{
     </SafeAreaView>
     </>
 };
-export default HomeScreen;
+export default SavedScreen;
 const styles = StyleSheet.create({
     container: {
         flex: 1,
@@ -100,7 +98,7 @@ const styles = StyleSheet.create({
     },
     accountIcon:{
         height: 40,
-        backgroundColor: Colors.color.lightblue,
+        backgroundColor: "#afc5e1",
         borderRadius: 20,
     },
     Icon:{
@@ -114,27 +112,7 @@ const styles = StyleSheet.create({
         flex: 1,
         padding:10,
     },
-    searchBar:{
-        height: 40,
-        width: "100%",
-        flexDirection: "row",
-        justifyContent: "center",
-        alignItems: "center",
-        borderWidth: 1,
-        borderColor: Colors.color.placeholder,
-        borderRadius: 30,
-        backgroundColor: Colors.color.white,
-        gap: 5,
-        marginTop: 10,
-        marginBottom: 20,
-        paddingStart: 15,
-    },
-    searchText:{
-        flex: 1,
-        color: Colors.color.placeholder,
-        fontSize: 16,
-    },
-    upcomingEvent:{
+    saveEvent:{
         fontSize: 20,
         fontWeight: "bold",
         marginRight: "auto",
@@ -154,5 +132,13 @@ const styles = StyleSheet.create({
     footerText:{
         color: Colors.color.placeholder,
         fontSize: 12,
+    },
+    headerBody:{
+        flexDirection: "row",
+    },
+    eventCount:{
+        fontSize: 20,
+        fontWeight: "bold",
+        marginLeft: "auto",
     },
 }); 
