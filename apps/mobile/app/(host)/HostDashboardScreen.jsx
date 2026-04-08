@@ -6,7 +6,7 @@ import { Colors } from "../../constants/theme";
 import StatCard from "../../components/StatCard";
 import HostEventItem from "../../components/HostEventItem";
 import { MOCK_EVENTS } from "@/data/mock_events";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { MaterialCommunityIcons, Ionicons } from "@expo/vector-icons";
 
 export default function HostDashboardScreen() {
     const [searchQuery, setSearchQuery] = useState('');
@@ -101,6 +101,13 @@ export default function HostDashboardScreen() {
                 contentContainerStyle={styles.scrollPadding}
                 showsVerticalScrollIndicator={false}
             />
+
+            <TouchableOpacity 
+                style={styles.createButton}
+            >
+                <Ionicons name="add" color='white' size={28} />
+                <Text style={styles.createButtonText}>Create new event</Text>
+            </TouchableOpacity>
         </SafeAreaView>
 
     )
@@ -178,6 +185,23 @@ function createStyles() {
             flexDirection: 'row',
             flexWrap: 'wrap',
             justifyContent: 'space-between',
+        },
+        createButton: {
+            flexDirection: 'row',
+            justifyContent: 'center',
+            alignItems: 'center',
+            position: 'absolute',
+            bottom: 10,
+            right: 5,
+            backgroundColor: Colors.color.primary,
+            padding: 15,
+            borderRadius: 30,
+        },
+        createButtonText: {
+            fontSize: 16,
+            color: 'white',
+            fontWeight: 600,
+            marginLeft: 5,
         }
     });
 }
