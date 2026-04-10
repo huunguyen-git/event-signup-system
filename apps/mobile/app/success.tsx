@@ -8,13 +8,11 @@ export default function SuccessScreen() {
     const router = useRouter();
     const themeColor = Colors.light.tint;
 
-    // 2. LẤY DỮ LIỆU TICKET TYPE TỪ MÀN 2 GỬI SANG
     const { ticketType } = useLocalSearchParams();
 
     return (
         <View style={styles.overlayContainer}>
             <View style={styles.successCard}>
-                {/* Vòng tròn tích xanh */}
                 <View style={styles.iconCircle}>
                     <Ionicons name="checkmark" size={50} color="#4CAF50" />
                 </View>
@@ -26,7 +24,6 @@ export default function SuccessScreen() {
                     Your registration for the <Text style={{fontWeight: 'bold', color: themeColor}}>{ticketType || 'Standard Pass'}</Text> is confirmed.
                 </Text>
 
-                {/* Khung chi tiết màu xám */}
                 <View style={styles.detailsBox}>
                     <View style={styles.detailRow}>
                         <Text style={styles.detailLabel}>Order Number:</Text>
@@ -34,7 +31,6 @@ export default function SuccessScreen() {
                     </View>
                     <View style={styles.detailRow}>
                         <Text style={styles.detailLabel}>Pass Type:</Text>
-                        {/* 3. HIỂN THỊ LOẠI VÉ ĐÃ CHỌN TẠI ĐÂY */}
                         <Text style={styles.detailValue}>{ticketType || 'Standard Pass'}</Text>
                     </View>
                     <View style={styles.detailRow}>
@@ -43,7 +39,6 @@ export default function SuccessScreen() {
                     </View>
                 </View>
 
-                {/* Nút bấm */}
                 <TouchableOpacity style={[styles.primaryBtn, { backgroundColor: themeColor }]}>
                     <Text style={styles.primaryBtnText}>VIEW MY TICKET</Text>
                 </TouchableOpacity>

@@ -51,11 +51,9 @@ export default function EventDetailsScreen() {
 
   return (
     <View style={styles.container}>
-      {/* 1. KHÚC TRẮNG TRÊN CÙNG (Dành cho Camera/Notch) */}
       <SafeAreaView style={{ backgroundColor: 'white' }} edges={['top']} />
       <StatusBar barStyle="dark-content" backgroundColor="white" />
 
-      {/* 2. KHÚC XANH HEADER (Nội dung chính của thanh tiêu đề) */}
       <View style={[styles.blueHeader, { backgroundColor: themeColor }]}>
         <View style={styles.headerLeft}>
           <TouchableOpacity onPress={() => router.back()}>
@@ -71,7 +69,6 @@ export default function EventDetailsScreen() {
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollBody} showsVerticalScrollIndicator={false}>
-        {/* BANNER */}
         <Image
           source={{ uri: 'https://uploads-ssl.webflow.com/6238fb9311591cfbce305e81/6272115ac02a5c7c4b7c78b4_CEG-open-graph.jpeg' }}
           style={styles.banner}
@@ -80,7 +77,6 @@ export default function EventDetailsScreen() {
         <View style={styles.content}>
           <Text style={[styles.mainTitle, { color: themeColor }]}>International Tech Summit 2024</Text>
 
-          {/* Dòng Thời gian (Tĩnh) */}
           <View style={styles.infoRow}>
             <MaterialCommunityIcons name="calendar-month" size={28} color={themeColor} />
             <View style={styles.infoTextGroup}>
@@ -89,7 +85,6 @@ export default function EventDetailsScreen() {
             </View>
           </View>
 
-          {/* Dòng Địa điểm (Tĩnh) */}
           <View style={styles.infoRow}>
             <Ionicons name="location-sharp" size={28} color={themeColor} />
             <View style={styles.infoTextGroup}>
@@ -98,7 +93,6 @@ export default function EventDetailsScreen() {
             </View>
           </View>
 
-          {/* GOOGLE MAP GIỐNG MẪU GIGAMALL */}
           <View style={styles.mapContainer}>
             <View style={[styles.mapFrame, { backgroundColor: '#f5f5f5' }]} />
             <TouchableOpacity style={styles.mapButton} onPress={handleOpenMap} activeOpacity={0.7}>
@@ -110,7 +104,6 @@ export default function EventDetailsScreen() {
             </View>
           </View>
 
-          {/* About the Event */}
           <View style={styles.section}>
             <View style={styles.sectionHeaderRow}>
                <Ionicons name="information-circle" size={24} color={themeColor} />
@@ -121,7 +114,6 @@ export default function EventDetailsScreen() {
             </Text>
           </View>
 
-          {/* Key Speakers */}
           <Text style={[styles.sectionTitle, {marginTop: 25}]}>Key Speakers</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.speakerList}>
             {speakers.map((s) => (
@@ -136,7 +128,6 @@ export default function EventDetailsScreen() {
             ))}
           </ScrollView>
 
-          {/* Host/Organization (PHẦN BỊ THIẾU) */}
           <View style={styles.section}>
              <View style={styles.sectionHeaderRow}>
                 <Ionicons name="person" size={20} color={themeColor} />
@@ -146,7 +137,6 @@ export default function EventDetailsScreen() {
              <Text style={styles.bodyText}>Leading organizer of international technology conferences across South East Asia, focused on digital transformation.</Text>
           </View>
 
-          {/* Ticket Information (PHẦN BỊ THIẾU) */}
           <View style={styles.section}>
              <View style={styles.sectionHeaderRow}>
                 <MaterialCommunityIcons name="ticket-confirmation" size={22} color={themeColor} />
@@ -155,7 +145,6 @@ export default function EventDetailsScreen() {
              <Text style={styles.bodyText}>• Standard Pass: Free access to all main sessions.{"\n"}• Premium Pass: Access to VIP networking and workshops.</Text>
           </View>
 
-          {/* Sponsors */}
           <Text style={[styles.sectionTitle, {marginTop: 25}]}>Sponsors</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.sponsorList}>
             {sponsors.map((sp) => (
@@ -167,7 +156,6 @@ export default function EventDetailsScreen() {
         </View>
       </ScrollView>
 
-      {/* FOOTER ĐĂNG KÝ */}
       <View style={styles.footer}>
         <TouchableOpacity
             style={[styles.regBtn, { backgroundColor: themeColor }]}

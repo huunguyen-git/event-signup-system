@@ -11,7 +11,6 @@ export default function RegistrationFormScreen() {
     const router = useRouter();
     const themeColor = Colors.light.tint;
 
-    // --- QUẢN LÝ TRẠNG THÁI ---
     const [agreed, setAgreed] = useState(false);
     const [ticketType, setTicketType] = useState('Standard Pass');
 
@@ -19,7 +18,6 @@ export default function RegistrationFormScreen() {
     const [showTerms, setShowTerms] = useState(false);
     const [showPrivacy, setShowPrivacy] = useState(false);
 
-    // CHỈ CÒN TÊN 2 LOẠI VÉ
     const ticketOptions = [
         { id: '1', name: 'Standard Pass' },
         { id: '2', name: 'Premium Pass' },
@@ -115,7 +113,6 @@ export default function RegistrationFormScreen() {
                 </View>
             </KeyboardAvoidingView>
 
-            {/* MODAL CHỌN VÉ - CHỈ HIỆN TÊN */}
             <Modal visible={showTicketPicker} transparent animationType="slide">
                 <View style={styles.pickerOverlay}>
                     <View style={styles.pickerCard}>
