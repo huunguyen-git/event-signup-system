@@ -32,6 +32,11 @@ export const Colors = {
     placeholder: '#A1A1A1',
     background: "#F5F5F5",
     lightblue: "#c6e3f7",
+  },
+  statusColor: {
+    Live: '#28a745',
+    Draft: '#ffc107',
+    Complete: '#6c757d',
   }
 };
 
