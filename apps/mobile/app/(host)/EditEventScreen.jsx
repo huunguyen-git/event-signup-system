@@ -396,27 +396,6 @@ function createStyles() {
             padding: 14,
             borderRadius: 10,
         },
-        selectorMainText: {
-            marginLeft: 8,
-            fontSize: 14,
-            fontWeight: '600',
-            color: '#1a2a44',
-        },
-        statusSelectorRow: {
-            flexDirection: 'row',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            backgroundColor: '#F5F7FA',
-            padding: 14,
-            borderRadius: 10,
-            marginBottom: 10,
-        },
-        statusDot: {
-            width: 8,
-            height: 8,
-            borderRadius: 4,
-            marginRight: 10,
-        },
         ticketRow: {
             flexDirection: 'row',
             justifyContent: 'space-between',
@@ -439,7 +418,8 @@ function createStyles() {
             marginRight: 10,
         },
         selectorMainText: {
-            fontSize: 15,
+            marginLeft: 8,
+            fontSize: 14,
             fontWeight: '600',
             color: '#1a2a44',
         },
