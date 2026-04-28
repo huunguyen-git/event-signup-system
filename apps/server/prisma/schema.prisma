@@ -32,7 +32,7 @@ enum ApplicationStatus {
 // ---MODEL---
 
 model User {
-  id           String   @id @default(uuid())
+  id           String   @id @db.Uuid
   email        String   @unique
   full_name    String
   birthdate    DateTime @db.Date
@@ -49,8 +49,8 @@ model User {
 }
 
 model Event {
-  id              String      @id @default(uuid())
-  host_id         String
+  id              String      @id @default(uuid()) @db.Uuid
+  host_id         String      @db.Uuid
   title           String
   description     String      @db.Text
   event_date      DateTime
@@ -72,9 +72,9 @@ model Event {
 }
 
 model Application {
-  id          String            @id @default(uuid())
-  event_id    String
-  user_id     String
+  id          String            @id @default(uuid()) @db.Uuid
+  event_id    String            @db.Uuid
+  user_id     String            @db.Uuid
   status      ApplicationStatus @default(PENDING)
   answers     Json              // Stores user responses to the custom form as JSONB
   checked_in  Boolean           @default(false)
@@ -90,10 +90,10 @@ model Application {
 }
 
 model Comment {
-  id          String   @id @default(uuid())
-  event_id    String
-  user_id     String
-  parent_id   String?  // Nullable. If it has a value, this comment is a reply
+  id          String   @id @default(uuid()) @db.Uuid
+  event_id    String   @db.Uuid
+  user_id     String   @db.Uuid
+  parent_id   String?  @db.Uuid
   content     String   @db.Text
   is_pinned   Boolean  @default(false)
   created_at  DateTime @default(now())

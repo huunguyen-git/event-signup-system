@@ -6,9 +6,11 @@ CREATE TYPE "ApplicationStatus" AS ENUM ('PENDING', 'APPROVED', 'WAITLISTED', 'R
 
 -- CreateTable
 CREATE TABLE "profiles" (
-    "id" TEXT NOT NULL,
+    "id" UUID NOT NULL,
     "email" TEXT NOT NULL,
     "full_name" TEXT NOT NULL,
+    "birthdate" DATE NOT NULL,
+    "phone_number" TEXT,
     "avatar_url" TEXT,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
@@ -17,13 +19,14 @@ CREATE TABLE "profiles" (
 
 -- CreateTable
 CREATE TABLE "events" (
-    "id" TEXT NOT NULL,
-    "host_id" TEXT NOT NULL,
+    "id" UUID NOT NULL,
+    "host_id" UUID NOT NULL,
     "title" TEXT NOT NULL,
     "description" TEXT NOT NULL,
     "event_date" TIMESTAMP(3) NOT NULL,
+    "end_date" TIMESTAMP(3),
     "banner_url" TEXT,
-    "venue_details" TEXT,
+    "location_url" TEXT,
     "allowed_domain" TEXT,
     "max_attendees" INTEGER,
     "status" "EventStatus" NOT NULL DEFAULT 'DRAFT',
@@ -35,9 +38,9 @@ CREATE TABLE "events" (
 
 -- CreateTable
 CREATE TABLE "applications" (
-    "id" TEXT NOT NULL,
-    "event_id" TEXT NOT NULL,
-    "user_id" TEXT NOT NULL,
+    "id" UUID NOT NULL,
+    "event_id" UUID NOT NULL,
+    "user_id" UUID NOT NULL,
     "status" "ApplicationStatus" NOT NULL DEFAULT 'PENDING',
     "answers" JSONB NOT NULL,
     "checked_in" BOOLEAN NOT NULL DEFAULT false,
@@ -48,10 +51,10 @@ CREATE TABLE "applications" (
 
 -- CreateTable
 CREATE TABLE "comments" (
-    "id" TEXT NOT NULL,
-    "event_id" TEXT NOT NULL,
-    "user_id" TEXT NOT NULL,
-    "parent_id" TEXT,
+    "id" UUID NOT NULL,
+    "event_id" UUID NOT NULL,
+    "user_id" UUID NOT NULL,
+    "parent_id" UUID,
     "content" TEXT NOT NULL,
     "is_pinned" BOOLEAN NOT NULL DEFAULT false,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
