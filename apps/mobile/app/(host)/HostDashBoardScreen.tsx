@@ -1,17 +1,27 @@
 import { StyleSheet, View, Text, TextInput, TouchableOpacity, FlatList, StatusBar } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useState } from "react";
-import { Search, Bell, User, Plus } from "lucide-react-native";
+import { useState, useEffect } from "react";
+import { Search, Bell, User } from "lucide-react-native";
 import { Colors } from "../../constants/theme";
 import StatCard from "../../components/StatCard";
 import HostEventItem from "../../components/HostEventItem";
-import { MOCK_EVENTS } from "@/data/mock_events";
 import { MaterialCommunityIcons, Ionicons } from "@expo/vector-icons";
+import { ICreateEvent } from "@/axios/dto/eventModel";
+import { EventService } from "@/axios/eventService";
+import { useRouter } from "expo-router";
 
 export default function HostDashboardScreen() {
     const [searchQuery, setSearchQuery] = useState('');
+    const [data, setData] = useState<ICreateEvent[]>([]);
+    useEffect(()=>{
+        const fetchData = async ()=>{
+            const events = await EventService.getEvents();
+        setData(events);
+        }
+        fetchData();
+    })
     const styles = createStyles();
-
+    const router = useRouter();
     const renderHeader = () => {
         return (
             <View style={styles.listHeader}>
@@ -42,18 +52,6 @@ export default function HostDashboardScreen() {
                     />
                 </View>
             </View>
-        );
-    }
-
-    const renderItem = ({item}) => {
-        return (
-            <HostEventItem 
-                title={item.title}
-                status={item.status}
-                attendees={item.attendees}
-                rating={item.attendees}
-                checkins={item.checkins}
-            />
         );
     }
 
@@ -94,9 +92,15 @@ export default function HostDashboardScreen() {
             </View>
 
             <FlatList 
-                data={MOCK_EVENTS}
+                data={data}
                 keyExtractor={(item) => item.id}
-                renderItem={renderItem}
+                renderItem={({item})=>{
+                        return (
+                <HostEventItem 
+                    event={item}
+                />
+        );
+                }}
                 ListHeaderComponent={renderHeader}
                 contentContainerStyle={styles.scrollPadding}
                 showsVerticalScrollIndicator={false}
@@ -104,6 +108,7 @@ export default function HostDashboardScreen() {
 
             <TouchableOpacity 
                 style={styles.createButton}
+                onPress={()=> router.push('/CreateEventScreen')}
             >
                 <Ionicons name="add" color='white' size={28} />
                 <Text style={styles.createButtonText}>Create new event</Text>
@@ -202,6 +207,10 @@ function createStyles() {
             color: 'white',
             fontWeight: 600,
             marginLeft: 5,
+        },
+        scrollPadding:{
+            paddingBottom: 100,
+            paddingHorizontal: 20
         }
     });
 }

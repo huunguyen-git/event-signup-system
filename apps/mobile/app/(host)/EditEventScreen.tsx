@@ -1,43 +1,57 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { StyleSheet, View, Text, TextInput, TouchableOpacity, ScrollView, KeyboardAvoidingView, Platform, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../../constants/theme';
 import * as ImagePicker from 'expo-image-picker'
+import { ICreateEvent } from '../../axios/dto/eventModel';
+import { EventService } from '../../axios/eventService'
+import { useLocalSearchParams } from 'expo-router'
+import DateTimePicker from "@react-native-community/datetimepicker";
 
-const eventToEdit = {
-    title: 'International Tech Summit 2023',
-    description: 'International Tech Summit 2023 is a premium event focused on...',
-    location: 'Tech Hub Auditorium, San Francisco',
-    capacity: 150,
-    price: 49.99,
-    status: 'Live',
-    imageUrl: 'https://via.placeholder.com/300x200', 
-};
+// const eventToEdit = {
+//     title: 'International Tech Summit 2023',
+//     description: 'International Tech Summit 2023 is a premium event focused on...',
+//     location: 'Tech Hub Auditorium, San Francisco',
+//     capacity: 150,
+//     price: 49.99,
+//     status: 'Live',
+//     imageUrl: 'https://via.placeholder.com/300x200', 
+// };
 
-export default function EditEventScreen({ navigation }) {
+export default function EditEventScreen() {
     const [isStatusOpen, setIsStatusOpen] = useState(false);
-    const [status, setStatus] = useState('Live');
-    
+    const [status, setStatus] = useState('LIVE');
+    const {id} = useLocalSearchParams();
+    const [event,setEvent] = useState<ICreateEvent>(new ICreateEvent());
+    const [showStartPicker, setShowStartPicker] = useState(false);
+    const [showEndPicker, setShowEndPicker] = useState(false);
+    useEffect(()=>{
+        const fetchData = async ()=>{
+            const data = await EventService.getEvent(id);
+            setEvent(data);
+        }
+        fetchData()
+    },[id]);
     const statusOptions = [
-        { label: 'Live', color: '#4CAF50' },
-        { label: 'Draft', color: '#FFC107' },
-        { label: 'Complete', color: '#2196F3' }
-    ];
+    { label: 'LIVE', color: '#4CAF50' },
+    { label: 'DRAFT', color: '#FFC107' },
+    { label: 'COMPLETE', color: '#2196F3' },
+];
 
-    const selectStatus = (val) => {
+    const selectStatus = (val:string) => {
         setStatus(val);
         setIsStatusOpen(false);
     };
 
-    const [image, setImage] = useState(eventToEdit.imageUrl);
-    const [form, setForm] = useState({
-        title: eventToEdit.title,
-        description: eventToEdit.description,
-        location: eventToEdit.location,
-        capacity: eventToEdit.capacity.toString(),
-        price: eventToEdit.price.toString(),
-        status: eventToEdit.status,
-    });
+    // const [image, setImage] = useState(eventToEdit.imageUrl);
+    // const [form, setForm] = useState({
+    //     title: eventToEdit.title,
+    //     description: eventToEdit.description,
+    //     location: eventToEdit.location,
+    //     capacity: eventToEdit.capacity.toString(),
+    //     price: eventToEdit.price.toString(),
+    //     status: eventToEdit.status,
+    // });
 
     const pickImage = async () => {
         const result = await ImagePicker.launchImageLibraryAsync({
@@ -48,12 +62,13 @@ export default function EditEventScreen({ navigation }) {
         });
 
         if (!result.canceled) {
-            setImage(result.assets[0].uri); 
+            setEvent({...event, banner_url: result.assets[0].uri}); 
         }
     }
 
     const handleSaveChanges = () => {
-        console.log("Submitting UPDATED form to Backend:", form);
+        console.log("Submitting UPDATED form to Backend:", event);
+        EventService.updateEvent(event.id,event);
     }
 
     const handleCancel = () => {
@@ -75,7 +90,7 @@ export default function EditEventScreen({ navigation }) {
                 <View style={styles.headerTitleContainer}>
                     <Text style={styles.headerSubtitle}>Editing Event</Text>
                     <Text style={styles.headerMainTitle} numberOfLines={1}>
-                        {eventToEdit.title}
+                        {event.title}
                     </Text>
                 </View>
 
@@ -100,7 +115,7 @@ export default function EditEventScreen({ navigation }) {
                         onPress={() => setIsStatusOpen(!isStatusOpen)}
                     >
                         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                            <View style={[styles.statusDot, { backgroundColor: statusOptions.find(o => o.label === status).color }]} />
+                            <View style={[styles.statusDot, { backgroundColor: statusOptions.find(o => o.label === status)?.color }]} />
                             <Text style={styles.selectorMainText}>{status}</Text>
                         </View>
                         <Ionicons 
@@ -143,8 +158,8 @@ export default function EditEventScreen({ navigation }) {
                     <View style={styles.inputWrapper}>
                         <TextInput
                             style={styles.wrapperInput}
-                            value={form.title}
-                            onChangeText={(val) => setForm({...form, title: val})}
+                            value={event.title}
+                            onChangeText={(val) => setEvent({...event, title: val})}
                         />
                     </View>
 
@@ -152,13 +167,13 @@ export default function EditEventScreen({ navigation }) {
                     <TouchableOpacity 
                         style={[
                             styles.imageContainer,
-                            image && styles.imageActive
+                            event.banner_url && styles.imageActive
                         ]}
                         onPress={pickImage} 
                     >
-                        {image ? (
+                        {event.banner_url ? (
                             <Image 
-                                source={{uri:image}} 
+                                source={{uri:event.banner_url}} 
                                 style={styles.previewImage}
                             />
                         ) : (
@@ -179,8 +194,8 @@ export default function EditEventScreen({ navigation }) {
                             style={[styles.wrapperInput, styles.textAreaInput]}
                             multiline
                             numberOfLines={4}
-                            value={form.description} 
-                            onChangeText={(val) => setForm({...form, description: val})}
+                            value={event.description} 
+                            onChangeText={(val) => setEvent({...event, description: val})}
                         />
                     </View>
                 </View>
@@ -189,24 +204,58 @@ export default function EditEventScreen({ navigation }) {
                 <View style={styles.card}>
                     <Text style={styles.cardSectionTitle}>DATE & VENUE</Text>
                     <View style={styles.selectorRow}>
-                        <TouchableOpacity style={styles.dateTimeSelector}>
+                        <TouchableOpacity
+                            style={styles.dateTimeSelector}
+                            onPress={() => setShowStartPicker(true)}>
                             <Ionicons name="calendar-clear-outline" size={18} color="#1a2a44" />
-                            <Text style={styles.selectorMainText}>Start Date</Text>
+                            <Text style={styles.selectorMainText}>{event.event_date ? event?.event_date : "Start Date"}</Text>
                         </TouchableOpacity>
-                        <TouchableOpacity style={styles.dateTimeSelector}>
+
+                        {/* Nút chọn End Date */}
+                        <TouchableOpacity
+                            style={styles.dateTimeSelector}
+                            onPress={() => setShowEndPicker(true)}
+                        >
                             <Ionicons name="time-outline" size={18} color="#1a2a44" />
-                            <Text style={styles.selectorMainText}>End Time</Text>
+                            <Text style={styles.selectorMainText}>{event.end_date ? event?.end_date : "End Date"}</Text>
                         </TouchableOpacity>
+                        {showStartPicker && (
+                            <DateTimePicker
+                            value={new Date()}
+                            mode="date"
+                            display="calendar"
+                            onChange={(date, selectedDate) => {
+                                setShowStartPicker(false);
+                                if (selectedDate) {
+                                setEvent({ ...event, event_date: selectedDate.toISOString() });
+                                }
+                            }}
+                            />
+                        )}
+
+                        {showEndPicker && (
+                            <DateTimePicker
+                            value={new Date()}
+                            mode="date"
+                            display="calendar"
+                            onChange={(date, selectedDate) => {
+                                setShowEndPicker(false);
+                                if (selectedDate) {
+                                setEvent({ ...event, end_date: selectedDate.toISOString() });
+                                }
+                            }}
+                            />
+                        )}
+                        </View>
                     </View>
 
                     <View style={styles.inputWrapper}>
                         <TextInput 
                             style={styles.wrapperInput}
-                            value={form.location}
-                            onChangeText={(val) => setForm({...form, location: val})}
+                            value={event.location_url}
+                            onChangeText={(val) => setEvent({...event, location_url: val})}
                         />
                     </View>
-                </View>
 
 
                 {/* CAPACITY & PRICE */}
@@ -217,8 +266,8 @@ export default function EditEventScreen({ navigation }) {
                             <TextInput 
                                 style={styles.wrapperInput}
                                 keyboardType="numeric"
-                                value={form.capacity} 
-                                onChangeText={(val) => setForm({...form, capacity: val})}
+                                value={String(event.max_attendees)} 
+                                onChangeText={(val) => setEvent({...event, max_attendees: Number(val)})}
                             />
                         </View>
                         <View style={[styles.inputWrapper, {flex: 1}]}>
@@ -226,8 +275,8 @@ export default function EditEventScreen({ navigation }) {
                             <TextInput 
                                 style={[styles.wrapperInput, {marginLeft: 5}]}
                                 keyboardType="numeric"
-                                value={form.price} 
-                                onChangeText={(val) => setForm({...form, price: val})}
+                                value="20"
+                                // onChangeText={(val) => setForm({...form, price: val})}
                             />
                         </View>
                     </View>

@@ -2,29 +2,27 @@ import React from "react";
 import { View, StyleSheet, Text, TouchableOpacity } from "react-native";
 import { Colors } from "../constants/theme";
 import { Users, MessageSquare, TrendingUp } from 'lucide-react-native';
+import { ICreateEvent } from "@/axios/dto/eventModel";
+import { useRouter } from "expo-router";
 
-interface HostEventItemProps {
-    title: string;
-    status: 'Live' | 'Draft' | 'Complete';
-    attendees: string;
-    rating?: string;
-    checkins?: string;
+interface HostItem{
+    event: ICreateEvent
 }
-
-const HostEventItem = ({ title, status, attendees, rating, checkins }: HostEventItemProps) => {
+const HostEventItem = (event: HostItem) => {
     const statusColors = {
-        Live: '#28a745',
-        Draft: '#ffc107',
-        Complete: '#6c757d',
-    };
+    "LIVE": '#28a745',
+    "DRAFT": '#ffc107',
+    "COMPLETED": '#6c757d',
+};
+const router = useRouter();
 
     return (
         <View style={styles.card}>
         {/* Top Row: Title and Status */}
         <View style={styles.headerRow}>
-            <Text style={styles.title} numberOfLines={1}>{title}</Text>
-            <View style={[styles.statusBadge, { backgroundColor: statusColors[status] }]}>
-            <Text style={styles.statusText}>{status}</Text>
+            <Text style={styles.title} numberOfLines={1}>{event.event.title}</Text>
+            <View style={[styles.statusBadge, { backgroundColor: statusColors[event.event.status as keyof typeof statusColors]}]}>
+            <Text style={styles.statusText}>{event.event.status}</Text>
             </View>
         </View>
 
@@ -32,35 +30,40 @@ const HostEventItem = ({ title, status, attendees, rating, checkins }: HostEvent
         <View style={styles.detailsRow}>
             <Text style={styles.detailsLabel}>Details</Text>
             
-            {checkins && (
+            {event.event.status && (
             <View style={styles.stat}>
                 <TrendingUp size={14} color="#666" />
-                <Text style={styles.statValue}>{checkins}</Text>
+                <Text style={styles.statValue}>{event.event.status}</Text>
             </View>
             )}
             
-            {rating && (
+            {event.event.max_attendees && (
             <View style={styles.stat}>
                 <MessageSquare size={14} color="#666" />
-                <Text style={styles.statValue}>{rating}</Text>
+                <Text style={styles.statValue}>{event.event.max_attendees}</Text>
             </View>
             )}
 
             <View style={styles.stat}>
             <Users size={14} color="#666" />
-            <Text style={styles.statValue}>{attendees}</Text>
+            <Text style={styles.statValue}>{event.event.max_attendees}</Text>
             </View>
         </View>
 
         {/* Actions Row: Buttons */}
         <View style={styles.buttonRow}>
-            <TouchableOpacity style={styles.secondaryButton}>
+            <TouchableOpacity 
+                style={styles.secondaryButton}
+                onPress={()=>router.push({
+                    pathname: '/EditEventScreen',
+                    params: {id:event.event.id}
+                })}>
             <Text style={styles.secondaryButtonText}>Edit</Text>
             </TouchableOpacity>
             
             <TouchableOpacity style={styles.primaryButton}>
             <Text style={styles.primaryButtonText}>
-                {status === 'Draft' ? 'View Vendors' : 'View Attendees'}
+                {event.event.status === 'Draft' ? 'View Vendors' : 'View Attendees'}
             </Text>
             </TouchableOpacity>
         </View>

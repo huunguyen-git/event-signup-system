@@ -1,4 +1,3 @@
-import React from "react";
 import {View,StyleSheet,TextInput,Text} from "react-native"
 import {MaterialCommunityIcons} from "@expo/vector-icons"
 import {Colors} from "../../constants/theme"
@@ -6,10 +5,24 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { FlatList} from "react-native-gesture-handler";
 import MyEventItem from "@/components/MyEventItem";
 import { Stack } from "expo-router";
-import { DashBoardData } from "../../scripts/data";
+import React,{ useState,useEffect } from "react";
+import { EventService } from "../../axios/eventService";
+import { ICreateEvent } from "../../axios/dto/eventModel"
 
 const DashBoardScreen = () =>{
-    
+    const [data, setData] = useState<ICreateEvent[]>([]);
+    useEffect(() =>{
+        const fetchData = async ()=>{
+            try{
+                const data = await EventService.getEvents();
+                setData(data);
+            }
+            catch(error){
+                console.error("Error fetching data:", error);
+            }
+        }
+        fetchData();
+    }, [])
     return <>
     <Stack.Screen options={{ headerShown: false }} />
     <SafeAreaView style={styles.container}>
@@ -28,17 +41,14 @@ const DashBoardScreen = () =>{
             </View>
             <View style ={styles.headerBody}>
                 <Text style={styles.upcomingEvent}>My Event</Text>
-                <Text style={styles.eventCount}>Total Event: {DashBoardData.length}</Text>
+                <Text style={styles.eventCount}>Total Event: {data?.length}</Text>
             </View>
             
             <FlatList          
-                data={DashBoardData}
+                data={data}
                 renderItem={({ item }) => (
               <MyEventItem 
-                eventCategory={item.eventCategory}
-                eventName={item.eventName}
-                eventDate={item.eventDate}
-                eventStatus={item.eventStatus}
+                    event={item}
               />
             )}
             keyExtractor={(item) => item.id}/>

@@ -1,13 +1,16 @@
 import React from "react";
 import {View,StyleSheet,Image,Text,TouchableOpacity} from "react-native"
 import {Colors} from "../constants/theme"
+import { useRouter } from "expo-router";
  
 interface EventItemProps {
   eventName: string;
   eventDate: string;
 }
 const EventItem = ({ eventName, eventDate }: EventItemProps) =>{
-    return <View style={styles.container}>
+    const router = useRouter();
+    return <TouchableOpacity onPress={()=> router.push("/EventDetailsScreen")}>
+    <View style={styles.container}>
         <Image source={require('../assets/images/icon.png')} style={styles.eventImage}/>
         <View style={styles.event}>
             <Text style={styles.eventName}>{eventName}</Text>
@@ -17,6 +20,7 @@ const EventItem = ({ eventName, eventDate }: EventItemProps) =>{
             </TouchableOpacity>
         </View>
     </View>
+    </TouchableOpacity> 
 };
 export default EventItem;
 const styles = StyleSheet.create({

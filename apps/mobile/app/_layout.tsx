@@ -11,7 +11,7 @@ export default function RootLayout() {
                 headerTintColor: Colors.color.white,
             }}>
                 <Stack.Screen name="(Auth)/LoginScreen" options={{ headerShown: false }}/>
-                <Stack.Screen name="(tabs)" options={{ headerShown: false }}/>
+                <Stack.Screen name="(attendee)" options={{ headerShown: false }}/>
             </Stack>
         </GestureHandlerRootView>
     )

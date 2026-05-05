@@ -2,18 +2,16 @@ import { useState } from "react";
 import { StyleSheet, View, Text, TextInput, TouchableOpacity, ScrollView, KeyboardAvoidingView, Platform, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../../constants/theme';
+import { EventService } from "../../axios/eventService.js";
 import * as ImagePicker from 'expo-image-picker'
-
+import DateTimePicker from "@react-native-community/datetimepicker";
+import { ICreateEvent } from "@/axios/dto/eventModel";
 
 export default function CreateEventScreen() {
-    const [image, setImage] = useState(null);
-    const [form, setForm] = useState({
-        title: '',
-        description: '',
-        location: '',
-        capacity: '',
-        price: '',
-    });
+    const [image, setImage] = useState('');
+    const [form, setForm] = useState<ICreateEvent>(new ICreateEvent());
+    const [showStartPicker, setShowStartPicker] = useState(false);
+    const [showEndPicker, setShowEndPicker] = useState(false);
 
     const pickImage = async () => {
         const result = await ImagePicker.launchImageLibraryAsync({
@@ -29,9 +27,14 @@ export default function CreateEventScreen() {
     }
 
     const handlePublish = () => {
-        console.log("Submitting to Backend:", form);
+        form.host_id="0c3a5974-2232-4e83-87db-942c0b410c1c";
+        form.allowed_domain="all";
+        form.created_at=new Date().toISOString();
+        form.form_config=JSON.stringify({});
+        form.banner_url=image;
+        console.log("Input UI",form);
+        EventService.createEvent(form);
     }
-
     const styles = createStyles();
 
     return (
@@ -106,22 +109,55 @@ export default function CreateEventScreen() {
                 <View style={styles.card}>
                     <Text style={styles.cardSectionTitle}>DATE & LOCATION</Text>
                     <View style={styles.selectorRow}>
-                        <TouchableOpacity style={styles.dateTimeSelector}>
+                        <TouchableOpacity
+                            style={styles.dateTimeSelector}
+                            onPress={() => setShowStartPicker(true)}>
                             <Ionicons name="calendar-clear-outline" size={18} color="#1a2a44" />
-                            <Text style={styles.selectorMainText}>Start Date</Text>
+                            <Text style={styles.selectorMainText}>{form.event_date ? form?.event_date : "Start Date"}</Text>
                         </TouchableOpacity>
-                        <TouchableOpacity style={styles.dateTimeSelector}>
-                            <Ionicons name="time-outline" size={18} color="#1a2a44" />
-                            <Text style={styles.selectorMainText}>End Time</Text>
-                        </TouchableOpacity>
-                    </View>
 
+                        {/* Nút chọn End Date */}
+                        <TouchableOpacity
+                            style={styles.dateTimeSelector}
+                            onPress={() => setShowEndPicker(true)}
+                        >
+                            <Ionicons name="time-outline" size={18} color="#1a2a44" />
+                            <Text style={styles.selectorMainText}>{form.end_date ? form?.end_date : "End Date"}</Text>
+                        </TouchableOpacity>
+                        {showStartPicker && (
+                            <DateTimePicker
+                            value={new Date()}
+                            mode="date"
+                            display="calendar"
+                            onChange={(event, selectedDate) => {
+                                setShowStartPicker(false);
+                                if (selectedDate) {
+                                setForm({ ...form, event_date: selectedDate.toISOString() });
+                                }
+                            }}
+                            />
+                        )}
+
+                        {showEndPicker && (
+                            <DateTimePicker
+                            value={new Date()}
+                            mode="date"
+                            display="calendar"
+                            onChange={(event, selectedDate) => {
+                                setShowEndPicker(false);
+                                if (selectedDate) {
+                                setForm({ ...form, end_date: selectedDate.toISOString() });
+                                }
+                            }}
+                            />
+                        )}
+                        </View>
                     <View style={styles.inputWrapper}>
                         <TextInput 
                             style={styles.wrapperInput}
                             placeholder="Venue / Location"
                             placeholderTextColor='#BBB'
-                            onChangeText={(val) => setForm({...form, location: val})}
+                            onChangeText={(val) => setForm({...form, location_url: val})}
                         />
                     </View>
                 </View>
@@ -137,7 +173,7 @@ export default function CreateEventScreen() {
                                 placeholder="Capacity"
                                 placeholderTextColor='#BBB'
                                 keyboardType="numeric"
-                                onChangeText={(val) => setForm({...form, capacity: val})}
+                                onChangeText={(val) => setForm({...form, max_attendees: Number(val)})}
                             />
                         </View>
                         <View style={[styles.inputWrapper, {flex: 1}]}>
@@ -147,7 +183,6 @@ export default function CreateEventScreen() {
                                 placeholder="Price"
                                 placeholderTextColor='#BBB'
                                 keyboardType="numeric"
-                                onChangeText={(val) => setForm({...form, price: val})}
                             />
                         </View>
                     </View>

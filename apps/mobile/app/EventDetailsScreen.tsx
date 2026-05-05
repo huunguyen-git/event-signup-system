@@ -1,6 +1,6 @@
 import { FontAwesome5, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
-import React from 'react';
+import { useRouter, useLocalSearchParams } from 'expo-router';
+import React, { useState, useEffect} from 'react';
 import {
   Image,
   Platform,
@@ -15,6 +15,8 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Colors } from '../constants/theme';
+import { EventService } from '@/axios/eventService';
+import { ICreateEvent } from '@/axios/dto/eventModel';
 
 // Dữ liệu mẫu
 const speakers = [
@@ -35,7 +37,17 @@ export default function EventDetailsScreen() {
   const router = useRouter();
   const themeColor = Colors.light.tint; // Màu Navy
   const EVENT_LOCATION = "Gigamall, 240-242 Phạm Văn Đồng, Hiệp Bình Chánh, Thủ Đức, Hồ Chí Minh";
-
+  const {id} = useLocalSearchParams();
+  const [eventData,setEventData] = useState<ICreateEvent|null>(null);
+  useEffect(()=>{
+    if(id){
+      const fetchData = async ()=>{
+        const data = await EventService.getEvent(id);
+        setEventData(data);
+      };
+      fetchData();
+    }
+  },[id])
   const handleOpenMap = () => {
     const encodedLocation = encodeURIComponent(EVENT_LOCATION);
     const url = Platform.select({
@@ -70,21 +82,20 @@ export default function EventDetailsScreen() {
 
       <ScrollView contentContainerStyle={styles.scrollBody} showsVerticalScrollIndicator={false}>
         <Image
-          source={{ uri: 'https://uploads-ssl.webflow.com/6238fb9311591cfbce305e81/6272115ac02a5c7c4b7c78b4_CEG-open-graph.jpeg' }}
+          source={ eventData?.banner_url ? {uri: eventData.banner_url} : require('../assets/images/icon.png') }
           style={styles.banner}
         />
 
         <View style={styles.content}>
-          <Text style={[styles.mainTitle, { color: themeColor }]}>International Tech Summit 2024</Text>
+          <Text style={[styles.mainTitle, { color: themeColor }]}>{eventData?.title}</Text>
 
           <View style={styles.infoRow}>
             <MaterialCommunityIcons name="calendar-month" size={28} color={themeColor} />
             <View style={styles.infoTextGroup}>
               <Text style={styles.infoLabel}>Event Timeline (Time & Date)</Text>
-              <Text style={styles.infoValue}>October 12-14, 2026 | 9:00 AM - 5:00 PM</Text>
+              <Text style={styles.infoValue}>{eventData?.event_date}</Text>
             </View>
           </View>
-
           <View style={styles.infoRow}>
             <Ionicons name="location-sharp" size={28} color={themeColor} />
             <View style={styles.infoTextGroup}>
@@ -159,7 +170,7 @@ export default function EventDetailsScreen() {
       <View style={styles.footer}>
         <TouchableOpacity
             style={[styles.regBtn, { backgroundColor: themeColor }]}
-            onPress={() => router.push('/registration_form')}
+            onPress={() => router.push('/RegistrationFormScreen')}
         >
           <Text style={styles.regBtnText}>REGISTER NOW</Text>
         </TouchableOpacity>

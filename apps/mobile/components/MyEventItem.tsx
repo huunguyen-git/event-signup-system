@@ -1,20 +1,29 @@
 import React from "react";
 import {View,StyleSheet,Image,Text,TouchableOpacity} from "react-native"
 import {Colors} from "../constants/theme"
- 
-interface EventItemProps {
-    eventCategory: string;
-    eventName: string;
-    eventDate: string;
-    eventStatus?: string;
+import { useRouter } from "expo-router"
+import { ICreateEvent } from "@/axios/dto/eventModel";
+
+interface EventItem{
+    event: ICreateEvent;
 }
-const MyEventItem = ({ eventCategory, eventName, eventDate, eventStatus }: EventItemProps) =>{
-    return <TouchableOpacity style={styles.container}>
-        <Image source={require('../assets/images/icon.png')} style={styles.eventImage}/>
+const MyEventItem = (event: EventItem) =>{
+    const router = useRouter();
+    const handleEventDetails = () => {
+        console.log(event.event.id);
+        router.push({
+            pathname: "/EventDetailsScreen",
+            params: {id: event.event.id},
+        })
+    };
+    console.log(event.event.banner_url);
+    return <TouchableOpacity style={styles.container}
+                            onPress={handleEventDetails}>
+        <Image source={{ uri: event.event.banner_url }} style={styles.eventImage}/>
         <View style={styles.event}>
-            <Text style={styles.eventName}>{eventCategory}: {eventName}</Text>
-            <Text style={styles.eventDate}>{eventDate}</Text>
-            {eventStatus && <Text style={styles.eventStatus}>{eventStatus}</Text>}
+            <Text style={styles.eventName}>{event.event.title}</Text>
+            <Text style={styles.eventDate}>{event.event.event_date}</Text>
+            {event.event.status && <Text style={styles.eventStatus}>{event.event.status}</Text>}
 
         </View>
     </TouchableOpacity>

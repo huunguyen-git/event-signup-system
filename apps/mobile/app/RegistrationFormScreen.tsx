@@ -103,7 +103,7 @@ export default function RegistrationFormScreen() {
                             style={[styles.completeBtn, { backgroundColor: themeColor, opacity: agreed ? 1 : 0.5 }]}
                             disabled={!agreed}
                             onPress={() => router.replace({
-                                pathname: '/success',
+                                pathname: '/SuccessScreen',
                                 params: { ticketType: ticketType }
                             })}
                         >
