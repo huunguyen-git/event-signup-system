@@ -16,13 +16,25 @@ const MyEventItem = (event: EventItem) =>{
             params: {id: event.event.id},
         })
     };
-    console.log(event.event.banner_url);
+    const eventDate = new Date(event.event.event_date);
+
+    const datePart = new Intl.DateTimeFormat('vi-VN', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    }).format(eventDate);
+
+    const timePart = new Intl.DateTimeFormat('vi-VN', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false
+    }).format(eventDate);
     return <TouchableOpacity style={styles.container}
                             onPress={handleEventDetails}>
         <Image source={{ uri: event.event.banner_url }} style={styles.eventImage}/>
         <View style={styles.event}>
             <Text style={styles.eventName}>{event.event.title}</Text>
-            <Text style={styles.eventDate}>{event.event.event_date}</Text>
+            <Text style={styles.eventDate}>{datePart} - {timePart}</Text>
             {event.event.status && <Text style={styles.eventStatus}>{event.event.status}</Text>}
 
         </View>

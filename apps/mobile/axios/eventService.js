@@ -25,9 +25,6 @@ export const EventService = {
                 if (key === 'max_attendees') {
                     value = parseInt(value).toString();
                 }
-                // if (key === 'form_config') {
-                //     value = JSON.stringify(value);
-                // }
                 
                 formData.append(key, value);
     }

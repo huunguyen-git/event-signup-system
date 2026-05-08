@@ -1,11 +1,13 @@
 import { MaterialCommunityIcons, Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
-import React, { useState } from 'react';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import React, { use, useEffect, useState } from 'react';
 import {
     KeyboardAvoidingView, Platform, ScrollView, StyleSheet,
     Text, TextInput, TouchableOpacity, View, Modal
 } from 'react-native';
 import { Colors } from '../constants/theme';
+import { ICreateEvent } from '@/axios/dto/eventModel';
+import { EventService } from '@/axios/eventService';
 
 export default function RegistrationFormScreen() {
     const router = useRouter();
@@ -17,6 +19,59 @@ export default function RegistrationFormScreen() {
     const [showTicketPicker, setShowTicketPicker] = useState(false);
     const [showTerms, setShowTerms] = useState(false);
     const [showPrivacy, setShowPrivacy] = useState(false);
+    const [showCustomQuestionModal, setShowCustomQuestionModal] = useState(false);
+    const {host_id, title, description, event_date, end_date, location_url, max_attendees, banner_url, created_at, form_config, allowed_domain, status } = useLocalSearchParams();
+    const [data,setData] = useState<ICreateEvent>(new ICreateEvent());
+    useEffect(()=>{
+        const fetchData = async ()=>{
+            setData({
+                ...data,
+                host_id: host_id as string,
+                title: title as string,
+                description: description as string,
+                event_date: event_date as string,
+                end_date: end_date as string,
+                location_url: location_url as string,
+                max_attendees: parseInt(max_attendees as string),
+                banner_url: banner_url as string,
+                created_at: created_at as string,
+                allowed_domain: allowed_domain as string,
+                status: status as string
+            });
+        }
+        fetchData();
+    },[]);
+
+    const [customQuestions, setCustomQuestions] = useState<any[]>([]);
+    const [question,setQuestion] = useState("");
+    const handleSaveCustomQuestion = () => {
+        const newQuestion = {
+            id: Date.now().toString(),
+            question: question
+        };
+        setCustomQuestions([...customQuestions, newQuestion]);
+        setData({
+            ...data,
+            form_config: JSON.stringify(customQuestions)
+        })
+        setShowCustomQuestionModal(false);
+        setQuestion("");
+    }
+
+    const handleCanelCustomQuestion = () => {
+        setShowCustomQuestionModal(false);
+        setQuestion("");
+    }
+
+    const handleCreateEvent = () => {
+        try{
+            console.log("du lieu dang ki:", data);
+            EventService.createEvent(data);
+        }
+        catch(error){
+            console.error("Error creating event:", error);
+        }
+    }
 
     const ticketOptions = [
         { id: '1', name: 'Standard Pass' },
@@ -50,11 +105,53 @@ export default function RegistrationFormScreen() {
             </View>
         </Modal>
     );
-
+    
     return (
         <View style={styles.overlayContainer}>
             <TouchableOpacity style={styles.dismissArea} onPress={() => router.back()} />
+            <TouchableOpacity style={{  position:'absolute', top: 30, right: 30 }} onPress={() => setShowCustomQuestionModal(true) }>
+                <MaterialCommunityIcons name="access-point-check" size={40} color='black' />
+            </TouchableOpacity>
+            <Modal visible={showCustomQuestionModal} transparent animationType="slide">
+                <View style={styles.modalOverlay}>
+                    <View style={styles.questionCard}>
+                        <View style={styles.cardHeader}>
+                            <Ionicons name="create-outline" size={22} color={themeColor} />
+                            <Text style={styles.cardTitle}>Thêm câu hỏi mới</Text>
+                        </View>
+                        
+                        <Text style={styles.cardSubtitle}>Nội dung này sẽ xuất hiện trong form đăng ký của người tham gia.</Text>
 
+                        <View style={styles.textAreaWrapper}>
+                            <TextInput 
+                                value={question}
+                                style={styles.textArea} 
+                                onChangeText={(text) => setQuestion(text)}
+                                placeholder="VD: Bạn có chế độ ăn kiêng đặc biệt nào không?" 
+                                placeholderTextColor="#999"
+                                multiline
+                                numberOfLines={4}
+                            />
+                        </View>
+
+                        <View style={styles.buttonGroup}>
+                            <TouchableOpacity 
+                                style={styles.secondaryBtn} 
+                                onPress={handleCanelCustomQuestion}
+                            >
+                                <Text style={styles.secondaryBtnText}>HỦY</Text>
+                            </TouchableOpacity>
+
+                            <TouchableOpacity 
+                                style={[styles.primaryBtn, { backgroundColor: themeColor }]} 
+                                onPress={handleSaveCustomQuestion}
+                            >
+                                <Text style={styles.primaryBtnText}>LƯU CÂU HỎI</Text>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                </View>
+            </Modal>
             <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
                 <View style={styles.modalCard}>
                     <Text style={styles.eventSmallTitle}>International Tech Summit 2024</Text>
@@ -78,7 +175,10 @@ export default function RegistrationFormScreen() {
                         </View>
                         <InputField label="Company Email" placeholder="nguyenvana@gmail.com" />
                         <InputField label="Job Title" placeholder="Software Engineer" />
-
+                        {customQuestions.map((q) => (
+                            <InputField key={q.id} label={q.question} placeholder="Your answer here..." />
+                        ))}
+                        
                         <View style={styles.checkboxRow}>
                             <TouchableOpacity onPress={() => setAgreed(!agreed)}>
                                 <MaterialCommunityIcons
@@ -102,10 +202,11 @@ export default function RegistrationFormScreen() {
                         <TouchableOpacity
                             style={[styles.completeBtn, { backgroundColor: themeColor, opacity: agreed ? 1 : 0.5 }]}
                             disabled={!agreed}
-                            onPress={() => router.replace({
-                                pathname: '/SuccessScreen',
-                                params: { ticketType: ticketType }
-                            })}
+                            // onPress={() => router.replace({
+                            //     pathname: '/SuccessScreen',
+                            //     params: { ticketType: ticketType }
+                            // })}
+                            onPress={handleCreateEvent}
                         >
                             <Text style={styles.completeBtnText}>COMPLETE REGISTRATION</Text>
                         </TouchableOpacity>
@@ -153,6 +254,86 @@ export default function RegistrationFormScreen() {
 }
 
 const styles = StyleSheet.create({
+   modalOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0, 0, 0, 0.6)', // Làm tối nền để tập trung vào box
+        justifyContent: 'center',
+        padding: 20,
+    },
+    questionCard: {
+        backgroundColor: '#FFF',
+        borderRadius: 24,
+        padding: 24,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 10 },
+        shadowOpacity: 0.1,
+        shadowRadius: 20,
+        elevation: 10,
+    },
+    cardHeader: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 10,
+    },
+    cardTitle: {
+        fontSize: 18,
+        fontWeight: '700',
+        color: '#1A1A1A',
+        marginLeft: 8,
+    },
+    cardSubtitle: {
+        fontSize: 13,
+        color: '#777',
+        lineHeight: 18,
+        marginBottom: 20,
+    },
+    // Ô nhập liệu dạng Text Area
+    textAreaWrapper: {
+        backgroundColor: '#F8F9FA',
+        borderRadius: 16,
+        borderWidth: 1,
+        borderColor: '#E9ECEF',
+        paddingHorizontal: 15,
+        paddingVertical: 12,
+        marginBottom: 25,
+    },
+    textArea: {
+        fontSize: 15,
+        color: '#333',
+        height: 100,
+        textAlignVertical: 'top', // Quan trọng cho Android để chữ nằm trên cùng
+    },
+    // Cụm nút bấm
+    buttonGroup: {
+        flexDirection: 'row',
+        justifyContent: 'flex-end',
+        alignItems: 'center',
+    },
+    secondaryBtn: {
+        paddingVertical: 12,
+        paddingHorizontal: 20,
+        marginRight: 8,
+    },
+    secondaryBtnText: {
+        color: '#999',
+        fontWeight: '600',
+        fontSize: 14,
+    },
+    primaryBtn: {
+        paddingVertical: 12,
+        paddingHorizontal: 24,
+        borderRadius: 14,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.2,
+        shadowRadius: 5,
+        elevation: 3,
+    },
+    primaryBtnText: {
+        color: '#FFF',
+        fontWeight: 'bold',
+        fontSize: 14,
+    },
     overlayContainer: { flex: 1, backgroundColor: 'rgba(0,0,0,0.6)', justifyContent: 'center', padding: 20 },
     dismissArea: { ...StyleSheet.absoluteFillObject },
     modalCard: { backgroundColor: 'white', borderRadius: 30, padding: 25, elevation: 20 },

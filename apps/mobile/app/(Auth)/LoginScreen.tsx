@@ -48,7 +48,7 @@ const LoginScreen = () =>{
                     </TouchableOpacity>
                 </View>
             </View>
-            <TouchableOpacity style={styles.loginButton} onPress={()=> router.push("/DashBoardScreen")}>
+            <TouchableOpacity style={styles.loginButton} onPress={()=> router.push("/HostDashBoardScreen")}>
                 <Text style={styles.loginButtonText}>LOGIN</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.forgotButton } onPress={()=> router.push("/ForgotPasswordScreen")}>

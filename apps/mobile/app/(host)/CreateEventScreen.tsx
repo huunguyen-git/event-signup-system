@@ -6,12 +6,14 @@ import { EventService } from "../../axios/eventService.js";
 import * as ImagePicker from 'expo-image-picker'
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { ICreateEvent } from "@/axios/dto/eventModel";
+import { useRouter } from "expo-router";
 
 export default function CreateEventScreen() {
     const [image, setImage] = useState('');
     const [form, setForm] = useState<ICreateEvent>(new ICreateEvent());
     const [showStartPicker, setShowStartPicker] = useState(false);
     const [showEndPicker, setShowEndPicker] = useState(false);
+    const router = useRouter();
 
     const pickImage = async () => {
         const result = await ImagePicker.launchImageLibraryAsync({
@@ -32,8 +34,28 @@ export default function CreateEventScreen() {
         form.created_at=new Date().toISOString();
         form.form_config=JSON.stringify({});
         form.banner_url=image;
-        console.log("Input UI",form);
-        EventService.createEvent(form);
+        form.status="DRAFT";
+        console.log("du lieu create event", form);
+        console.log("du lieu dang ki:", form.status);
+        router.push({
+            pathname: '/RegistrationFormScreen',
+            params: {
+                host_id: form.host_id,
+                title: form.title,
+                description: form.description,
+                event_date: form.event_date,
+                end_date: form.end_date,
+                location_url: form.location_url,
+                max_attendees: form.max_attendees,
+                banner_url: form.banner_url,
+                created_at: form.created_at,
+                form_config: form.form_config,
+                allowed_domain: form.allowed_domain,
+                status: form.status
+            }
+        })
+        
+        // EventService.createEvent(form);
     }
     const styles = createStyles();
 
