@@ -1,16 +1,38 @@
 import React,{ useState } from "react";
-import {View,StyleSheet,TextInput,Text,TouchableOpacity} from "react-native"
-import {MaterialCommunityIcons} from "@expo/vector-icons"
-import {Colors} from "../../constants/theme"
+import { View, StyleSheet, TextInput, Text, TouchableOpacity, Alert, ActivityIndicator } from "react-native"
+import { MaterialCommunityIcons } from "@expo/vector-icons"
+import { Colors } from "../../constants/theme"
 import { SafeAreaView } from 'react-native-safe-area-context';
 import HeaderText from "@/components/HeaderText";
 import { useRouter } from "expo-router";
+import { authApi } from "@/services/api";
+import { saveToken } from "@/services/storage";
+
 const LoginScreen = () =>{
 
-    const [username, setUsername] = useState("");
+    const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [showPassword, setShowPassword] = useState(false);
+    const [loading, setLoading] = useState(false);
     const router = useRouter();
+
+    const handleLogin = async () => {
+        if (!email || !password) {
+            Alert.alert('Error', 'Please enter your email and password');
+            return;
+        }
+
+        try {
+            setLoading(true);
+            const res = await authApi.login({ email, password });
+            await saveToken(res.access_token);
+            router.replace("/HomeScreen");
+        } catch (err: any) {
+            Alert.alert('Login Failed', err?.message || 'Invalid email or password');
+        } finally {
+            setLoading(false);
+        }
+    }
 
     return <SafeAreaView style={styles.container}>
         <View style={styles.header}>
@@ -24,10 +46,10 @@ const LoginScreen = () =>{
                 <View style={styles.inputContainer}>
                     <MaterialCommunityIcons name="account-outline" size={40} color={Colors.color.placeholder}/>
                     <TextInput 
-                        placeholder="UserName / Email"
+                        placeholder="Email"
                         placeholderTextColor={Colors.color.placeholder}
-                        value={username}
-                        onChangeText={(value) => setUsername(value)}
+                        value={email}
+                        onChangeText={(value) => setEmail(value)}
                         style={styles.textInput}/>
                 </View>
             </View>
@@ -48,8 +70,14 @@ const LoginScreen = () =>{
                     </TouchableOpacity>
                 </View>
             </View>
-            <TouchableOpacity style={styles.loginButton} onPress={()=> router.push("/HomeScreen")}>
-                <Text style={styles.loginButtonText}>LOGIN</Text>
+            <TouchableOpacity 
+                style={styles.loginButton} 
+                onPress={handleLogin}
+                disabled={loading}
+            >
+                {loading
+                    ? <ActivityIndicator color={Colors.color.white} />
+                    : <Text style={styles.loginButtonText}>LOGIN</Text>}
             </TouchableOpacity>
             <TouchableOpacity style={styles.forgotButton } onPress={()=> router.push("/ForgotPasswordScreen")}>
                 <Text style={styles.forgotButtonText}>Forget password?</Text>
