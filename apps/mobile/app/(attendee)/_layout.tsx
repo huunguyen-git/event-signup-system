@@ -10,6 +10,7 @@ export default function TabLayout(){
             tabBarInactiveTintColor: Colors.color.placeholder,
             tabBarStyle: {height: 60, paddingBottom: 10},
         }}>
+          <Tabs.Screen name="SavedScreen" options={{href: null}}/>
           <Tabs.Screen name="HomeScreen" options={{
             title: "Home",
             tabBarIcon: ({color}) => <Ionicons name="home" size={30} color={color}/>
@@ -22,8 +23,8 @@ export default function TabLayout(){
             title: "Scan QR",
             tabBarIcon: ({color}) => <Ionicons name="qr-code" size={30} color={color}/>
           }}/>
-          <Tabs.Screen name="SavedScreen" options={{
-            title: "Saved",
+          <Tabs.Screen name="HostDashBoardScreen" options={{
+            title: "My Events",
             tabBarIcon: ({color}) => <Ionicons name="heart" size={30} color={color}/>
           }}/>
           <Tabs.Screen name="AccountScreen" options={{

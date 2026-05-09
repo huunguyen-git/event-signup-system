@@ -3,7 +3,7 @@ import {View,StyleSheet,Image,Text,TouchableOpacity} from "react-native"
 import {MaterialCommunityIcons} from "@expo/vector-icons"
 import {Colors} from "../../constants/theme"
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Stack } from "expo-router";
+import { router, Stack } from "expo-router";
 const HomeScreen = () =>{
 
     return <>
@@ -87,14 +87,14 @@ const HomeScreen = () =>{
                     <Text style={styles.activityTitle}>Change Password</Text>
                 </View>
             </View>
-            <View style={styles.activityItem}>
+            <TouchableOpacity style={styles.activityItem} onPress={()=>router.push("/LoginScreen")}>
                 <View style={styles.activityIcon}>
                     <MaterialCommunityIcons name="logout" size={30} color={Colors.color.primary} style={{backgroundColor: Colors.color.lightblue, borderRadius: 20}}/>
                 </View>
                 <View>
                     <Text style={styles.activityTitle}>Log out</Text>
                 </View>
-            </View>
+            </TouchableOpacity>
         </View>
     </SafeAreaView>
     </>

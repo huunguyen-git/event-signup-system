@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import {View,StyleSheet,TextInput,Text} from "react-native"
 import {MaterialCommunityIcons} from "@expo/vector-icons"
 import {Colors} from "../../constants/theme"
@@ -6,9 +6,22 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { FlatList } from "react-native-gesture-handler";
 import EventItem from "@/components/EventItem";
 import { Stack } from "expo-router";
-import { HomeData } from "../../scripts/data"; 
+import { ICreateEvent } from "@/axios/dto/eventModel";
+import { EventService } from "@/axios/eventService";
 const HomeScreen = () =>{
-    
+    const [data, setData] = useState<ICreateEvent[]>([]);
+        useEffect(() =>{
+            const fetchData = async ()=>{
+                try{
+                    const data = await EventService.getEvents();
+                    setData(data);
+                }
+                catch(error){
+                    console.error("Error fetching data:", error);
+                }
+            }
+            fetchData();
+        }, [])
     return <>
     <Stack.Screen options={{ headerShown: false }} />
     <SafeAreaView style={styles.container}>
@@ -30,11 +43,10 @@ const HomeScreen = () =>{
             </View>
             <Text style={styles.upcomingEvent}>Upcoming Event</Text>
             <FlatList          
-                data={HomeData}
+                data={data}
                 renderItem={({ item }) => (
               <EventItem 
-                eventName={item.eventName}
-                eventDate={item.eventDate}
+                event={item}
               />
             )}
             keyExtractor={(item) => item.id}/>
