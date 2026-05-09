@@ -2,25 +2,47 @@ import React from "react";
 import {View,StyleSheet,Image,Text,TouchableOpacity} from "react-native"
 import {Colors} from "../constants/theme"
 import { useRouter } from "expo-router";
+import { ICreateEvent } from "@/axios/dto/eventModel";
  
 interface EventItemProps {
-  eventName: string;
-  eventDate: string;
+  event: ICreateEvent;
 }
-const EventItem = ({ eventName, eventDate }: EventItemProps) =>{
+const EventItem = ({ event }: EventItemProps) =>{
     const router = useRouter();
-    return <TouchableOpacity onPress={()=> router.push("/EventDetailsScreen")}>
-    <View style={styles.container}>
-        <Image source={require('../assets/images/icon.png')} style={styles.eventImage}/>
-        <View style={styles.event}>
-            <Text style={styles.eventName}>{eventName}</Text>
-            <Text style={styles.eventDate}>{eventDate}</Text>
-            <TouchableOpacity style={styles.detailButton}>
-                <Text style={styles.detailButtonText}>View Details</Text>
-            </TouchableOpacity>
+
+    const handleEventDetails = () => {
+        console.log(event.id);
+        router.push({
+            pathname: "/EventDetailsScreen",
+            params: {id: event.id},
+        })
+    };
+    const eventdate = new Date(event.event_date);
+
+    const datePart = new Intl.DateTimeFormat('vi-VN', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    }).format(eventdate);
+
+    const timePart = new Intl.DateTimeFormat('vi-VN', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false
+    }).format(eventdate);
+
+    return <View>
+        <View style={styles.container}>
+            <Image source={event.banner_url ? { uri: event.banner_url } : require('../assets/images/icon.png')} style={styles.eventImage}/>
+            <View style={styles.event}>
+                <Text style={styles.eventName}>{event.title}</Text>
+                <Text style={styles.eventDate}>{datePart} - {timePart}</Text>
+                <TouchableOpacity style={styles.detailButton} onPress={handleEventDetails}>
+                    <Text style={styles.detailButtonText}>View Details</Text>
+                </TouchableOpacity>
+            </View>
         </View>
-    </View>
-    </TouchableOpacity> 
+    </View> 
 };
 export default EventItem;
 const styles = StyleSheet.create({

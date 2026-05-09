@@ -51,7 +51,8 @@ export default function CreateEventScreen() {
                 created_at: form.created_at,
                 form_config: form.form_config,
                 allowed_domain: form.allowed_domain,
-                status: form.status
+                status: form.status,
+                isCreate: "true",
             }
         })
         

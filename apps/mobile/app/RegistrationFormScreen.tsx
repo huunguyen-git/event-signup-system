@@ -20,30 +20,43 @@ export default function RegistrationFormScreen() {
     const [showTerms, setShowTerms] = useState(false);
     const [showPrivacy, setShowPrivacy] = useState(false);
     const [showCustomQuestionModal, setShowCustomQuestionModal] = useState(false);
-    const {host_id, title, description, event_date, end_date, location_url, max_attendees, banner_url, created_at, form_config, allowed_domain, status } = useLocalSearchParams();
+    const {host_id, title, description, event_date, end_date, location_url, max_attendees, banner_url, created_at, form_config, allowed_domain, status, isCreate } = useLocalSearchParams();
+    const { id, isRegister } = useLocalSearchParams();
     const [data,setData] = useState<ICreateEvent>(new ICreateEvent());
+    const [customQuestions, setCustomQuestions] = useState<any[]>([]);
+    const [question,setQuestion] = useState("");
+    const IsCreate = isCreate ? true : false;
+    const IsRegister = isRegister ? true : false;
     useEffect(()=>{
         const fetchData = async ()=>{
-            setData({
-                ...data,
-                host_id: host_id as string,
-                title: title as string,
-                description: description as string,
-                event_date: event_date as string,
-                end_date: end_date as string,
-                location_url: location_url as string,
-                max_attendees: parseInt(max_attendees as string),
-                banner_url: banner_url as string,
-                created_at: created_at as string,
-                allowed_domain: allowed_domain as string,
-                status: status as string
-            });
+            if(IsCreate){
+                setData({
+                    ...data,
+                    host_id: host_id as string,
+                    title: title as string,
+                    description: description as string,
+                    event_date: event_date as string,
+                    end_date: end_date as string,
+                    location_url: location_url as string,
+                    max_attendees: parseInt(max_attendees as string),
+                    banner_url: banner_url as string,
+                    created_at: created_at as string,
+                    allowed_domain: allowed_domain as string,
+                    status: status as string,
+                    form_config: form_config as string,
+                });
+            }
+            else if(IsRegister){
+                const event = await EventService.getEvent(id);
+                setData(event);
+                setCustomQuestions(JSON.parse(event.form_config || "[]"));
+            }
         }
         fetchData();
     },[]);
 
-    const [customQuestions, setCustomQuestions] = useState<any[]>([]);
-    const [question,setQuestion] = useState("");
+    
+    
     const handleSaveCustomQuestion = () => {
         const newQuestion = {
             id: Date.now().toString(),
@@ -58,7 +71,7 @@ export default function RegistrationFormScreen() {
         setQuestion("");
     }
 
-    const handleCanelCustomQuestion = () => {
+    const handleCancelCustomQuestion = () => {
         setShowCustomQuestionModal(false);
         setQuestion("");
     }
@@ -109,7 +122,7 @@ export default function RegistrationFormScreen() {
     return (
         <View style={styles.overlayContainer}>
             <TouchableOpacity style={styles.dismissArea} onPress={() => router.back()} />
-            <TouchableOpacity style={{  position:'absolute', top: 30, right: 30 }} onPress={() => setShowCustomQuestionModal(true) }>
+            <TouchableOpacity style={{  position:'absolute', top: 30, right: 30, visibility: IsCreate ? 'visible' : 'hidden'}} onPress={() => setShowCustomQuestionModal(true) }>
                 <MaterialCommunityIcons name="access-point-check" size={40} color='black' />
             </TouchableOpacity>
             <Modal visible={showCustomQuestionModal} transparent animationType="slide">
@@ -137,7 +150,7 @@ export default function RegistrationFormScreen() {
                         <View style={styles.buttonGroup}>
                             <TouchableOpacity 
                                 style={styles.secondaryBtn} 
-                                onPress={handleCanelCustomQuestion}
+                                onPress={handleCancelCustomQuestion}
                             >
                                 <Text style={styles.secondaryBtnText}>HỦY</Text>
                             </TouchableOpacity>

@@ -39,17 +39,36 @@ export default function EventDetailsScreen() {
   const EVENT_LOCATION = "Gigamall, 240-242 Phạm Văn Đồng, Hiệp Bình Chánh, Thủ Đức, Hồ Chí Minh";
   const {id} = useLocalSearchParams();
   const [eventData,setEventData] = useState<ICreateEvent|null>(null);
+  const [datePart, setDatePart] = useState("");
+  const [timePart, setTimePart] = useState("");
+  
   useEffect(()=>{
     if(id){
       const fetchData = async ()=>{
         const data = await EventService.getEvent(id);
         setEventData(data);
+        const eventdate = new Date(data.event_date);
+
+        const date = new Intl.DateTimeFormat('vi-VN', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        }).format(eventdate);
+
+        const time = new Intl.DateTimeFormat('vi-VN', {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false
+        }).format(eventdate);
+        setDatePart(date);
+        setTimePart(time);
       };
       fetchData();
     }
   },[id])
+  
   const handleOpenMap = () => {
-    const encodedLocation = encodeURIComponent(EVENT_LOCATION);
+    const encodedLocation = encodeURIComponent(eventData ? eventData.location_url : EVENT_LOCATION);
     const url = Platform.select({
       ios: `maps://0,0?q=${encodedLocation}`,
       android: `geo:0,0?q=${encodedLocation}`,
@@ -60,7 +79,15 @@ export default function EventDetailsScreen() {
   const handleShare = () => {
     Share.share({ message: `Tham gia International Tech Summit 2024 tại Gigamall cùng mình nhé!` });
   };
-
+  const handleRegister = () => {
+    router.push({
+      pathname: "/RegistrationFormScreen",
+      params: {
+        id: eventData?.id,
+        isRegister: "true",
+      }
+    });
+  };
   return (
     <View style={styles.container}>
       <SafeAreaView style={{ backgroundColor: 'white' }} edges={['top']} />
@@ -93,14 +120,14 @@ export default function EventDetailsScreen() {
             <MaterialCommunityIcons name="calendar-month" size={28} color={themeColor} />
             <View style={styles.infoTextGroup}>
               <Text style={styles.infoLabel}>Event Timeline (Time & Date)</Text>
-              <Text style={styles.infoValue}>{eventData?.event_date}</Text>
+              <Text style={styles.infoValue}>{datePart} - {timePart}</Text>
             </View>
           </View>
           <View style={styles.infoRow}>
             <Ionicons name="location-sharp" size={28} color={themeColor} />
             <View style={styles.infoTextGroup}>
               <Text style={styles.infoLabel}>Location</Text>
-              <Text style={styles.infoValue}>{EVENT_LOCATION}</Text>
+              <Text style={styles.infoValue}>{eventData?.location_url || EVENT_LOCATION}</Text>
             </View>
           </View>
 
@@ -170,7 +197,7 @@ export default function EventDetailsScreen() {
       <View style={styles.footer}>
         <TouchableOpacity
             style={[styles.regBtn, { backgroundColor: themeColor }]}
-            onPress={() => router.push('/RegistrationFormScreen')}
+            onPress={handleRegister}
         >
           <Text style={styles.regBtnText}>REGISTER NOW</Text>
         </TouchableOpacity>
