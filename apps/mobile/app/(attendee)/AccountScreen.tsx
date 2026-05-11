@@ -1,111 +1,156 @@
-import React from "react";
-import {View,StyleSheet,Image,Text,TouchableOpacity} from "react-native"
-import {MaterialCommunityIcons} from "@expo/vector-icons"
-import {Colors} from "../../constants/theme"
+import React, { useEffect, useState } from "react";
+import { View, StyleSheet, Image, Text, TouchableOpacity, Alert, ActivityIndicator, ScrollView } from "react-native"
+import { MaterialCommunityIcons } from "@expo/vector-icons"
+import { Colors } from "../../constants/theme"
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Stack } from "expo-router";
-const HomeScreen = () =>{
+import { Stack, useRouter } from "expo-router";
+import { userApi, authApi } from "@/services/api";
+import { getToken, removeToken } from "@/services/storage";
 
-    return <>
-    <Stack.Screen options={{ headerShown: false }} />
-    <SafeAreaView style={styles.container}>
-        <View style={styles.header}>
-            <MaterialCommunityIcons name="domain" size={40} color={Colors.color.white}/>
-            <Text style={styles.connect}> <Text style={styles.event}>EVENT </Text>CONNECT</Text>
-            <View style={styles.Icon}>
-            <MaterialCommunityIcons name="bell-outline" size={40} color={Colors.color.white}/>
-            <MaterialCommunityIcons name="account" size={40} color={Colors.color.primary} style={styles.accountIcon}/>
-            </View>
-        </View>
-        <View style={styles.body}>
-            <Text style={styles.profileOverview}>Profile Overview</Text>
-            <View style={styles.profileInfo}>
-                <Image source={require('../../assets/images/favicon.png')} style={styles.profileImage}/>
-                <View>
-                    <Text style={styles.profileName}>John Doe</Text>
-                    <Text style={styles.profileJob}>Event Organizer</Text>
-                    <View style={styles.profileButton}>
-                        <TouchableOpacity style={styles.editButton}>
-                            <Text style={styles.editButtonText}>Edit Profile</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity style={styles.editButton}>
-                            <Text style={styles.editButtonText}>View Profile</Text>
-                        </TouchableOpacity>
+type User = {
+    full_name: string;
+    email: string;
+    phone_number: string | null;
+    birthdate: string;
+    avatar_url: string | null;
+    created_at: string;
+};
+
+const AccountScreen = () => {
+    const [user, setUser] = useState<User | null>(null);
+    const [loading, setLoading] = useState(true);
+    const router = useRouter();
+
+    useEffect(() => {
+        const fetchUser = async () => {
+            try {
+                const token = await getToken();
+                if (token === null) {
+                    router.replace('/LoginScreen');
+                    return;
+                }
+                const data = await userApi.getMe(token!);
+                setUser(data);
+            } catch (e) {
+                Alert.alert('Error', 'Failed to load profile');
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchUser();
+    }, []);
+
+    const handleLogout = async () => {
+        Alert.alert('Log Out', 'Are you sure you want to log out?', [
+            { text: 'Cancel', style: 'cancel' },
+            {
+                text: 'Log Out',
+                style: 'destructive',
+                onPress: async () => {
+                    try {
+                        const token = await getToken();
+                        if (token != null) {
+                            await authApi.logout(token);
+                        }
+                    } catch (e) {
+                        // proceed with local logout even if server call fails
+                    } finally {
+                        await removeToken();
+                        router.replace('/LoginScreen');
+                    }
+                }
+            }
+        ]);
+    };
+
+    const formatDate = (dateStr: string) => {
+        return new Date(dateStr).toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+        });
+    };
+
+    return (
+        <>
+            <Stack.Screen options={{ headerShown: false }} />
+            <SafeAreaView style={styles.container}>
+                <View style={styles.header}>
+                    <MaterialCommunityIcons name="domain" size={40} color={Colors.color.white} />
+                    <Text style={styles.connect}><Text style={styles.event}>EVENT </Text>CONNECT</Text>
+                    <View style={styles.Icon}>
+                        <MaterialCommunityIcons name="bell-outline" size={40} color={Colors.color.white} />
                     </View>
                 </View>
-            </View>
-            <Text style={styles.profileOverview}>My Activity</Text>
-            <View style={styles.activityItem}>
-                <View style={styles.activityIcon}>
-                    <MaterialCommunityIcons name="ticket" size={30} color={Colors.color.primary} style={{backgroundColor: Colors.color.lightblue, borderRadius: 20}}/>
-                </View>
-                <View>
-                    <Text style={styles.activityTitle}>My Registrations</Text>
-                    <Text style={styles.activityText}>3 Upcoming, 1 Past</Text>
-                </View>
-            </View>
-            <View style={styles.activityItem}>
-                <View style={styles.activityIcon}>
-                    <MaterialCommunityIcons name="ticket-percent" size={30} color={Colors.color.primary} style={{backgroundColor: Colors.color.lightblue, borderRadius: 20}}/>
-                </View>
-                <View>
-                    <Text style={styles.activityTitle}>Purchased Tickets</Text>
-                    <Text style={styles.activityText}>Transaction History</Text>
-                </View>
-            </View>
-            <View style={styles.activityItem}>
-                <View style={styles.activityIcon}>
-                    <MaterialCommunityIcons name="handshake" size={30} color={Colors.color.primary} style={{backgroundColor: Colors.color.lightblue, borderRadius: 20}}/>
-                </View>
-                <View>
-                    <Text style={styles.activityTitle}>My Connections</Text>
-                    <Text style={styles.activityText}>32 Contacts Made</Text>
-                </View>
-            </View>
-            <View style={styles.activityItem}>
-                <View style={styles.activityIcon}>
-                    <MaterialCommunityIcons name="flag" size={30} color={Colors.color.primary} style={{backgroundColor: Colors.color.lightblue, borderRadius: 20}}/>
-                </View>
-                <View>
-                    <Text style={styles.activityTitle}>Saved Speaker</Text>
-                    <Text style={styles.activityText}>4 Total</Text>
-                </View>
-            </View>
-            <View style={styles.activityItem}>
-                <View style={styles.activityIcon}>
-                    <MaterialCommunityIcons name="cog" size={30} color={Colors.color.primary} style={{backgroundColor: Colors.color.lightblue, borderRadius: 20}}/>
-                </View>
-                <View>
-                    <Text style={styles.activityTitle}>Account Settings</Text>
-                </View>
-            </View>
-            <View style={styles.activityItem}>
-                <View style={styles.activityIcon}>
-                    <MaterialCommunityIcons name="key" size={30} color={Colors.color.primary} style={{backgroundColor: Colors.color.lightblue, borderRadius: 20}}/>
-                </View>
-                <View>
-                    <Text style={styles.activityTitle}>Change Password</Text>
-                </View>
-            </View>
-            <View style={styles.activityItem}>
-                <View style={styles.activityIcon}>
-                    <MaterialCommunityIcons name="logout" size={30} color={Colors.color.primary} style={{backgroundColor: Colors.color.lightblue, borderRadius: 20}}/>
-                </View>
-                <View>
-                    <Text style={styles.activityTitle}>Log out</Text>
-                </View>
-            </View>
-        </View>
-    </SafeAreaView>
-    </>
+
+                <ScrollView style={styles.body} contentContainerStyle={styles.bodyContent}>
+                    {loading ? (
+                        <ActivityIndicator size="large" color={Colors.color.primary} style={styles.loader} />
+                    ) : (
+                        <>
+                            {/* Avatar + Name */}
+                            <View style={styles.profileInfo}>
+                                <View style={styles.avatarContainer}>
+                                    {user?.avatar_url
+                                        ? <Image source={{ uri: user.avatar_url }} style={styles.profileImage} />
+                                        : <View style={styles.avatarFallback}>
+                                            <Text style={styles.avatarInitial}>
+                                                {user?.full_name?.charAt(0).toUpperCase() ?? '?'}
+                                            </Text>
+                                          </View>
+                                    }
+                                </View>
+                                <Text style={styles.profileName}>{user?.full_name}</Text>
+                                <Text style={styles.profileEmail}>{user?.email}</Text>
+                            </View>
+
+                            {/* Info Cards */}
+                            <View style={styles.infoCard}>
+                                <InfoRow icon="phone-outline" label="Phone" value={user?.phone_number ?? 'Not set'} />
+                                <InfoRow icon="calendar-outline" label="Birthdate" value={user?.birthdate ? formatDate(user.birthdate) : '-'} />
+                                <InfoRow icon="clock-outline" label="Member since" value={user?.created_at ? formatDate(user.created_at) : '-'} />
+                            </View>
+
+                            {/* Buttons */}
+                            <TouchableOpacity
+                                style={styles.editButton}
+                                onPress={() => router.push('./EditProfileScreen')}
+                            >
+                                <MaterialCommunityIcons name="account-edit-outline" size={20} color={Colors.color.white} />
+                                <Text style={styles.editButtonText}>Edit Profile</Text>
+                            </TouchableOpacity>
+
+                            <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+                                <MaterialCommunityIcons name="logout" size={20} color={Colors.color.primary} />
+                                <Text style={styles.logoutButtonText}>Log Out</Text>
+                            </TouchableOpacity>
+                        </>
+                    )}
+                </ScrollView>
+            </SafeAreaView>
+        </>
+    );
 };
-export default HomeScreen;
+
+// Small helper component for info rows
+const InfoRow = ({ icon, label, value }: { icon: any, label: string, value: string }) => (
+    <View style={styles.infoRow}>
+        <MaterialCommunityIcons name={icon} size={22} color={Colors.color.primary} />
+        <View style={styles.infoTextContainer}>
+            <Text style={styles.infoLabel}>{label}</Text>
+            <Text style={styles.infoValue}>{value}</Text>
+        </View>
+    </View>
+);
+
+export default AccountScreen;
+
 const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: Colors.color.white,
     },
-    header:{
+    header: {
         height: 60,
         alignItems: "center",
         backgroundColor: Colors.color.primary,
@@ -113,87 +158,124 @@ const styles = StyleSheet.create({
         gap: 10,
         paddingHorizontal: 10,
     },
-    connect:{
+    connect: {
         fontSize: 18,
         color: Colors.color.white,
     },
-    event:{
-        fontWeight: 700,
+    event: {
+        fontWeight: '700',
     },
-    accountIcon:{
-        height: 40,
-        backgroundColor: Colors.color.lightblue,
-        borderRadius: 20,
-    },
-    Icon:{
+    Icon: {
         flexDirection: "row",
-        gap:10,
+        gap: 10,
         alignItems: "center",
         marginLeft: "auto",
     },
-    body:{
-        backgroundColor: Colors.color.background,
+    body: {
         flex: 1,
-        padding:10,
+        backgroundColor: Colors.color.background,
     },
-    profileOverview:{
-        fontSize: 20,
-        fontWeight: "bold",
-        marginRight: "auto",
-        marginVertical: 10,
+    bodyContent: {
+        padding: 16,
+        alignItems: 'center',
     },
-    profileInfo:{
-        flexDirection: "row",
-        gap: 10,
-        alignItems: "center",
+    loader: {
+        marginTop: 60,
     },
-    profileImage:{
+    profileInfo: {
+        alignItems: 'center',
+        marginVertical: 20,
+    },
+    avatarContainer: {
+        marginBottom: 12,
+    },
+    profileImage: {
         height: 100,
         width: 100,
         borderRadius: 50,
-        marginRight:15,
     },
-    profileName:{
+    avatarFallback: {
+        height: 100,
+        width: 100,
+        borderRadius: 50,
+        backgroundColor: Colors.color.lightblue,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    avatarInitial: {
+        fontSize: 40,
+        fontWeight: 'bold',
+        color: Colors.color.primary,
+    },
+    profileName: {
         fontSize: 24,
         fontWeight: "bold",
+        color: Colors.color.text,
     },
-    profileJob:{
+    profileEmail: {
+        fontSize: 14,
+        color: Colors.color.placeholder,
+        marginTop: 4,
+    },
+    infoCard: {
+        width: '100%',
+        backgroundColor: Colors.color.white,
+        borderRadius: 12,
+        padding: 16,
+        marginBottom: 16,
+        gap: 12,
+        shadowColor: '#000',
+        shadowOpacity: 0.05,
+        shadowRadius: 4,
+        elevation: 2,
+    },
+    infoRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 12,
+    },
+    infoTextContainer: {
+        flex: 1,
+    },
+    infoLabel: {
+        fontSize: 12,
+        color: Colors.color.placeholder,
+    },
+    infoValue: {
         fontSize: 16,
         color: Colors.color.text,
+        fontWeight: '500',
     },
-    activityIcon:{
-        width: 40,
-        height: 40,
-        backgroundColor: Colors.color.lightblue,
-        borderRadius: 20,
-        justifyContent: "center",
-        alignItems: "center",
+    editButton: {
+        width: '100%',
+        height: 50,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: Colors.color.primary,
+        borderRadius: 30,
+        gap: 8,
+        marginBottom: 12,
     },
-    activityItem:{
-        flexDirection: "row",
-        gap: 10,
-        alignItems: "center",
-        marginBottom: 10,
+    editButtonText: {
+        color: Colors.color.white,
+        fontSize: 16,
+        fontWeight: '600',
     },
-    activityTitle:{
-        fontSize: 18,
-        fontWeight: "bold",
+    logoutButton: {
+        width: '100%',
+        height: 50,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        borderWidth: 1,
+        borderColor: Colors.color.primary,
+        borderRadius: 30,
+        gap: 8,
     },
-    activityText:{
-        fontSize: 14,
-        color: Colors.color.text,
+    logoutButtonText: {
+        color: Colors.color.primary,
+        fontSize: 16,
+        fontWeight: '600',
     },
-    editButton:{
-        backgroundColor: Colors.color.lightblue,
-        margin:5,
-        borderRadius:10,
-        padding:5,
-    },
-    editButtonText:{
-        color: Colors.color.text,
-        textAlign: "center",
-    },
-    profileButton:{
-        flexDirection: "row",
-    },
-}); 
+});

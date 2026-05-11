@@ -8,7 +8,7 @@ import { useRouter } from "expo-router";
 import { authApi } from "@/services/api";
 import { saveToken } from "@/services/storage";
 
-const LoginScreen = () =>{
+const LoginScreen = () => { 
 
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
@@ -34,66 +34,69 @@ const LoginScreen = () =>{
         }
     }
 
-    return <SafeAreaView style={styles.container}>
-        <View style={styles.header}>
-            <MaterialCommunityIcons name="domain" size={70} color={Colors.color.placeholder}/>
-            <HeaderText/>
-        </View>
-        <View style={styles.body}>
-            <Text style ={styles.welcomeText}>Welcome Back</Text>
-            <Text style = {styles.eventText}>Please log in to manage or attend events.</Text>
-            <View style={styles.input}>
-                <View style={styles.inputContainer}>
-                    <MaterialCommunityIcons name="account-outline" size={40} color={Colors.color.placeholder}/>
-                    <TextInput 
-                        placeholder="Email"
-                        placeholderTextColor={Colors.color.placeholder}
-                        value={email}
-                        onChangeText={(value) => setEmail(value)}
-                        style={styles.textInput}/>
-                </View>
+    return (
+        <SafeAreaView style={styles.container}>
+            <View style={styles.header}>
+                <MaterialCommunityIcons name="domain" size={70} color={Colors.color.placeholder}/>
+                <HeaderText/>
             </View>
-            <View style={styles.input}>
-                <View style={styles.inputContainer}>
-                    <MaterialCommunityIcons name="lock-outline" size={40} color={Colors.color.placeholder}/>
-                    <TextInput 
-                        placeholder="Password"
-                        placeholderTextColor={Colors.color.placeholder}
-                        secureTextEntry={!showPassword}
-                        value={password}
-                        onChangeText={(value) => setPassword(value)}
-                        style={styles.textInput}/>
-                    <TouchableOpacity 
-                        style={styles.eyeIcon}
-                        onPress={() => setShowPassword(!showPassword)}> 
-                        <MaterialCommunityIcons name={showPassword ? "eye" : "eye-off"} size={40} color={Colors.color.placeholder} />
-                    </TouchableOpacity>
+            <View style={styles.body}>
+                <Text style ={styles.welcomeText}>Welcome Back</Text>
+                <Text style = {styles.eventText}>Please log in to manage or attend events.</Text>
+                <View style={styles.input}>
+                    <View style={styles.inputContainer}>
+                        <MaterialCommunityIcons name="account-outline" size={40} color={Colors.color.placeholder}/>
+                        <TextInput 
+                            placeholder="Email"
+                            placeholderTextColor={Colors.color.placeholder}
+                            value={email}
+                            onChangeText={(value) => setEmail(value)}
+                            style={styles.textInput}/>
+                    </View>
                 </View>
+                <View style={styles.input}>
+                    <View style={styles.inputContainer}>
+                        <MaterialCommunityIcons name="lock-outline" size={40} color={Colors.color.placeholder}/>
+                        <TextInput 
+                            placeholder="Password"
+                            placeholderTextColor={Colors.color.placeholder}
+                            secureTextEntry={!showPassword}
+                            value={password}
+                            onChangeText={(value) => setPassword(value)}
+                            style={styles.textInput}/>
+                        <TouchableOpacity 
+                            style={styles.eyeIcon}
+                            onPress={() => setShowPassword(!showPassword)}> 
+                            <MaterialCommunityIcons name={showPassword ? "eye" : "eye-off"} size={40} color={Colors.color.placeholder} />
+                        </TouchableOpacity>
+                    </View>
+                </View>
+                <TouchableOpacity 
+                    style={styles.loginButton} 
+                    onPress={handleLogin}
+                    disabled={loading}
+                >
+                    {loading
+                        ? <ActivityIndicator color={Colors.color.white} />
+                        : <Text style={styles.loginButtonText}>LOGIN</Text>}
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.forgotButton } onPress={()=> router.push("/ForgotPasswordScreen")}>
+                    <Text style={styles.forgotButtonText}>Forget password?</Text>
+                </TouchableOpacity>
             </View>
-            <TouchableOpacity 
-                style={styles.loginButton} 
-                onPress={handleLogin}
-                disabled={loading}
-            >
-                {loading
-                    ? <ActivityIndicator color={Colors.color.white} />
-                    : <Text style={styles.loginButtonText}>LOGIN</Text>}
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.forgotButton } onPress={()=> router.push("/ForgotPasswordScreen")}>
-                <Text style={styles.forgotButtonText}>Forget password?</Text>
-            </TouchableOpacity>
-        </View>
-        <View style={styles.footer}>
-            <TouchableOpacity style={styles.registerButton} onPress={()=> router.push("/CreateAccount")}>
-                <Text style={styles.registerButtonText}>Register for an account</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.recoverButton}>
-                <Text style={styles.recoverButtonText}>Recover Password</Text>
-            </TouchableOpacity>
-        </View>
-    </SafeAreaView>
+            <View style={styles.footer}>
+                <TouchableOpacity style={styles.registerButton} onPress={()=> router.push("/CreateAccount")}>
+                    <Text style={styles.registerButtonText}>Register for an account</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.recoverButton}>
+                    <Text style={styles.recoverButtonText}>Recover Password</Text>
+                </TouchableOpacity>
+            </View>
+        </SafeAreaView>
+    );
 }
 export default LoginScreen;
+
 const styles=StyleSheet.create({
     container: {
         flex: 1,

@@ -34,5 +34,16 @@ export const authApi = {
         }
 
         return res.json();
-    }
+    },
+
+    logout: async (token: string) => {
+        const res = await fetch(`${BASE_URL}/auth/logout`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${token}` },
+        });
+        if (!res.ok) {
+            throw await res.json();
+        } 
+        return res.json();
+    },
 }
