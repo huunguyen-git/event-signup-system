@@ -1,14 +1,16 @@
 import React from "react";
-import {View,StyleSheet,TextInput,Text} from "react-native"
-import {MaterialCommunityIcons} from "@expo/vector-icons"
-import {Colors} from "../../constants/theme"
+import { View, StyleSheet, TextInput, Text, TouchableOpacity, } from "react-native"
+import { MaterialCommunityIcons } from "@expo/vector-icons"
+import { Colors } from "../../../constants/theme"
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { FlatList } from "react-native-gesture-handler";
 import EventItem from "@/components/EventItem";
-import { Stack } from "expo-router";
-import { HomeData } from "../../scripts/data"; 
-const HomeScreen = () =>{
-    
+import { Stack, useRouter } from "expo-router";
+import { HomeData } from "../../../scripts/data"; 
+
+const HomeScreen = () => {
+    const router = useRouter();
+
     return <>
     <Stack.Screen options={{ headerShown: false }} />
     <SafeAreaView style={styles.container}>
@@ -17,7 +19,9 @@ const HomeScreen = () =>{
             <Text style={styles.connect}> <Text style={styles.event}>EVENT </Text>CONNECT</Text>
             <View style={styles.Icon}>
             <MaterialCommunityIcons name="bell-outline" size={40} color={Colors.color.white}/>
-            <MaterialCommunityIcons name="account" size={40} color={Colors.color.primary} style={styles.accountIcon}/>
+            <TouchableOpacity onPress={() => router.push('/AccountScreen')}>
+                <MaterialCommunityIcons name="account" size={40} color={Colors.color.primary} style={styles.accountIcon}/>
+            </TouchableOpacity>
             </View>
         </View>
         <View style={styles.body}>
@@ -42,7 +46,9 @@ const HomeScreen = () =>{
     </SafeAreaView>
     </>
 };
+
 export default HomeScreen;
+
 const styles = StyleSheet.create({
     container: {
         flex: 1,

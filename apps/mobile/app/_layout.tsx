@@ -1,4 +1,4 @@
-import {Stack} from "expo-router"
+import { Stack } from "expo-router"
 import { Colors } from "../constants/theme";
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
