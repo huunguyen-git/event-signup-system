@@ -1,12 +1,12 @@
 import React from "react";
 import { View, StyleSheet, TextInput, Text, TouchableOpacity, } from "react-native"
 import { MaterialCommunityIcons } from "@expo/vector-icons"
-import { Colors } from "../../constants/theme"
+import { Colors } from "../../../constants/theme"
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { FlatList } from "react-native-gesture-handler";
 import EventItem from "@/components/EventItem";
 import { Stack, useRouter } from "expo-router";
-import { HomeData } from "../../scripts/data"; 
+import { HomeData } from "../../../scripts/data"; 
 
 const HomeScreen = () => {
     const router = useRouter();

@@ -1,7 +1,8 @@
-import React, { useEffect, useState } from "react";
-import { View, StyleSheet, Image, Text, TouchableOpacity, Alert, ActivityIndicator, ScrollView } from "react-native"
-import { MaterialCommunityIcons } from "@expo/vector-icons"
-import { Colors } from "../../constants/theme"
+import React, { useState, useCallback } from "react";
+import { useFocusEffect } from "expo-router";
+import { View, StyleSheet, Image, Text, TouchableOpacity, Alert, ActivityIndicator, ScrollView } from "react-native";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { Colors } from "../../../constants/theme";
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Stack, useRouter } from "expo-router";
 import { userApi, authApi } from "@/services/api";
@@ -21,25 +22,26 @@ const AccountScreen = () => {
     const [loading, setLoading] = useState(true);
     const router = useRouter();
 
-    useEffect(() => {
-        const fetchUser = async () => {
-            try {
-                const token = await getToken();
-                if (token === null) {
-                    router.replace('/LoginScreen');
-                    return;
+    useFocusEffect(
+        useCallback(() => {
+            const fetchUser = async () => {
+                try {
+                    const token = await getToken();
+                    if (!token) {
+                        router.replace('/LoginScreen');
+                        return;
+                    }
+                    const data = await userApi.getMe(token);
+                    setUser(data);
+                } catch (e) {
+                    Alert.alert('Error', 'Failed to load profile');
+                } finally {
+                    setLoading(false);
                 }
-                const data = await userApi.getMe(token!);
-                setUser(data);
-            } catch (e) {
-                Alert.alert('Error', 'Failed to load profile');
-            } finally {
-                setLoading(false);
-            }
-        };
-        fetchUser();
-    }, []);
-
+            };
+            fetchUser();
+        }, [])
+    );
     const handleLogout = async () => {
         Alert.alert('Log Out', 'Are you sure you want to log out?', [
             { text: 'Cancel', style: 'cancel' },
@@ -114,7 +116,7 @@ const AccountScreen = () => {
                             {/* Buttons */}
                             <TouchableOpacity
                                 style={styles.editButton}
-                                onPress={() => router.push('./EditProfileScreen')}
+                                onPress={() => router.push('/(attendee)/EditProfileScreen')}
                             >
                                 <MaterialCommunityIcons name="account-edit-outline" size={20} color={Colors.color.white} />
                                 <Text style={styles.editButtonText}>Edit Profile</Text>

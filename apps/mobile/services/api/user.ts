@@ -19,7 +19,7 @@ export const userApi = {
         full_name?: string,
         birthdate?: string,
         phone_number?: string
-        avatar_URL?: string,
+        avatar_url?: string,
     }) => {
         const res = await fetch(`${BASE_URL}/users/me`, {
             method: 'PATCH',
