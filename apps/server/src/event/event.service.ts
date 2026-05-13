@@ -3,6 +3,7 @@ import { PrismaService } from '../prisma.service.js';
 import { CreateEventDto } from './event.dto.js';
 import { Event, Prisma } from '../generated/prisma/client.js';
 import { createClient } from '@supabase/supabase-js';
+import * as QrCode from 'qrcode';
 
 @Injectable()
 export class EventService {

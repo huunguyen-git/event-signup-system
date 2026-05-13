@@ -2,23 +2,58 @@ import {View,StyleSheet,Text, Alert} from "react-native"
 import {MaterialCommunityIcons} from "@expo/vector-icons"
 import {Colors} from "../../constants/theme"
 import { SafeAreaView } from 'react-native-safe-area-context';
+import React, { useCallback, useState } from "react";
 // @ts-ignore
 import { Camera, CameraType } from 'react-native-camera-kit';
-import { Stack } from "expo-router";
+import { Stack, useRouter } from "expo-router";
+import {EventService} from "@/axios/eventService";
+import { useFocusEffect } from "@react-navigation/native";
 
-interface QRScannerEvent {
-  nativeEvent: {
-    codeStringValue: string;
-  };
-}
 
 const QrScreen = () =>{
-    const onReadCode = (event: QRScannerEvent) => {
-    const qrData = event.nativeEvent.codeStringValue;
-    if (qrData) {
-      Alert.alert("Event Connect", `Đã xác nhận mã: ${qrData}`);
+    const router = useRouter();
+    const [isScanned, setIsScanned] = useState(false);
+    const [scankey,setScanKey] = useState(0);
+
+    useFocusEffect(
+        useCallback(()=>{
+            setIsScanned(false);
+            setScanKey(prev => prev + 1);
+        },[])
+    )
+    const onReadCode = async (event: any) => {
+    // Nếu đang xử lý mã trước đó rồi thì bỏ qua
+        console.log("isscanned:", isScanned); // Log trạng thái để kiểm tra
+        if (isScanned) return; 
+
+        const qrData = event.nativeEvent.codeStringValue;
+        
+        if (qrData) {
+            setIsScanned(true); // Khóa camera lập tức để không bị gọi API 10 lần/giây
+            console.log("🚀 Camera vừa quét được mã:", qrData); // Log ra để kiểm tra
+            
+            // Đưa try-catch vào BÊN TRONG if (qrData)
+            try {
+                const data = await EventService.getEvent(qrData);
+                
+                // Sửa thành if (data) -> Có dữ liệu mới chuyển trang
+                if (data) { 
+                    router.push({
+                        pathname: "/EventDetailsScreen",
+                        params: { id: qrData }
+                    });
+                } else {
+                    Alert.alert("Thông báo", "Mã QR này không thuộc về bất kỳ sự kiện nào.");
+                    setIsScanned(false); // Mở khóa camera để quét mã khác
+                }
+            }
+            catch (error) {
+                console.error("Lỗi API khi lấy sự kiện:", error);
+                Alert.alert("Lỗi", "Không thể tìm thấy sự kiện, vui lòng thử lại.");
+                setIsScanned(false); // Mở khóa camera khi gặp lỗi mạng/API
+            }
+        }
     }
-  };
     return <>
     <Stack.Screen options={{ headerShown: false }} />
     <SafeAreaView style={styles.container}>
@@ -35,14 +70,15 @@ const QrScreen = () =>{
           
           <View style={styles.cameraWrapper}>
             <Camera
-        style={{ flex: 1, width: '100%', height: '100%' }}
-        cameraType={CameraType.Back}
-        scanBarcode={true}
-        onReadCode={onReadCode}
-        // Thêm dòng này để vá lỗi Hermes engine của thư viện trên Android
-        // @ts-ignore
-        zoom={0} 
-    />
+                key={scankey} // Thêm key để reset camera khi cần
+                style={{ flex: 1, width: '100%', height: '100%' }}
+                cameraType={CameraType.Back}
+                scanBarcode={true}
+                onReadCode={onReadCode}
+                // Thêm dòng này để vá lỗi Hermes engine của thư viện trên Android
+                // @ts-ignore
+                zoom={0} 
+            />
 
             <View style={styles.overlay}>
               <View style={styles.unfocusedContainer} />

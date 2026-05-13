@@ -77,7 +77,10 @@ export default function EventDetailsScreen() {
   };
 
   const handleShare = () => {
-    Share.share({ message: `Tham gia International Tech Summit 2024 tại Gigamall cùng mình nhé!` });
+    router.push({
+      pathname: "/ShowQrScreen",
+      params: {id: eventData?.id, title: eventData?.title}
+    })
   };
   const handleRegister = () => {
     router.push({
