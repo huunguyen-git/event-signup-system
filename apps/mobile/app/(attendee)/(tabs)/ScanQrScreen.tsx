@@ -1,6 +1,6 @@
 import {View,StyleSheet,Text, Alert} from "react-native"
 import {MaterialCommunityIcons} from "@expo/vector-icons"
-import {Colors} from "../../constants/theme"
+import {Colors} from "../../../constants/theme"
 import { SafeAreaView } from 'react-native-safe-area-context';
 import React, { useCallback, useState } from "react";
 // @ts-ignore

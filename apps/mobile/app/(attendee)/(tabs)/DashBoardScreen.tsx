@@ -1,13 +1,13 @@
 import {View,StyleSheet,TextInput,Text} from "react-native"
 import {MaterialCommunityIcons} from "@expo/vector-icons"
-import {Colors} from "../../constants/theme"
+import {Colors} from "../../../constants/theme"
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { FlatList} from "react-native-gesture-handler";
 import MyEventItem from "@/components/MyEventItem";
 import { Stack } from "expo-router";
 import React,{ useState,useEffect } from "react";
-import { EventService } from "../../axios/eventService";
-import { ICreateEvent } from "../../axios/dto/eventModel"
+import { EventService } from "../../../axios/eventService";
+import { ICreateEvent } from "../../../axios/dto/eventModel";
 
 const DashBoardScreen = () =>{
     const [data, setData] = useState<ICreateEvent[]>([]);
