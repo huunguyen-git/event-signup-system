@@ -40,6 +40,12 @@
           }
         }
       ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow Event Management to access your camera"
+        }
+      ],
       "@react-native-community/datetimepicker"
     ],
     "experiments": {

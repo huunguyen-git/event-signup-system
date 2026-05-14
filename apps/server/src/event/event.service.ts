@@ -3,7 +3,6 @@ import { PrismaService } from '../prisma.service.js';
 import { CreateEventDto } from './event.dto.js';
 import { Event, Prisma } from '../generated/prisma/client.js';
 import { createClient } from '@supabase/supabase-js';
-import * as QrCode from 'qrcode';
 
 @Injectable()
 export class EventService {
@@ -19,6 +18,16 @@ export class EventService {
   }
   async getEvents(): Promise<Event[]> {
     return this.prisma.event.findMany();
+  }
+  async getEventByUserId(user_id: string): Promise<Event[] | null> {
+    return this.prisma.event.findMany({
+      where: {
+        host_id: user_id,
+      },
+      orderBy: {
+        event_date: 'desc',
+      },
+    });
   }
   async createEvent(
     data: CreateEventDto,

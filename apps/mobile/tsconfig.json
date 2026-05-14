@@ -4,15 +4,18 @@
     "strict": true,
     "jsx": "react-native",
     "paths": {
-      "@/*": [
-        "./*"
-      ]
+      "@/*": ["./*"]
     }
   },
   "include": [
     "**/*.ts",
     "**/*.tsx",
     ".expo/types/**/*.ts",
-    "expo-env.d.ts"
-, "app/(host)/HostDashBoardScreen.tsx", "axios/eventService.js", "axios/ipConfig.js", "axios/axios.js", "app/(host)/CreateEventScreen.tsx"  ]
+    "expo-env.d.ts",
+    "app/(host)/HostDashBoardScreen.tsx",
+    "axios/eventService.js",
+    "axios/ipConfig.js",
+    "axios/axios.js",
+    "app/(host)/CreateEventScreen.tsx"
+  ]
 }

@@ -43,7 +43,7 @@
 //         });
 //         if (!res.ok) {
 //             throw await res.json();
-//         } 
+//         }
 //         return res.json();
 //     },
 // }

@@ -22,13 +22,26 @@ export class EventController {
   async getEventByID(@Param('id') id: string): Promise<Event> {
     try {
       const event = await this.eventService.getEvent({ id });
-      console.log(event);
       if (!event) {
         throw new Error('Null Event');
       }
       return event;
     } catch {
       throw new NotFoundException(`Not Found Event ID ${id}`);
+    }
+  }
+  @Get('user/:user_id')
+  async getEventByUserID(
+    @Param('user_id') user_id: string,
+  ): Promise<Event[] | null> {
+    try {
+      const events = await this.eventService.getEventByUserId(user_id);
+      if (!events) {
+        throw Error('Null Event');
+      }
+      return events;
+    } catch {
+      throw new NotFoundException(`Not Found Event of UserID ${user_id}`);
     }
   }
   @Get()

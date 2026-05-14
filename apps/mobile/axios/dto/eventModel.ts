@@ -1,8 +1,8 @@
 export const EventStatus = {
-  DRAFT: 'DRAFT',
-  PUBLISHED: 'PUBLISHED',
-  CANCELLED: 'CANCELLED',
-  COMPLETED: 'COMPLETED'
+  DRAFT: "DRAFT",
+  PUBLISHED: "PUBLISHED",
+  CANCELLED: "CANCELLED",
+  COMPLETED: "COMPLETED",
 };
 
 export class ICreateEvent {
