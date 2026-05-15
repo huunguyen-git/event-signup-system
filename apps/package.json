@@ -1,6 +1,8 @@
 {
   "dependencies": {
     "@nestjs/cli": "^11.0.21",
-    "0g": "^0.4.2"
+    "0g": "^0.4.2",
+    "react-native-camera-kit": "^17.0.1",
+    "react-native-vision-camera": "^5.0.9"
   }
 }
