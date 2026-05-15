@@ -1,12 +1,12 @@
 import React from "react";
 import {View,StyleSheet,TextInput,Text} from "react-native"
 import {MaterialCommunityIcons} from "@expo/vector-icons"
-import {Colors} from "../../constants/theme"
+import {Colors} from "../../../constants/theme"
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { FlatList} from "react-native-gesture-handler";
 import MyEventItem from "@/components/MyEventItem";
 import { Stack } from "expo-router";
-import { DashBoardData } from "../../scripts/data";
+import { DashBoardData } from "../../../scripts/data";
 
 const DashBoardScreen = () =>{
     

@@ -1,7 +1,7 @@
 import React from "react";
 import {View,StyleSheet,Text} from "react-native"
 import {MaterialCommunityIcons} from "@expo/vector-icons"
-import {Colors} from "../../constants/theme"
+import {Colors} from "../../../constants/theme"
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Stack } from "expo-router";
 const HomeScreen = () =>{

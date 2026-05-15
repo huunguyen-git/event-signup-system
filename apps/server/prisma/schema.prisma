@@ -1,0 +1,110 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+  moduleFormat = "cjs"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ---ENUM---
+
+enum EventStatus {
+  DRAFT
+  PUBLISHED
+  COMPLETED
+  CANCELLED
+}
+
+enum ApplicationStatus {
+  PENDING
+  APPROVED
+  WAITLISTED
+  REJECTED
+}
+
+// ---MODEL---
+
+model User {
+  id           String   @id @db.Uuid
+  email        String   @unique
+  full_name    String
+  birthdate    DateTime @db.Date
+  phone_number String?
+  avatar_url   String?  
+  created_at   DateTime @default(now())
+
+  // Relations
+  hosted_events Event[]       @relation("HostedEvents")
+  applications  Application[]
+  comments      Comment[]
+
+  @@map("profiles")
+}
+
+model Event {
+  id              String      @id @default(uuid()) @db.Uuid
+  host_id         String      @db.Uuid
+  title           String
+  description     String      @db.Text
+  event_date      DateTime
+  end_date        DateTime?
+  banner_url      String?
+  location_url    String?
+  allowed_domain  String?     // domain restriction feature
+  max_attendees   Int?
+  status          EventStatus @default(DRAFT)
+  form_config     Json?       // Stores custom field toggles as JSONB
+  created_at      DateTime    @default(now())
+
+  // Relations
+  host            User          @relation("HostedEvents", fields: [host_id], references: [id], onDelete: Cascade)
+  applications    Application[]
+  comments        Comment[]
+
+  @@map("events")
+}
+
+model Application {
+  id          String            @id @default(uuid()) @db.Uuid
+  event_id    String            @db.Uuid
+  user_id     String            @db.Uuid
+  status      ApplicationStatus @default(PENDING)
+  answers     Json              // Stores user responses to the custom form as JSONB
+  checked_in  Boolean           @default(false)
+  applied_at  DateTime          @default(now())
+
+  // Relations
+  event       Event @relation(fields: [event_id], references: [id], onDelete: Cascade)
+  user        User  @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  // A user can only apply to a specific event once
+  @@unique([event_id, user_id]) 
+  @@map("applications")
+}
+
+model Comment {
+  id          String   @id @default(uuid()) @db.Uuid
+  event_id    String   @db.Uuid
+  user_id     String   @db.Uuid
+  parent_id   String?  @db.Uuid
+  content     String   @db.Text
+  is_pinned   Boolean  @default(false)
+  created_at  DateTime @default(now())
+
+  // Relations
+  event       Event     @relation(fields: [event_id], references: [id], onDelete: Cascade)
+  user        User      @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  
+  // Self-referencing relationship for nested replies
+  parent      Comment?  @relation("CommentReplies", fields: [parent_id], references: [id], onDelete: Cascade)
+  replies     Comment[] @relation("CommentReplies")
+
+  @@map("comments")
+}
