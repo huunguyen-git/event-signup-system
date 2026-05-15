@@ -244,13 +244,13 @@ export default function RegistrationFormScreen() {
               placeholder="nguyenvana@gmail.com"
             />
             <InputField label="Job Title" placeholder="Software Engineer" />
-            {customQuestions.map((q) => (
+            {/* {customQuestions.map((q) => (
               <InputField
                 key={q.id}
                 label={q.question}
                 placeholder="Your answer here..."
               />
-            ))}
+            ))} */}
 
             <View style={styles.checkboxRow}>
               <TouchableOpacity onPress={() => setAgreed(!agreed)}>

@@ -14,15 +14,13 @@ import EventItem from "@/components/EventItem";
 import { Stack, useRouter, } from "expo-router";
 import { ICreateEvent } from "@/axios/dto/eventModel";
 import { EventService } from "@/axios/eventService";
-import { getUserId } from "@/services/storage";
 const HomeScreen = () => {
   const router = useRouter();
   const [data, setData] = useState<ICreateEvent[]>([]);
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const UserId = await getUserId();
-        const data = await EventService.getEventsByUser(UserId);
+        const data = await EventService.getEvents();
         setData(data);
       } catch (error) {
         console.error("Error fetching data:", error);
