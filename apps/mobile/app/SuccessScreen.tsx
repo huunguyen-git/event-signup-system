@@ -1,5 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
-import { useRouter, useLocalSearchParams } from "expo-router"; // 1. Thêm useLocalSearchParams
+import { useRouter, useLocalSearchParams } from "expo-router";
 import React from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { Colors } from "../constants/theme";
@@ -56,7 +56,7 @@ export default function SuccessScreen() {
 
         <TouchableOpacity
           style={styles.secondaryBtn}
-          onPress={() => router.dismissAll()}
+          onPress={() => router.replace('/(tabs)/DashBoardScreen')}
         >
           <Text style={[styles.secondaryBtnText, { color: "#555" }]}>
             GO TO MY DASHBOARD

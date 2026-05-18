@@ -12,7 +12,7 @@ import { ApplicationsModule } from './applications/applications.module.js';
 import { CommentsModule } from './comments/comments.module.js'; 
 
 @Module({
-  imports: [ConfigModule.forRoot(), SupabaseModule, AuthModule, UserModule],
+  imports: [ConfigModule.forRoot(), SupabaseModule, AuthModule, UserModule, ApplicationsModule, CommentsModule],
   controllers: [EventController, AppController],
   providers: [EventService, PrismaService, AppService],
 })

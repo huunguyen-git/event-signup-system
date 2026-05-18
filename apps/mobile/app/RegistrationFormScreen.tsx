@@ -1,6 +1,7 @@
 import { MaterialCommunityIcons, Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { use, useEffect, useState } from "react";
+import { getUserId } from "@/services/storage";
 import {
   KeyboardAvoidingView,
   Platform,
@@ -21,6 +22,10 @@ export default function RegistrationFormScreen() {
   const themeColor = Colors.light.tint;
 
   const [agreed, setAgreed] = useState(false);
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [email, setEmail] = useState("");
+  const [jobTitle, setJobTitle] = useState("");
   const [ticketType, setTicketType] = useState("Standard Pass");
 
   const [showTicketPicker, setShowTicketPicker] = useState(false);
@@ -94,21 +99,41 @@ export default function RegistrationFormScreen() {
     setQuestion("");
   };
 
-  const handleCreateEvent = () => {
-    try {
-      console.log("du lieu dang ki:", data);
-      EventService.createEvent(data);
-    } catch (error) {
-      console.error("Error creating event:", error);
-    }
-  };
+  const handleRegisterEvent = async () => {
+      try {
+        const currentUserId = await getUserId();
+        if (!currentUserId) {
+          return;
+        }
+        const applicationData = {
+          event_id: id as string,
+          user_id: currentUserId,
+          answers: {
+            firstName: firstName,
+            lastName: lastName,
+            email: email,
+            jobTitle: jobTitle,
+            ticketType: ticketType,
+          },
+        };
+        console.log("Đang gửi đơn đăng ký sự kiện lên server...", applicationData);
+        await EventService.registerForEvent(applicationData);
+        router.replace({
+          pathname: '/SuccessScreen',
+          params: { ticketType: ticketType }
+        });
+      } catch (error: any) {
+        console.error("Error creating event application:", error);
+        const errorMsg = error.response?.data?.message || "Không thể kết nối đến Server!";
+      }
+    };
 
   const ticketOptions = [
     { id: "1", name: "Standard Pass" },
     { id: "2", name: "Premium Pass" },
   ];
 
-  const InputField = ({ label, placeholder, isShort }: any) => (
+  const InputField = ({ label, placeholder, isShort, value, onChangeText }: any) => (
     <View style={[styles.inputGroup, isShort && { flex: 1 }]}>
       <Text style={styles.label}>{label}</Text>
       <View style={styles.inputWrapper}>
@@ -116,6 +141,8 @@ export default function RegistrationFormScreen() {
           style={styles.input}
           placeholder={placeholder}
           placeholderTextColor="#bbb"
+          value={value}
+          onChangeText={onChangeText}
         />
       </View>
     </View>
@@ -235,15 +262,12 @@ export default function RegistrationFormScreen() {
             style={{ maxHeight: 300 }}
           >
             <View style={styles.row}>
-              <InputField label="First Name" placeholder="A" isShort />
+              <InputField label="First Name" placeholder="A" isShort value={firstName} onChangeText={setFirstName} />
               <View style={{ width: 10 }} />
-              <InputField label="Last Name" placeholder="Nguyễn Văn" isShort />
+              <InputField label="Last Name" placeholder="Nguyễn Văn" isShort value={lastName} onChangeText={setLastName} />
             </View>
-            <InputField
-              label="Company Email"
-              placeholder="nguyenvana@gmail.com"
-            />
-            <InputField label="Job Title" placeholder="Software Engineer" />
+            <InputField label="Company Email" placeholder="nguyenvana@gm.uit.edu.vn" value={email} onChangeText={setEmail} />
+            <InputField label="Job Title" placeholder="Software Engineer" value={jobTitle} onChangeText={setJobTitle} />
             {/* {customQuestions.map((q) => (
               <InputField
                 key={q.id}
@@ -299,7 +323,7 @@ export default function RegistrationFormScreen() {
               //     pathname: '/SuccessScreen',
               //     params: { ticketType: ticketType }
               // })}
-              onPress={handleCreateEvent}
+              onPress={handleRegisterEvent}
             >
               <Text style={styles.completeBtnText}>COMPLETE REGISTRATION</Text>
             </TouchableOpacity>
