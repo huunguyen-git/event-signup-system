@@ -18,7 +18,6 @@ import {
   TextInput,
   ActivityIndicator,
   Modal,
-  Alert,
 } from "react-native";
 import { CustomText } from "@/components/CustomText";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -107,7 +106,7 @@ const CommentItem = ({
 
         <View style={styles.commentBody}>
           <View style={styles.commentHeader}>
-            <CustomText style={styles.commentUserName}>
+            <CustomText variant="bold" style={styles.commentUserName}>
               {comment.user?.full_name || "User"}
               {comment.user_id === hostId && <CustomText style={{color: themeColor, fontSize: 11}}> (Host)</CustomText>}
             </CustomText>
@@ -116,14 +115,14 @@ const CommentItem = ({
             {replyingToName && (
               <View style={{flexDirection: 'row', alignItems: 'center', marginRight: 8}}>
                 <Entypo name="triangle-right" size={14} color="#888" style={{marginLeft: -2, marginRight: 2}} />
-                <CustomText style={{fontSize: 12, fontWeight: 'bold', color: '#666'}}>{replyingToName}</CustomText>
+                <CustomText variant="bold" style={{fontSize: 12, color: '#666'}}>{replyingToName}</CustomText>
               </View>
             )}
 
             {comment.is_pinned && (
               <View style={[styles.pinnedBadge, { backgroundColor: themeColor + '20' }]}>
                 <Entypo name="pin" size={10} color={themeColor} />
-                <CustomText style={[styles.pinnedText, { color: themeColor }]}>Pinned</CustomText>
+                <CustomText variant="bold" style={[styles.pinnedText, { color: themeColor }]}>Pinned</CustomText>
               </View>
             )}
             <CustomText style={styles.commentTime}>{timeAgo(comment.created_at)}</CustomText>
@@ -174,7 +173,7 @@ const CommentItem = ({
           {displayedReplies.map(reply => {
             const rId = rootId || comment.id;
             const isNested = reply.parent_id !== rId && reply.parent_id !== null;
-            const rName = isNested ? commentMap?.get(reply.parent_id)?.user?.full_name : null;
+            const rName = isNested ? commentMap?.get(reply.parent_id as string)?.user?.full_name : null;
 
             return (
               <CommentItem
@@ -199,7 +198,7 @@ const CommentItem = ({
       {!previewMode && allReplies.length > 0 && (
         <TouchableOpacity style={styles.viewMoreRepliesBtn} onPress={() => setShowReplies(!showReplies)}>
           <View style={styles.viewMoreDash} />
-          <CustomText style={styles.viewMoreRepliesText}>
+          <CustomText variant="bold" style={styles.viewMoreRepliesText}>
             {showReplies ? "Hide replies" : `View all ${allReplies.length} replies`}
           </CustomText>
         </TouchableOpacity>
@@ -208,7 +207,7 @@ const CommentItem = ({
       {previewMode && allReplies.length > (latestHostReply ? 1 : 0) && (
         <TouchableOpacity style={styles.viewMoreRepliesBtn} onPress={onViewRepliesInModal}>
           <View style={styles.viewMoreDash} />
-          <CustomText style={[styles.viewMoreRepliesText, { color: themeColor }]}>
+          <CustomText variant="bold" style={[styles.viewMoreRepliesText, { color: themeColor }]}>
             {latestHostReply
               ? `View all ${allReplies.length} replies`
               : `View ${allReplies.length} ${allReplies.length > 1 ? 'replies' : 'reply'}`}
@@ -222,6 +221,7 @@ const CommentItem = ({
 export default function EventDetailsScreen() {
   const router = useRouter();
   const themeColor = Colors.light.tint;
+  const EVENT_LOCATION_DEFAULT = "Hồ Chí Minh";
 
   const { id } = useLocalSearchParams();
   const [eventData, setEventData] = useState<any | null>(null);
@@ -297,11 +297,10 @@ export default function EventDetailsScreen() {
         if (!repliesMap.has(comment.parent_id)) {
           repliesMap.set(comment.parent_id, []);
         }
-        repliesMap.get(comment.parent_id)?.push(comment);
+          repliesMap.get(comment.parent_id)?.push(comment);
       }
     });
 
-    // 🟢 LÀM PHẲNG CÂY REPLY ĐỂ TẠO STYLE TIKTOK
     const flatRepliesMap = new Map<string, IComment[]>();
 
     roots.forEach(root => {
@@ -373,7 +372,6 @@ export default function EventDetailsScreen() {
     }
   };
 
-  // 🟢 FIX LỖI GHIM ĐỘC TÔN (CHỈ 1 COMMENT ĐƯỢC GHIM)
   const handlePinAction = async (comment: IComment) => {
     try {
       const token = await getToken();
@@ -406,12 +404,7 @@ export default function EventDetailsScreen() {
           <TouchableOpacity onPress={() => router.back()}>
             <Ionicons name="arrow-back" size={24} color="white" />
           </TouchableOpacity>
-          <FontAwesome5
-            name="building"
-            size={20}
-            color="white"
-            style={{ marginLeft: 15 }}
-          />
+          <FontAwesome5 name="building" size={20} color="white" style={{ marginLeft: 15 }} />
           <CustomText variant="bold" style={styles.headerTitle}>EVENT CONNECT</CustomText>
         </View>
         <TouchableOpacity style={styles.shareBtn} onPress={handleShare}>
@@ -422,11 +415,12 @@ export default function EventDetailsScreen() {
 
       <ScrollView contentContainerStyle={styles.scrollBody} showsVerticalScrollIndicator={false}>
         <Image source={eventData?.banner_url ? { uri: eventData.banner_url } : require("../assets/images/icon.png")} style={styles.banner} />
-          <View style={styles.content}>
+        
+        <View style={styles.content}>
           <CustomText variant="bold" style={[styles.mainTitle, { color: themeColor }]}>
             {eventData?.title}
           </CustomText>
-          </View>
+
           <View style={styles.infoRow}>
             <MaterialCommunityIcons name="calendar-month" size={28} color={themeColor} />
             <View style={styles.infoTextGroup}>
@@ -436,34 +430,35 @@ export default function EventDetailsScreen() {
               </CustomText>
             </View>
           </View>
+
           <View style={styles.infoRow}>
             <Ionicons name="location-sharp" size={28} color={themeColor} />
             <View style={styles.infoTextGroup}>
               <CustomText variant="bold" style={styles.infoLabel}>Location</CustomText>
               <CustomText style={styles.infoValue}>
-                {eventData?.location_url}
+                {eventData?.location_url || EVENT_LOCATION_DEFAULT}
               </CustomText>
             </View>
           </View>
 
-          <View style={styles.mapContainer}>
-            <View style={[styles.mapFrame, { backgroundColor: "#f5f5f5" }]} />
-            <TouchableOpacity
-              style={styles.mapButton}
-              onPress={handleOpenMap}
-              activeOpacity={0.7}
-            >
-              <Ionicons name="map-outline" size={16} color="#007AFF" />
-              <CustomText variant="bold" style={styles.mapButtonText}>Open in Maps</CustomText>
-            </TouchableOpacity>
-            <View style={styles.mapPin}>
-              <Ionicons name="location" size={36} color="red" />
+          {eventData?.location_url && (
+            <View style={styles.mapContainer}>
+              <View style={[styles.mapFrame, { backgroundColor: "#f5f5f5" }]} />
+              <TouchableOpacity style={styles.mapButton} onPress={handleOpenMap} activeOpacity={0.7}>
+                <Ionicons name="map-outline" size={16} color="#007AFF" />
+                <CustomText style={styles.mapButtonText}>Open in Maps</CustomText>
+              </TouchableOpacity>
+              <View style={styles.mapPin}>
+                <Ionicons name="location" size={36} color="red" />
+              </View>
             </View>
+          )}
+
           {eventData?.description && (
             <View style={styles.section}>
               <View style={styles.sectionHeaderRow}>
                 <Ionicons name="information-circle" size={24} color={themeColor} />
-                <CustomText style={styles.sectionTitle}>About the Event</CustomText>
+                <CustomText variant="bold" style={styles.sectionTitle}>About the Event</CustomText>
               </View>
               <CustomText style={styles.bodyText}>{eventData.description}</CustomText>
             </View>
@@ -473,7 +468,7 @@ export default function EventDetailsScreen() {
             <View style={styles.section}>
               <View style={styles.sectionHeaderRow}>
                 <Ionicons name="person" size={20} color={themeColor} />
-                <CustomText style={styles.sectionTitle}>Host/Organization</CustomText>
+                <CustomText variant="bold" style={styles.sectionTitle}>Host/Organization</CustomText>
               </View>
               <TouchableOpacity
                 style={styles.hostCard}
@@ -504,8 +499,10 @@ export default function EventDetailsScreen() {
                   </View>
                 )}
                 <View>
-                    <CustomText style={styles.hostName}>{eventData?.host?.full_name ? eventData.host.full_name : "Event Organizer"}</CustomText>
-                    <CustomText style={styles.hostSubText}>Host</CustomText>
+                  <CustomText variant="bold" style={styles.hostName}>
+                    {eventData?.host?.full_name ? eventData.host.full_name : "Event Organizer"}
+                  </CustomText>
+                  <CustomText style={styles.hostSubText}>Host</CustomText>
                 </View>
               </TouchableOpacity>
             </View>
@@ -513,12 +510,8 @@ export default function EventDetailsScreen() {
 
           <View style={[styles.section, {marginBottom: 20}]}>
             <View style={styles.sectionHeaderRow}>
-              <Ionicons
-                name="information-circle"
-                size={24}
-                color={themeColor}
-              />
-              <CustomText style={styles.sectionTitle}>Comments ({comments.length})</CustomText>
+              <MaterialCommunityIcons name="comment-text-multiple" size={22} color={themeColor} />
+              <CustomText variant="bold" style={styles.sectionTitle}>Comments ({comments.length})</CustomText>
             </View>
 
             {loadingComments && (
@@ -548,14 +541,16 @@ export default function EventDetailsScreen() {
 
             {!loadingComments && organizedComments.roots.length > 3 && (
               <TouchableOpacity style={[styles.viewAllCommentsBtn, { marginBottom: 15 }]} onPress={() => setShowAllCommentsModal(true)}>
-                <CustomText style={styles.viewAllCommentsText}>View all {comments.length} comments</CustomText>
+                <CustomText variant="bold" style={styles.viewAllCommentsText}>View all {comments.length} comments</CustomText>
               </TouchableOpacity>
             )}
 
             <View style={{marginTop: 5, marginBottom: 10}}>
               {replyingTo && (
                 <View style={styles.replyingToHeader}>
-                  <CustomText style={styles.replyingToText}>Replying to <CustomText style={{fontWeight: 'bold'}}>{replyingTo.name}</CustomText></CustomText>
+                  <CustomText style={styles.replyingToText}>
+                    Replying to <CustomText variant="bold">{replyingTo.name}</CustomText>
+                  </CustomText>
                   <TouchableOpacity onPress={() => setReplyingTo(null)}>
                     <Ionicons name="close-circle" size={16} color="#888" />
                   </TouchableOpacity>
@@ -576,7 +571,7 @@ export default function EventDetailsScreen() {
         <SafeAreaView style={styles.modalContainer}>
           <View style={styles.modalHeader}>
             <View style={{width: 30}}/>
-            <CustomText style={styles.modalTitle}>Comments ({comments.length})</CustomText>
+            <CustomText variant="bold" style={styles.modalTitle}>Comments ({comments.length})</CustomText>
             <TouchableOpacity style={styles.modalCloseBtn} onPress={() => {setShowAllCommentsModal(false); setReplyingTo(null);}}>
               <Ionicons name="close" size={26} color="#333" />
             </TouchableOpacity>
@@ -604,7 +599,9 @@ export default function EventDetailsScreen() {
           <View style={[styles.footer, { position: 'relative', borderTopWidth: 1, borderColor: '#eee', paddingHorizontal: 15, paddingVertical: 10 }]}>
             {replyingTo && (
               <View style={[styles.replyingToHeader, { marginLeft: 0, marginBottom: 5 }]}>
-                <CustomText style={styles.replyingToText}>Replying to <CustomText style={{fontWeight: 'bold'}}>{replyingTo.name}</CustomText></CustomText>
+                <CustomText style={styles.replyingToText}>
+                  Replying to <CustomText variant="bold">{replyingTo.name}</CustomText>
+                </CustomText>
                 <TouchableOpacity onPress={() => setReplyingTo(null)}>
                   <Ionicons name="close-circle" size={16} color="#888" />
                 </TouchableOpacity>
@@ -619,6 +616,7 @@ export default function EventDetailsScreen() {
           </View>
         </SafeAreaView>
       </Modal>
+      
       <View style={styles.footer}>
         <TouchableOpacity
           style={[styles.regBtn, { backgroundColor: themeColor }]}
@@ -628,18 +626,14 @@ export default function EventDetailsScreen() {
         </TouchableOpacity>
       </View>
     </View>
-    )};
+  );
+}
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "white" },
   blueHeader: { height: 60, flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 15, zIndex: 100 },
   headerLeft: { flexDirection: "row", alignItems: "center" },
-  headerTitle: {
-    color: "white",
-    fontSize: 16,
-    marginLeft: 10,
-    letterSpacing: 1,
-  },
+  headerTitle: { color: "white", fontSize: 16, marginLeft: 10, letterSpacing: 1 },
   shareBtn: { flexDirection: "row", alignItems: "center" },
   shareBtnText: { color: "white", marginLeft: 5, fontSize: 14 },
   scrollBody: { paddingBottom: 110 },
@@ -681,57 +675,23 @@ const styles = StyleSheet.create({
     shadowRadius: 3,
     zIndex: 10,
   },
-  mapButtonText: {
-    color: "#007AFF",
-    fontSize: 12,
-    marginLeft: 5,
-  },
+  mapButtonText: { color: "#007AFF", fontSize: 12, marginLeft: 5 },
   mapPin: { position: "absolute", top: "35%", left: "46%" },
   section: { marginTop: 25 },
-  sectionHeaderRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 8,
-  },
-  sectionTitle: {
-    fontSize: 17,
-    marginLeft: 8,
-    color: "#333",
-  },
+  sectionHeaderRow: { flexDirection: "row", alignItems: "center", marginBottom: 8 },
+  sectionTitle: { fontSize: 17, marginLeft: 8, color: "#333" },
   bodyText: { color: "#666", lineHeight: 20, fontSize: 13 },
-  hostName: {
-    color: "#333",
-    fontSize: 14,
-    marginBottom: 5,
-  },
-
+  hostName: { color: "#333", fontSize: 14, marginBottom: 5 },
   speakerList: { marginTop: 15 },
   speakerCard: { alignItems: "center", marginRight: 15, width: 90 },
-  speakerImg: {
-    width: 70,
-    height: 70,
-    borderRadius: 35,
-    backgroundColor: "#eee",
-  },
-  speakerName: {
-    fontSize: 11,
-    textAlign: "center",
-    marginTop: 8,
-  },
+  speakerImg: { width: 70, height: 70, borderRadius: 35, backgroundColor: "#eee" },
+  speakerName: { fontSize: 11, textAlign: "center", marginTop: 8 },
   speakerRole: { fontSize: 10, color: "#888" },
-  profileTag: {
-    backgroundColor: "#E1E9F4",
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 12,
-    marginTop: 6,
-  },
+  profileTag: { backgroundColor: "#E1E9F4", paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12, marginTop: 6 },
   profileTagText: { fontSize: 9 },
-
   sponsorList: { marginTop: 10, paddingVertical: 10 },
   sponsorCard: { marginRight: 25, justifyContent: "center" },
   sponsorImg: { width: 80, height: 40 },
-
   footer: {
     position: "absolute",
     bottom: 0,
@@ -758,22 +718,22 @@ const styles = StyleSheet.create({
   commentAvatar: { width: 36, height: 36, borderRadius: 18, marginRight: 12 },
   commentBody: { flex: 1 },
   commentHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 2 },
-  commentUserName: { fontWeight: 'bold', fontSize: 13, marginRight: 8, color: '#333' },
+  commentUserName: { fontSize: 13, marginRight: 8, color: '#333' },
   commentTime: { fontSize: 11, color: '#aaa', marginLeft: 'auto' },
   commentContent: { fontSize: 13, color: '#444', lineHeight: 18 },
   actionButtonsRow: { flexDirection: 'row', alignItems: 'center', marginTop: 8 },
   actionBtn: { flexDirection: 'row', alignItems: 'center', paddingVertical: 2 },
   actionBtnText: { fontSize: 12, fontWeight: '500' },
   pinnedBadge: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 10, marginRight: 5 },
-  pinnedText: { fontSize: 9, fontWeight: 'bold', marginLeft: 3 },
+  pinnedText: { fontSize: 9, marginLeft: 3 },
   repliesList: { marginLeft: 48, marginTop: 12 },
   viewAllCommentsBtn: { alignSelf: 'center', marginTop: 10, paddingVertical: 8, paddingHorizontal: 15, backgroundColor: '#f0f2f5', borderRadius: 20 },
-  viewAllCommentsText: { fontSize: 13, fontWeight: 'bold', color: '#555' },
+  viewAllCommentsText: { fontSize: 13, color: '#555' },
   viewMoreRepliesBtn: { flexDirection: 'row', alignItems: 'center', marginLeft: 48, marginTop: 8 },
   viewMoreDash: { width: 24, height: 1, backgroundColor: '#aaa', marginRight: 8 },
-  viewMoreRepliesText: { fontSize: 13, fontWeight: 'bold', color: '#666' },
+  viewMoreRepliesText: { fontSize: 13, color: '#666' },
   modalContainer: { flex: 1, backgroundColor: 'white' },
   modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 15, paddingVertical: 15, borderBottomWidth: 1, borderBottomColor: '#eee' },
-  modalTitle: { fontSize: 16, fontWeight: 'bold', color: '#111' },
+  modalTitle: { fontSize: 16, color: '#111' },
   modalCloseBtn: { padding: 4 },
 });
