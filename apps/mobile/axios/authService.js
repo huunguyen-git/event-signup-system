@@ -6,7 +6,7 @@ export const AuthService = {
       const response = await apiClient.post("/auth/login", loginData);
       return response.data;
     } catch (error) {
-      console.error("Login error:", error.response?.data || error.message);
+      console.error("Login error:" || error.message);
       throw error;
     }
   },

@@ -10,10 +10,12 @@ import { AuthModule } from './auth/auth.module.js';
 import { UserModule } from './user/user.module.js';
 import { ApplicationsModule } from './applications/applications.module.js';
 import { CommentsModule } from './comments/comments.module.js'; 
+import { NotificationController } from './notification/notification.controller.js';
+import { NotificationService } from './notification/notification.service.js';
 
 @Module({
   imports: [ConfigModule.forRoot(), SupabaseModule, AuthModule, UserModule],
-  controllers: [EventController, AppController],
-  providers: [EventService, PrismaService, AppService],
+  controllers: [EventController, NotificationController, AppController],
+  providers: [EventService, NotificationService, PrismaService, AppService],
 })
 export class AppModule {}

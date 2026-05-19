@@ -3,13 +3,13 @@ import {
   View,
   StyleSheet,
   TextInput,
-  Text,
   TouchableOpacity,
   Alert,
   ActivityIndicator,
   ScrollView,
   Platform,
 } from "react-native";
+import { CustomText } from "@/components/CustomText";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { Colors } from "../../constants/theme";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -103,7 +103,7 @@ const EditProfileScreen = () => {
               color={Colors.color.white}
             />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Edit Profile</Text>
+          <CustomText variant="bold" style={styles.headerTitle}>Edit Profile</CustomText>
         </View>
 
         <ScrollView
@@ -111,7 +111,7 @@ const EditProfileScreen = () => {
           contentContainerStyle={styles.bodyContent}
         >
           <View style={styles.field}>
-            <Text style={styles.label}>Full Name</Text>
+            <CustomText variant="medium" style={styles.label}>Full Name</CustomText>
             <View style={styles.inputContainer}>
               <MaterialCommunityIcons
                 name="account-outline"
@@ -129,7 +129,7 @@ const EditProfileScreen = () => {
           </View>
 
           <View style={styles.field}>
-            <Text style={styles.label}>Phone Number</Text>
+            <CustomText variant="medium" style={styles.label}>Phone Number</CustomText>
             <View style={styles.inputContainer}>
               <MaterialCommunityIcons
                 name="phone-outline"
@@ -148,7 +148,7 @@ const EditProfileScreen = () => {
           </View>
 
           <View style={styles.field}>
-            <Text style={styles.label}>Birthdate</Text>
+            <CustomText variant="medium" style={styles.label}>Birthdate</CustomText>
             <TouchableOpacity
               style={styles.inputContainer}
               onPress={() => setShowDatePicker(true)}
@@ -158,7 +158,7 @@ const EditProfileScreen = () => {
                 size={22}
                 color={Colors.color.placeholder}
               />
-              <Text
+              <CustomText
                 style={[
                   styles.input,
                   {
@@ -171,7 +171,7 @@ const EditProfileScreen = () => {
                 {birthdate
                   ? birthdate.toLocaleDateString()
                   : "Select your birthdate"}
-              </Text>
+              </CustomText>
             </TouchableOpacity>
             {showDatePicker && (
               <DateTimePicker
@@ -187,7 +187,7 @@ const EditProfileScreen = () => {
           </View>
 
           <View style={styles.field}>
-            <Text style={styles.label}>Avatar URL</Text>
+            <CustomText variant="medium" style={styles.label}>Avatar URL</CustomText>
             <View style={styles.inputContainer}>
               <MaterialCommunityIcons
                 name="image-outline"
@@ -213,7 +213,7 @@ const EditProfileScreen = () => {
             {saving ? (
               <ActivityIndicator color={Colors.color.white} />
             ) : (
-              <Text style={styles.saveButtonText}>Save Changes</Text>
+              <CustomText variant="medium" style={styles.saveButtonText}>Save Changes</CustomText>
             )}
           </TouchableOpacity>
         </ScrollView>
@@ -244,7 +244,6 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 18,
     color: Colors.color.white,
-    fontWeight: "600",
   },
   body: {
     flex: 1,
@@ -259,7 +258,6 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 14,
-    fontWeight: "600",
     color: Colors.color.text,
     marginLeft: 4,
   },
@@ -267,14 +265,15 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: Colors.color.white,
-    borderRadius: 12,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    gap: 10,
+    borderRadius: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    gap: 12,
     shadowColor: "#000",
-    shadowOpacity: 0.04,
-    shadowRadius: 4,
-    elevation: 1,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.06,
+    shadowRadius: 10,
+    elevation: 2,
   },
   input: {
     flex: 1,
@@ -282,16 +281,20 @@ const styles = StyleSheet.create({
     color: Colors.color.text,
   },
   saveButton: {
-    height: 50,
+    height: 54,
     backgroundColor: Colors.color.primary,
-    borderRadius: 30,
+    borderRadius: 27,
     alignItems: "center",
     justifyContent: "center",
-    marginTop: 8,
+    marginTop: 16,
+    shadowColor: Colors.color.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+    elevation: 4,
   },
   saveButtonText: {
     color: Colors.color.white,
     fontSize: 16,
-    fontWeight: "600",
   },
 });

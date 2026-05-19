@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import {
   StyleSheet,
   View,
-  Text,
   TextInput,
   TouchableOpacity,
   ScrollView,
@@ -10,6 +9,7 @@ import {
   Platform,
   Image,
 } from "react-native";
+import { CustomText } from "@/components/CustomText";
 import { Ionicons } from "@expo/vector-icons";
 import { Colors } from "../../constants/theme";
 import * as ImagePicker from "expo-image-picker";
@@ -98,17 +98,17 @@ export default function EditEventScreen() {
         </TouchableOpacity>
 
         <View style={styles.headerTitleContainer}>
-          <Text style={styles.headerSubtitle}>Editing Event</Text>
-          <Text style={styles.headerMainTitle} numberOfLines={1}>
+          <CustomText variant="bold" style={styles.headerSubtitle}>Editing Event</CustomText>
+          <CustomText variant="bold" style={styles.headerMainTitle} numberOfLines={1}>
             {event.title}
-          </Text>
+          </CustomText>
         </View>
 
         <TouchableOpacity
           onPress={handleSaveChanges}
           style={styles.headerSaveBtn}
         >
-          <Text style={styles.saveBtnText}>Save</Text>
+          <CustomText variant="bold" style={styles.saveBtnText}>Save</CustomText>
         </TouchableOpacity>
       </View>
 
@@ -119,7 +119,7 @@ export default function EditEventScreen() {
       >
         {/*  EVENT STATUS */}
         <View style={styles.card}>
-          <Text style={styles.cardSectionTitle}>EVENT STATUS</Text>
+          <CustomText variant="bold" style={styles.cardSectionTitle}>EVENT STATUS</CustomText>
 
           {/* DROPDOWN TRIGGER */}
           <TouchableOpacity
@@ -137,7 +137,7 @@ export default function EditEventScreen() {
                   },
                 ]}
               />
-              <Text style={styles.selectorMainText}>{status}</Text>
+              <CustomText variant="medium" style={styles.selectorMainText}>{status}</CustomText>
             </View>
             <Ionicons
               name={isStatusOpen ? "chevron-up" : "chevron-down"}
@@ -158,17 +158,17 @@ export default function EditEventScreen() {
                   <View
                     style={[styles.statusDot, { backgroundColor: opt.color }]}
                   />
-                  <Text
+                  <CustomText
+                    variant={status === opt.label ? "bold" : "regular"}
                     style={[
                       styles.dropdownItemText,
                       status === opt.label && {
-                        fontWeight: "800",
                         color: "#1a2a44",
                       },
                     ]}
                   >
                     {opt.label}
-                  </Text>
+                  </CustomText>
                   {status === opt.label && (
                     <Ionicons name="checkmark" size={18} color="#1a2a44" />
                   )}
@@ -180,9 +180,9 @@ export default function EditEventScreen() {
 
         {/* EVENT INFORMATION */}
         <View style={styles.card}>
-          <Text style={styles.cardSectionTitle}>EVENT INFORMATION</Text>
+          <CustomText variant="bold" style={styles.cardSectionTitle}>EVENT INFORMATION</CustomText>
 
-          <Text style={styles.label}>Event Title</Text>
+          <CustomText variant="medium" style={styles.label}>Event Title</CustomText>
           <View style={styles.inputWrapper}>
             <TextInput
               style={styles.wrapperInput}
@@ -191,7 +191,7 @@ export default function EditEventScreen() {
             />
           </View>
 
-          <Text style={styles.label}>Event Image (6:9)</Text>
+          <CustomText variant="medium" style={styles.label}>Event Image (6:9)</CustomText>
           <TouchableOpacity
             style={[
               styles.imageContainer,
@@ -209,14 +209,14 @@ export default function EditEventScreen() {
                 <View style={styles.cameraCircle}>
                   <Ionicons name="camera-outline" size={24} color="#FFF" />
                 </View>
-                <Text style={styles.uploadMainText}>Tap to add</Text>
-                <Text style={styles.uploadSubText}>Recommended (6:9)</Text>
+                <CustomText variant="medium" style={styles.uploadMainText}>Tap to add</CustomText>
+                <CustomText style={styles.uploadSubText}>Recommended (6:9)</CustomText>
               </View>
             )}
           </TouchableOpacity>
 
           {/* DESCRIPTION */}
-          <Text style={styles.label}>Description</Text>
+          <CustomText variant="medium" style={styles.label}>Description</CustomText>
           <View
             style={[
               styles.inputWrapper,
@@ -235,7 +235,7 @@ export default function EditEventScreen() {
 
         {/* DATE & VENUE */}
         <View style={styles.card}>
-          <Text style={styles.cardSectionTitle}>DATE & VENUE</Text>
+          <CustomText variant="bold" style={styles.cardSectionTitle}>DATE & VENUE</CustomText>
           <View style={styles.selectorRow}>
             <TouchableOpacity
               style={styles.dateTimeSelector}
@@ -246,9 +246,9 @@ export default function EditEventScreen() {
                 size={18}
                 color="#1a2a44"
               />
-              <Text style={styles.selectorMainText}>
+              <CustomText variant="medium" style={styles.selectorMainText}>
                 {event.event_date ? event?.event_date : "Start Date"}
-              </Text>
+              </CustomText>
             </TouchableOpacity>
 
             {/* Nút chọn End Date */}
@@ -257,9 +257,9 @@ export default function EditEventScreen() {
               onPress={() => setShowEndPicker(true)}
             >
               <Ionicons name="time-outline" size={18} color="#1a2a44" />
-              <Text style={styles.selectorMainText}>
+              <CustomText variant="medium" style={styles.selectorMainText}>
                 {event.end_date ? event?.end_date : "End Date"}
-              </Text>
+              </CustomText>
             </TouchableOpacity>
             {showStartPicker && (
               <DateTimePicker
@@ -307,7 +307,7 @@ export default function EditEventScreen() {
 
         {/* CAPACITY & PRICE */}
         <View style={styles.card}>
-          <Text style={styles.cardSectionTitle}>CAPACITY & TICKETING</Text>
+          <CustomText variant="bold" style={styles.cardSectionTitle}>CAPACITY & TICKETING</CustomText>
           <View style={styles.ticketRow}>
             <View style={[styles.inputWrapper, { flex: 1, marginRight: 10 }]}>
               <TextInput
@@ -320,11 +320,12 @@ export default function EditEventScreen() {
               />
             </View>
             <View style={[styles.inputWrapper, { flex: 1 }]}>
-              <Text
-                style={{ fontWeight: "bold", fontSize: 16, color: "#1a2a44" }}
+              <CustomText
+                variant="bold"
+                style={{ fontSize: 16, color: "#1a2a44" }}
               >
                 $
-              </Text>
+              </CustomText>
               <TextInput
                 style={[styles.wrapperInput, { marginLeft: 5 }]}
                 keyboardType="numeric"
@@ -377,14 +378,12 @@ function createStyles() {
     headerSubtitle: {
       color: "#BBB",
       fontSize: 10,
-      fontWeight: "700",
       textTransform: "uppercase",
       letterSpacing: 1,
     },
     headerMainTitle: {
       color: "white",
       fontSize: 16,
-      fontWeight: "bold",
     },
     headerSaveBtn: {
       backgroundColor: "rgba(255,255,255,0.15)",
@@ -395,45 +394,36 @@ function createStyles() {
     saveBtnText: {
       color: "white",
       fontSize: 14,
-      fontWeight: "700",
     },
     card: {
       backgroundColor: "white",
       borderRadius: 16,
       padding: 20,
       marginBottom: 16,
-      ...Platform.select({
-        ios: {
-          shadowColor: "#000",
-          shadowOffset: { width: 0, height: 2 },
-          shadowOpacity: 0.05,
-          shadowRadius: 5,
-        },
-        android: { elevation: 2 },
-      }),
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 6 },
+      shadowOpacity: 0.08,
+      shadowRadius: 12,
+      elevation: 4,
     },
     cardSectionTitle: {
       fontSize: 12,
       marginBottom: 15,
-      fontWeight: "800",
       color: "#AAA",
       letterSpacing: 1.2,
     },
     label: {
       fontSize: 14,
       marginBottom: 8,
-      fontWeight: "600",
       color: "#555",
     },
     inputWrapper: {
       flexDirection: "row",
       alignItems: "center",
       backgroundColor: "#F5F7FA",
-      borderRadius: 10,
-      paddingHorizontal: 12,
+      borderRadius: 12,
+      paddingHorizontal: 16,
       marginBottom: 15,
-      borderBottomWidth: 1,
-      borderColor: "#E6E9EE",
     },
     wrapperInput: {
       flex: 1,
@@ -476,7 +466,6 @@ function createStyles() {
     uploadMainText: {
       fontSize: 14,
       color: "#333",
-      fontWeight: "600",
     },
     uploadSubText: {
       fontSize: 12,
@@ -526,7 +515,6 @@ function createStyles() {
     selectorMainText: {
       marginLeft: 8,
       fontSize: 14,
-      fontWeight: "600",
       color: "#1a2a44",
     },
 

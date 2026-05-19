@@ -2,7 +2,6 @@ import { useState } from "react";
 import {
   StyleSheet,
   View,
-  Text,
   TextInput,
   TouchableOpacity,
   ScrollView,
@@ -10,6 +9,7 @@ import {
   Platform,
   Image,
 } from "react-native";
+import { CustomText } from "@/components/CustomText";
 import { Ionicons } from "@expo/vector-icons";
 import { Colors } from "../../constants/theme";
 import { EventService } from "../../axios/eventService.js";
@@ -77,7 +77,7 @@ export default function CreateEventScreen() {
     >
       {/* HEADER */}
       <View style={styles.header}>
-        <Text style={styles.headerText}>CREATE NEW EVENT</Text>
+        <CustomText variant="bold" style={styles.headerText}>CREATE NEW EVENT</CustomText>
       </View>
 
       <ScrollView
@@ -87,9 +87,9 @@ export default function CreateEventScreen() {
       >
         {/* EVENT INFORMATION CARD */}
         <View style={styles.card}>
-          <Text style={styles.cardSectionTitle}>EVENT INFORMATION</Text>
+          <CustomText variant="bold" style={styles.cardSectionTitle}>EVENT INFORMATION</CustomText>
 
-          <Text style={styles.label}>Event Title</Text>
+          <CustomText variant="medium" style={styles.label}>Event Title</CustomText>
           <View style={styles.inputWrapper}>
             <TextInput
               style={styles.wrapperInput}
@@ -100,7 +100,7 @@ export default function CreateEventScreen() {
             />
           </View>
 
-          <Text style={styles.label}>Event Image (6:9)</Text>
+          <CustomText variant="medium" style={styles.label}>Event Image (6:9)</CustomText>
           <TouchableOpacity
             style={[styles.imageContainer, image && styles.imageActive]}
             onPress={pickImage}
@@ -112,14 +112,14 @@ export default function CreateEventScreen() {
                 <View style={styles.cameraCircle}>
                   <Ionicons name="camera-outline" size={24} color="#FFF" />
                 </View>
-                <Text style={styles.uploadMainText}>Tap to add</Text>
-                <Text style={styles.uploadSubText}>Recommended (6:9)</Text>
+                <CustomText variant="medium" style={styles.uploadMainText}>Tap to add</CustomText>
+                <CustomText style={styles.uploadSubText}>Recommended (6:9)</CustomText>
               </View>
             )}
           </TouchableOpacity>
 
           {/* DESCRIPTION */}
-          <Text style={styles.label}>Description</Text>
+          <CustomText variant="medium" style={styles.label}>Description</CustomText>
           <View
             style={[
               styles.inputWrapper,
@@ -139,7 +139,7 @@ export default function CreateEventScreen() {
 
         {/* DATE & LOCATION CARD */}
         <View style={styles.card}>
-          <Text style={styles.cardSectionTitle}>DATE & LOCATION</Text>
+          <CustomText variant="bold" style={styles.cardSectionTitle}>DATE & LOCATION</CustomText>
           <View style={styles.selectorRow}>
             <TouchableOpacity
               style={styles.dateTimeSelector}
@@ -150,9 +150,9 @@ export default function CreateEventScreen() {
                 size={18}
                 color="#1a2a44"
               />
-              <Text style={styles.selectorMainText}>
-                {form.event_date ? form?.event_date : "Start Date"}
-              </Text>
+              <CustomText variant="medium" style={styles.selectorMainText}>
+                {form.event_date ? new Date(form.event_date).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }) : "Start Date"}
+              </CustomText>
             </TouchableOpacity>
 
             {/* Nút chọn End Date */}
@@ -161,9 +161,9 @@ export default function CreateEventScreen() {
               onPress={() => setShowEndPicker(true)}
             >
               <Ionicons name="time-outline" size={18} color="#1a2a44" />
-              <Text style={styles.selectorMainText}>
-                {form.end_date ? form?.end_date : "End Date"}
-              </Text>
+              <CustomText variant="medium" style={styles.selectorMainText}>
+                {form.end_date ?new Date(form.end_date).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }) : "End Date"}
+              </CustomText>
             </TouchableOpacity>
             {showStartPicker && (
               <DateTimePicker
@@ -208,7 +208,7 @@ export default function CreateEventScreen() {
 
         {/* CAPACITY & PRICE */}
         <View style={styles.card}>
-          <Text style={styles.cardSectionTitle}>CAPACITY & TICKETING</Text>
+          <CustomText variant="bold" style={styles.cardSectionTitle}>CAPACITY & TICKETING</CustomText>
           <View style={styles.ticketRow}>
             <View style={[styles.inputWrapper, { flex: 1, marginRight: 10 }]}>
               <TextInput
@@ -222,11 +222,12 @@ export default function CreateEventScreen() {
               />
             </View>
             <View style={[styles.inputWrapper, { flex: 1 }]}>
-              <Text
-                style={{ fontWeight: "bold", fontSize: 16, color: "#1a2a44" }}
+              <CustomText
+                variant="bold"
+                style={{ fontSize: 16, color: "#1a2a44" }}
               >
                 $
-              </Text>
+              </CustomText>
               <TextInput
                 style={[styles.wrapperInput, { marginLeft: 5 }]}
                 placeholder="Price"
@@ -240,10 +241,10 @@ export default function CreateEventScreen() {
         {/* ACTIONS */}
         <View style={styles.footer}>
           <TouchableOpacity style={styles.btnSecondary}>
-            <Text style={styles.btnSecondaryText}>Save Draft</Text>
+            <CustomText variant="bold" style={styles.btnSecondaryText}>Save Draft</CustomText>
           </TouchableOpacity>
           <TouchableOpacity style={styles.btnPrimary} onPress={handlePublish}>
-            <Text style={styles.btnPrimaryText}>Publish</Text>
+            <CustomText variant="bold" style={styles.btnPrimaryText}>Publish</CustomText>
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -276,7 +277,6 @@ function createStyles() {
     },
     headerText: {
       fontSize: 20,
-      fontWeight: "700",
       textAlign: "center",
       color: "white",
       letterSpacing: 1,
@@ -286,27 +286,21 @@ function createStyles() {
       borderRadius: 16,
       padding: 20,
       marginBottom: 16,
-      ...Platform.select({
-        ios: {
-          shadowColor: "#000",
-          shadowOffset: { width: 0, height: 2 },
-          shadowOpacity: 0.05,
-          shadowRadius: 5,
-        },
-        android: { elevation: 2 },
-      }),
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 6 },
+      shadowOpacity: 0.08,
+      shadowRadius: 12,
+      elevation: 4,
     },
     cardSectionTitle: {
       fontSize: 12,
       marginBottom: 15,
-      fontWeight: "800",
       color: "#AAA",
       letterSpacing: 1.2,
     },
     label: {
       fontSize: 14,
       marginBottom: 8,
-      fontWeight: "600",
       color: "#555",
     },
 
@@ -315,11 +309,9 @@ function createStyles() {
       flexDirection: "row",
       alignItems: "center",
       backgroundColor: "#F5F7FA",
-      borderRadius: 10,
-      paddingHorizontal: 12,
+      borderRadius: 12,
+      paddingHorizontal: 16,
       marginBottom: 15,
-      borderBottomWidth: 1,
-      borderColor: "#E6E9EE",
     },
     wrapperInput: {
       flex: 1,
@@ -364,7 +356,6 @@ function createStyles() {
     uploadMainText: {
       fontSize: 14,
       color: "#333",
-      fontWeight: "600",
     },
     uploadSubText: {
       fontSize: 12,
@@ -395,7 +386,6 @@ function createStyles() {
     selectorMainText: {
       marginLeft: 8,
       fontSize: 14,
-      fontWeight: "600",
       color: "#1a2a44",
     },
 
@@ -431,12 +421,10 @@ function createStyles() {
     btnPrimaryText: {
       color: "white",
       fontSize: 16,
-      fontWeight: "700",
     },
     btnSecondaryText: {
       color: Colors.color.primary,
       fontSize: 15,
-      fontWeight: "700",
     },
   });
 }

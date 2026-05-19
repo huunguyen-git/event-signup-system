@@ -6,15 +6,19 @@ import {
   Platform,
   ScrollView,
   StyleSheet,
-  Text,
   TextInput,
   TouchableOpacity,
   View,
   Modal,
 } from "react-native";
+import { CustomText } from "@/components/CustomText";
 import { Colors } from "../constants/theme";
 import { ICreateEvent } from "@/axios/dto/eventModel";
 import { EventService } from "@/axios/eventService";
+import * as Notifications from 'expo-notifications';
+import { NotificationService } from "@/axios/notificationService";
+import { getUserId } from "@/services/storage";
+import { SchedulableTriggerInputTypes } from 'expo-notifications';
 
 export default function RegistrationFormScreen() {
   const router = useRouter();
@@ -28,6 +32,7 @@ export default function RegistrationFormScreen() {
   const [showPrivacy, setShowPrivacy] = useState(false);
   const [showCustomQuestionModal, setShowCustomQuestionModal] = useState(false);
   const {
+    id,
     host_id,
     title,
     description,
@@ -42,12 +47,11 @@ export default function RegistrationFormScreen() {
     status,
     isCreate,
   } = useLocalSearchParams();
-  const { id, isRegister } = useLocalSearchParams();
   const [data, setData] = useState<ICreateEvent>(new ICreateEvent());
   const [customQuestions, setCustomQuestions] = useState<any[]>([]);
   const [question, setQuestion] = useState("");
-  const IsCreate = isCreate ? true : false;
-  const IsRegister = isRegister ? true : false;
+  const IsCreate = isCreate === "true" ? true : false;
+  console.log (IsCreate);
   useEffect(() => {
     const fetchData = async () => {
       if (IsCreate) {
@@ -66,10 +70,14 @@ export default function RegistrationFormScreen() {
           status: status as string,
           form_config: form_config as string,
         });
-      } else if (IsRegister) {
+      } else {
         const event = await EventService.getEvent(id);
+        console.log("event duoc lay ve:", event);
         setData(event);
-        setCustomQuestions(JSON.parse(event.form_config || "[]"));
+        const formConfig = event.form_config ? JSON.parse(event.form_config) : [];
+        if(Array.isArray(formConfig)) {
+          setCustomQuestions(formConfig);
+        }
       }
     };
     fetchData();
@@ -94,15 +102,44 @@ export default function RegistrationFormScreen() {
     setQuestion("");
   };
 
-  const handleCreateEvent = () => {
+  const handleCreateEvent = async() => {
     try {
       console.log("du lieu dang ki:", data);
-      EventService.createEvent(data);
+      await EventService.createEvent(data);
+      const notification = {
+        userId: await getUserId(),
+        title: data.title,
+        body: "Bạn vừa đăng kí sự kiện "+ data.title,
+      }
+      await Notifications.scheduleNotificationAsync({
+      content: {
+        title: notification.title,
+        body: notification.body,
+        data: { eventId: data.id },
+      },
+      trigger: null,
+    });
+      await NotificationService.sendAndSaveNotification(notification);
     } catch (error) {
       console.error("Error creating event:", error);
     }
   };
 
+  async function scheduleEventReminder(eventTitle: string, eventStartStr: string) {
+    const eventTime = new Date(data.event_date).getTime();
+    const triggerDate = new Date(eventTime - 30 * 60 * 1000);
+    const notificationId = await Notifications.scheduleNotificationAsync({
+      content: {
+        title: `⏰ Sắp diễn ra: ${eventTitle}`,
+        body: 'Sự kiện của bạn sẽ bắt đầu sau 30 phút nữa. Hãy chuẩn bị nhé!',
+        sound: true,
+      },
+      trigger: {
+        type: SchedulableTriggerInputTypes.DATE, 
+        date: triggerDate,
+      },
+    });
+}
   const ticketOptions = [
     { id: "1", name: "Standard Pass" },
     { id: "2", name: "Premium Pass" },
@@ -110,7 +147,7 @@ export default function RegistrationFormScreen() {
 
   const InputField = ({ label, placeholder, isShort }: any) => (
     <View style={[styles.inputGroup, isShort && { flex: 1 }]}>
-      <Text style={styles.label}>{label}</Text>
+      <CustomText variant="bold" style={styles.label}>{label}</CustomText>
       <View style={styles.inputWrapper}>
         <TextInput
           style={styles.input}
@@ -125,15 +162,15 @@ export default function RegistrationFormScreen() {
     <Modal visible={visible} transparent animationType="fade">
       <View style={styles.infoOverlay}>
         <View style={styles.infoCard}>
-          <Text style={styles.infoTitle}>{title}</Text>
+          <CustomText variant="bold" style={styles.infoTitle}>{title}</CustomText>
           <ScrollView style={{ maxHeight: 250 }}>
-            <Text style={styles.infoBodyText}>{content}</Text>
+            <CustomText style={styles.infoBodyText}>{content}</CustomText>
           </ScrollView>
           <TouchableOpacity
             style={[styles.infoCloseBtn, { backgroundColor: themeColor }]}
             onPress={onClose}
           >
-            <Text style={styles.infoCloseBtnText}>ĐÓNG</Text>
+            <CustomText variant="bold" style={styles.infoCloseBtnText}>ĐÓNG</CustomText>
           </TouchableOpacity>
         </View>
       </View>
@@ -144,23 +181,19 @@ export default function RegistrationFormScreen() {
     <View style={styles.overlayContainer}>
       <TouchableOpacity
         style={styles.dismissArea}
-        onPress={() => router.back()}
+        activeOpacity={1}
+        onPressOut={() => router.back()}
       />
-      <TouchableOpacity
-        style={{
-          position: "absolute",
-          top: 30,
-          right: 30,
-          visibility: IsCreate ? "visible" : "hidden",
-        }}
-        onPress={() => setShowCustomQuestionModal(true)}
-      >
-        <MaterialCommunityIcons
-          name="access-point-check"
-          size={40}
-          color="black"
-        />
-      </TouchableOpacity>
+      {IsCreate && (
+        <TouchableOpacity
+          activeOpacity={0.7}
+          style={styles.floatingAddBtn}
+          onPress={() => setShowCustomQuestionModal(true)}
+        >
+          <Ionicons name="add" size={28} color="white" />
+        </TouchableOpacity>
+      )}
+      
       <Modal
         visible={showCustomQuestionModal}
         transparent
@@ -170,12 +203,12 @@ export default function RegistrationFormScreen() {
           <View style={styles.questionCard}>
             <View style={styles.cardHeader}>
               <Ionicons name="create-outline" size={22} color={themeColor} />
-              <Text style={styles.cardTitle}>Thêm câu hỏi mới</Text>
+              <CustomText variant="bold" style={styles.cardTitle}>Thêm câu hỏi mới</CustomText>
             </View>
 
-            <Text style={styles.cardSubtitle}>
+            <CustomText style={styles.cardSubtitle}>
               Nội dung này sẽ xuất hiện trong form đăng ký của người tham gia.
-            </Text>
+            </CustomText>
 
             <View style={styles.textAreaWrapper}>
               <TextInput
@@ -194,14 +227,14 @@ export default function RegistrationFormScreen() {
                 style={styles.secondaryBtn}
                 onPress={handleCancelCustomQuestion}
               >
-                <Text style={styles.secondaryBtnText}>HỦY</Text>
+                <CustomText variant="medium" style={styles.secondaryBtnText}>HỦY</CustomText>
               </TouchableOpacity>
 
               <TouchableOpacity
                 style={[styles.primaryBtn, { backgroundColor: themeColor }]}
                 onPress={handleSaveCustomQuestion}
               >
-                <Text style={styles.primaryBtnText}>LƯU CÂU HỎI</Text>
+                <CustomText variant="bold" style={styles.primaryBtnText}>LƯU CÂU HỎI</CustomText>
               </TouchableOpacity>
             </View>
           </View>
@@ -211,22 +244,22 @@ export default function RegistrationFormScreen() {
         behavior={Platform.OS === "ios" ? "padding" : "height"}
       >
         <View style={styles.modalCard}>
-          <Text style={styles.eventSmallTitle}>
+          <CustomText style={styles.eventSmallTitle}>
             International Tech Summit 2024
-          </Text>
-          <Text style={[styles.mainTitle, { color: themeColor }]}>
+          </CustomText>
+          <CustomText variant="bold" style={[styles.mainTitle, { color: themeColor }]}>
             CONFIRM REGISTRATION
-          </Text>
+          </CustomText>
 
           <View style={styles.ticketSummary}>
             <View>
-              <Text style={styles.ticketLabel}>REGISTERING AS:</Text>
-              <Text style={styles.ticketType}>{ticketType}</Text>
+              <CustomText variant="bold" style={styles.ticketLabel}>REGISTERING AS:</CustomText>
+              <CustomText variant="bold" style={styles.ticketType}>{ticketType}</CustomText>
             </View>
             <TouchableOpacity onPress={() => setShowTicketPicker(true)}>
-              <Text style={[styles.changeLink, { color: themeColor }]}>
+              <CustomText variant="bold" style={[styles.changeLink, { color: themeColor }]}>
                 Change
-              </Text>
+              </CustomText>
             </TouchableOpacity>
           </View>
 
@@ -244,13 +277,13 @@ export default function RegistrationFormScreen() {
               placeholder="nguyenvana@gmail.com"
             />
             <InputField label="Job Title" placeholder="Software Engineer" />
-            {/* {customQuestions.map((q) => (
+            {customQuestions?.map((q) => (
               <InputField
                 key={q.id}
                 label={q.question}
                 placeholder="Your answer here..."
               />
-            ))} */}
+            ))}
 
             <View style={styles.checkboxRow}>
               <TouchableOpacity onPress={() => setAgreed(!agreed)}>
@@ -260,23 +293,25 @@ export default function RegistrationFormScreen() {
                   color={themeColor}
                 />
               </TouchableOpacity>
-              <Text style={styles.checkboxText}>
+              <CustomText style={styles.checkboxText}>
                 I agree to the{" "}
-                <Text
+                <CustomText
+                  variant="bold"
                   style={styles.boldLink}
                   onPress={() => setShowTerms(true)}
                 >
                   Terms of Service
-                </Text>{" "}
+                </CustomText>{" "}
                 and{" "}
-                <Text
+                <CustomText
+                  variant="bold"
                   style={styles.boldLink}
                   onPress={() => setShowPrivacy(true)}
                 >
                   Privacy Policy
-                </Text>
+                </CustomText>
                 .
-              </Text>
+              </CustomText>
             </View>
           </ScrollView>
 
@@ -285,9 +320,9 @@ export default function RegistrationFormScreen() {
               style={styles.cancelBtn}
               onPress={() => router.back()}
             >
-              <Text style={[styles.cancelBtnText, { color: themeColor }]}>
+              <CustomText variant="bold" style={[styles.cancelBtnText, { color: themeColor }]}>
                 CANCEL
-              </Text>
+              </CustomText>
             </TouchableOpacity>
             <TouchableOpacity
               style={[
@@ -295,13 +330,9 @@ export default function RegistrationFormScreen() {
                 { backgroundColor: themeColor, opacity: agreed ? 1 : 0.5 },
               ]}
               disabled={!agreed}
-              // onPress={() => router.replace({
-              //     pathname: '/SuccessScreen',
-              //     params: { ticketType: ticketType }
-              // })}
               onPress={handleCreateEvent}
             >
-              <Text style={styles.completeBtnText}>COMPLETE REGISTRATION</Text>
+              <CustomText variant="bold" style={styles.completeBtnText}>COMPLETE REGISTRATION</CustomText>
             </TouchableOpacity>
           </View>
         </View>
@@ -310,7 +341,7 @@ export default function RegistrationFormScreen() {
       <Modal visible={showTicketPicker} transparent animationType="slide">
         <View style={styles.pickerOverlay}>
           <View style={styles.pickerCard}>
-            <Text style={styles.pickerHeader}>Select Ticket Type</Text>
+            <CustomText variant="bold" style={styles.pickerHeader}>Select Ticket Type</CustomText>
             {ticketOptions.map((option) => (
               <TouchableOpacity
                 key={option.id}
@@ -326,14 +357,15 @@ export default function RegistrationFormScreen() {
                   setShowTicketPicker(false);
                 }}
               >
-                <Text
+                <CustomText
+                  variant="bold"
                   style={[
                     styles.optionName,
                     ticketType === option.name && { color: themeColor },
                   ]}
                 >
                   {option.name}
-                </Text>
+                </CustomText>
                 {ticketType === option.name && (
                   <Ionicons
                     name="checkmark-circle"
@@ -347,9 +379,9 @@ export default function RegistrationFormScreen() {
               style={styles.pickerClose}
               onPress={() => setShowTicketPicker(false)}
             >
-              <Text style={{ color: "#999", fontWeight: "bold" }}>
+              <CustomText variant="bold" style={{ color: "#999" }}>
                 QUAY LẠI
-              </Text>
+              </CustomText>
             </TouchableOpacity>
           </View>
         </View>
@@ -374,7 +406,7 @@ export default function RegistrationFormScreen() {
 const styles = StyleSheet.create({
   modalOverlay: {
     flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.6)", // Làm tối nền để tập trung vào box
+    backgroundColor: "rgba(0, 0, 0, 0.6)",
     justifyContent: "center",
     padding: 20,
   },
@@ -395,7 +427,6 @@ const styles = StyleSheet.create({
   },
   cardTitle: {
     fontSize: 18,
-    fontWeight: "700",
     color: "#1A1A1A",
     marginLeft: 8,
   },
@@ -405,7 +436,6 @@ const styles = StyleSheet.create({
     lineHeight: 18,
     marginBottom: 20,
   },
-  // Ô nhập liệu dạng Text Area
   textAreaWrapper: {
     backgroundColor: "#F8F9FA",
     borderRadius: 16,
@@ -419,9 +449,8 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: "#333",
     height: 100,
-    textAlignVertical: "top", // Quan trọng cho Android để chữ nằm trên cùng
+    textAlignVertical: "top",
   },
-  // Cụm nút bấm
   buttonGroup: {
     flexDirection: "row",
     justifyContent: "flex-end",
@@ -434,7 +463,6 @@ const styles = StyleSheet.create({
   },
   secondaryBtnText: {
     color: "#999",
-    fontWeight: "600",
     fontSize: 14,
   },
   primaryBtn: {
@@ -449,7 +477,6 @@ const styles = StyleSheet.create({
   },
   primaryBtnText: {
     color: "#FFF",
-    fontWeight: "bold",
     fontSize: 14,
   },
   overlayContainer: {
@@ -459,6 +486,17 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   dismissArea: { ...StyleSheet.absoluteFillObject },
+  floatingAddBtn: {
+    position: "absolute",
+    top: 50,
+    right: 20,
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    justifyContent: "center",
+    alignItems: "center",
+    elevation: 5,
+  },
   modalCard: {
     backgroundColor: "white",
     borderRadius: 30,
@@ -468,7 +506,6 @@ const styles = StyleSheet.create({
   eventSmallTitle: { fontSize: 13, color: "#666", textAlign: "center" },
   mainTitle: {
     fontSize: 20,
-    fontWeight: "bold",
     textAlign: "center",
     marginTop: 5,
     marginBottom: 15,
@@ -482,22 +519,19 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     marginBottom: 20,
   },
-  ticketLabel: { fontSize: 11, color: "#777", fontWeight: "bold" },
-  ticketType: { fontSize: 15, fontWeight: "bold", color: "#333" },
+  ticketLabel: { fontSize: 11, color: "#777" },
+  ticketType: { fontSize: 15, color: "#333" },
   changeLink: {
     textDecorationLine: "underline",
-    fontWeight: "bold",
     fontSize: 13,
   },
   row: { flexDirection: "row" },
   inputGroup: { marginBottom: 15 },
-  label: { fontSize: 12, fontWeight: "bold", color: "#444", marginBottom: 5 },
+  label: { fontSize: 12, color: "#444", marginBottom: 5 },
   inputWrapper: {
-    borderWidth: 1,
-    borderColor: "#DDD",
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    backgroundColor: "#FFF",
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    backgroundColor: "#F4F6F9",
   },
   input: { paddingVertical: 10, fontSize: 15, color: "#000" },
   checkboxRow: {
@@ -508,7 +542,6 @@ const styles = StyleSheet.create({
   },
   checkboxText: { marginLeft: 8, fontSize: 12, color: "#666", flex: 1 },
   boldLink: {
-    fontWeight: "bold",
     textDecorationLine: "underline",
     color: "#333",
   },
@@ -526,7 +559,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#F1F3F5",
     justifyContent: "center",
   },
-  cancelBtnText: { fontWeight: "bold", fontSize: 15 },
+  cancelBtnText: { fontSize: 15 },
   completeBtn: {
     flex: 2,
     padding: 15,
@@ -536,12 +569,9 @@ const styles = StyleSheet.create({
   },
   completeBtnText: {
     color: "white",
-    fontWeight: "bold",
     fontSize: 15,
     textAlign: "center",
   },
-
-  // Picker Styles
   pickerOverlay: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.5)",
@@ -555,7 +585,6 @@ const styles = StyleSheet.create({
   },
   pickerHeader: {
     fontSize: 18,
-    fontWeight: "bold",
     marginBottom: 20,
     textAlign: "center",
   },
@@ -570,10 +599,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#eee",
   },
-  optionName: { fontWeight: "bold", fontSize: 16, color: "#333" },
+  optionName: { fontSize: 16, color: "#333" },
   pickerClose: { padding: 15, alignItems: "center" },
-
-  // Info Modal Styles
   infoOverlay: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.8)",
@@ -586,7 +613,7 @@ const styles = StyleSheet.create({
     padding: 25,
     alignItems: "center",
   },
-  infoTitle: { fontSize: 18, fontWeight: "bold", marginBottom: 15 },
+  infoTitle: { fontSize: 18, marginBottom: 15 },
   infoBodyText: {
     fontSize: 14,
     color: "#555",
@@ -599,5 +626,5 @@ const styles = StyleSheet.create({
     paddingHorizontal: 30,
     borderRadius: 20,
   },
-  infoCloseBtnText: { color: "white", fontWeight: "bold" },
+  infoCloseBtnText: { color: "white" },
 });

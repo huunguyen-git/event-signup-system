@@ -39,11 +39,13 @@ model User {
   phone_number String?
   avatar_url   String?  
   created_at   DateTime @default(now())
+  token        String?
 
   // Relations
   hosted_events Event[]       @relation("HostedEvents")
   applications  Application[]
   comments      Comment[]
+  notification    Notification[]
 
   @@map("profiles")
 }
@@ -68,9 +70,19 @@ model Event {
   applications    Application[]
   comments        Comment[]
 
+
   @@map("events")
 }
-
+model Notification {
+  id          String   @id @default(uuid()) @db.Uuid
+  title       String   // Tiêu đề (VD: "Sự kiện mới!")
+  body        String   // Nội dung
+  isRead      Boolean  @default(false) // Trạng thái đọc
+  createdAt   DateTime @default(now())
+  
+  userId      String   @db.Uuid
+  user        User     @relation(fields: [userId], references: [id])
+}
 model Application {
   id          String            @id @default(uuid()) @db.Uuid
   event_id    String            @db.Uuid

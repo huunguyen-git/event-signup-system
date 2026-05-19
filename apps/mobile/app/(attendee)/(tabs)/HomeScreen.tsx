@@ -1,11 +1,11 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   View,
   StyleSheet,
   TextInput,
-  Text,
   TouchableOpacity,
 } from "react-native";
+import { CustomText } from "@/components/CustomText";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { Colors } from "../../../constants/theme";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -14,9 +14,10 @@ import EventItem from "@/components/EventItem";
 import { Stack, useRouter, } from "expo-router";
 import { ICreateEvent } from "@/axios/dto/eventModel";
 import { EventService } from "@/axios/eventService";
+import Header from "@/components/Header";
 const HomeScreen = () => {
-  const router = useRouter();
   const [data, setData] = useState<ICreateEvent[]>([]);
+  const [searchText, setSearchText] = useState<string>("");
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -28,36 +29,21 @@ const HomeScreen = () => {
     };
     fetchData();
   }, []);
+  const filterData = useMemo(() => {
+    if(!searchText) return data;
+    const formatQuery = searchText.toLowerCase(); 
+
+    return data.filter(item => 
+      item.title.toLowerCase().includes(formatQuery)
+    );
+  },[searchText, data]);
+  
+  
   return (
     <>
       <Stack.Screen options={{ headerShown: false }} />
       <SafeAreaView style={styles.container}>
-        <View style={styles.header}>
-          <MaterialCommunityIcons
-            name="domain"
-            size={40}
-            color={Colors.color.white}
-          />
-          <Text style={styles.connect}>
-            {" "}
-            <Text style={styles.event}>EVENT </Text>CONNECT
-          </Text>
-          <View style={styles.Icon}>
-            <MaterialCommunityIcons
-              name="bell-outline"
-              size={40}
-              color={Colors.color.white}
-            />
-            <TouchableOpacity onPress={() => router.push("/AccountScreen")}>
-              <MaterialCommunityIcons
-                name="account"
-                size={40}
-                color={Colors.color.primary}
-                style={styles.accountIcon}
-              />
-            </TouchableOpacity>
-          </View>
-        </View>
+        <Header />
         <View style={styles.body}>
           <View style={styles.searchBar}>
             <MaterialCommunityIcons
@@ -70,13 +56,19 @@ const HomeScreen = () => {
               placeholder="Search by event name, date or location..."
               placeholderTextColor={Colors.color.placeholder}
               scrollEnabled={false}
+              value={searchText}
+              onChangeText={(text)=>{setSearchText(text)}}
+              clearButtonMode="while-editing"
             />
           </View>
-          <Text style={styles.upcomingEvent}>Upcoming Event</Text>
+          <CustomText variant="bold" style={styles.upcomingEvent}>Upcoming Event</CustomText>
           <FlatList
-            data={data}
+            data={filterData}
             renderItem={({ item }) => <EventItem event={item} />}
             keyExtractor={(item) => item.id}
+            ListEmptyComponent={
+              <CustomText style={styles.emptyText}>Không có sự kiện nào</CustomText>
+            }
           />
         </View>
       </SafeAreaView>
@@ -91,47 +83,24 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Colors.color.white,
   },
-  header: {
-    height: 60,
-    alignItems: "center",
-    backgroundColor: Colors.color.primary,
-    flexDirection: "row",
-    gap: 10,
-    paddingHorizontal: 10,
-  },
-  connect: {
-    fontSize: 18,
-    color: Colors.color.white,
-  },
-  event: {
-    fontWeight: 700,
-  },
-  accountIcon: {
-    height: 40,
-    backgroundColor: Colors.color.lightblue,
-    borderRadius: 20,
-  },
-  Icon: {
-    flexDirection: "row",
-    gap: 10,
-    alignItems: "center",
-    marginLeft: "auto",
-  },
   body: {
     backgroundColor: Colors.color.background,
     flex: 1,
     padding: 10,
   },
   searchBar: {
-    height: 40,
+    height: 45,
     width: "100%",
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
-    borderWidth: 1,
-    borderColor: Colors.color.placeholder,
     borderRadius: 30,
     backgroundColor: Colors.color.white,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 10,
+    elevation: 4,
     gap: 5,
     marginTop: 10,
     marginBottom: 20,
@@ -144,7 +113,12 @@ const styles = StyleSheet.create({
   },
   upcomingEvent: {
     fontSize: 20,
-    fontWeight: "bold",
     marginRight: "auto",
   },
+  emptyText: {
+    textAlign: 'center',
+    marginTop: 20,
+    color: '#888',
+    fontSize: 16,
+  }
 });

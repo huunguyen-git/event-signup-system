@@ -1,9 +1,10 @@
 import React from "react";
-import { View, StyleSheet, Text, TouchableOpacity } from "react-native";
+import { View, StyleSheet, TouchableOpacity } from "react-native";
 import { Colors } from "../constants/theme";
 import { Users, MessageSquare, TrendingUp } from "lucide-react-native";
 import { ICreateEvent } from "@/axios/dto/eventModel";
 import { useRouter } from "expo-router";
+import { CustomText } from "@/components/CustomText";
 
 interface HostItem {
   event: ICreateEvent;
@@ -20,9 +21,9 @@ const HostEventItem = (event: HostItem) => {
     <View style={styles.card}>
       {/* Top Row: Title and Status */}
       <View style={styles.headerRow}>
-        <Text style={styles.title} numberOfLines={1}>
+        <CustomText variant="bold" style={styles.title} numberOfLines={1}>
           {event.event.title}
-        </Text>
+        </CustomText>
         <View
           style={[
             styles.statusBadge,
@@ -32,31 +33,31 @@ const HostEventItem = (event: HostItem) => {
             },
           ]}
         >
-          <Text style={styles.statusText}>{event.event.status}</Text>
+          <CustomText variant="bold" style={styles.statusText}>{event.event.status}</CustomText>
         </View>
       </View>
 
       {/* Details Row: Icons and Stats */}
       <View style={styles.detailsRow}>
-        <Text style={styles.detailsLabel}>Details</Text>
+        <CustomText variant="medium" style={styles.detailsLabel}>Details</CustomText>
 
         {event.event.status && (
           <View style={styles.stat}>
             <TrendingUp size={14} color="#666" />
-            <Text style={styles.statValue}>{event.event.status}</Text>
+            <CustomText style={styles.statValue}>{event.event.status}</CustomText>
           </View>
         )}
 
         {event.event.max_attendees && (
           <View style={styles.stat}>
             <MessageSquare size={14} color="#666" />
-            <Text style={styles.statValue}>{event.event.max_attendees}</Text>
+            <CustomText style={styles.statValue}>{event.event.max_attendees}</CustomText>
           </View>
         )}
 
         <View style={styles.stat}>
           <Users size={14} color="#666" />
-          <Text style={styles.statValue}>{event.event.max_attendees}</Text>
+          <CustomText style={styles.statValue}>{event.event.max_attendees}</CustomText>
         </View>
       </View>
 
@@ -71,14 +72,17 @@ const HostEventItem = (event: HostItem) => {
             })
           }
         >
-          <Text style={styles.secondaryButtonText}>Edit</Text>
+          <CustomText variant="medium" style={styles.secondaryButtonText}>Edit</CustomText>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.primaryButton}>
-          <Text style={styles.primaryButtonText}>
+        <TouchableOpacity 
+          style={styles.primaryButton}
+          onPress={()=>{router.push('/ViewAttendeesScreen')}}>
+          <CustomText variant="medium" style={styles.primaryButtonText}>
             {event.event.status === "Draft" ? "View Vendors" : "View Attendees"}
-          </Text>
+          </CustomText>
         </TouchableOpacity>
+
       </View>
     </View>
   );
@@ -87,12 +91,15 @@ const HostEventItem = (event: HostItem) => {
 const styles = StyleSheet.create({
   card: {
     backgroundColor: Colors.color.white,
-    borderRadius: 15,
+    borderRadius: 16,
     padding: 15,
-    marginHorizontal: 15,
-    marginBottom: 12,
-    borderWidth: 1,
-    borderColor: "#E1E9F4",
+    marginHorizontal: 16,
+    marginBottom: 14,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    elevation: 5,
   },
   headerRow: {
     flexDirection: "row",
@@ -101,7 +108,6 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 16,
-    fontWeight: "700",
     color: "#1B2B52",
     flex: 1,
     marginRight: 10,
@@ -114,7 +120,6 @@ const styles = StyleSheet.create({
   statusText: {
     color: "white",
     fontSize: 11,
-    fontWeight: "bold",
   },
   detailsRow: {
     flexDirection: "row",
@@ -124,7 +129,6 @@ const styles = StyleSheet.create({
   detailsLabel: {
     fontSize: 13,
     color: "#1B2B52",
-    fontWeight: "600",
     marginRight: 12,
   },
   stat: {
@@ -153,7 +157,6 @@ const styles = StyleSheet.create({
   },
   secondaryButtonText: {
     color: "#1B2B52",
-    fontWeight: "600",
   },
   primaryButton: {
     flex: 2,
@@ -164,7 +167,6 @@ const styles = StyleSheet.create({
   },
   primaryButtonText: {
     color: "#1B2B52",
-    fontWeight: "600",
   },
 });
 

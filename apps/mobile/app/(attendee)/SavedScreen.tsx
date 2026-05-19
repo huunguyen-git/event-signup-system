@@ -1,5 +1,6 @@
 import React from "react";
-import { View, StyleSheet, Text } from "react-native";
+import { View, StyleSheet } from "react-native";
+import { CustomText } from "@/components/CustomText";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { Colors } from "../../constants/theme";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -19,10 +20,10 @@ const SavedScreen = () => {
             size={40}
             color={Colors.color.white}
           />
-          <Text style={styles.connect}>
+          <CustomText style={styles.connect}>
             {" "}
-            <Text style={styles.event}>EVENT </Text>CONNECT
-          </Text>
+            <CustomText variant="bold" style={styles.event}>EVENT </CustomText>CONNECT
+          </CustomText>
           <View style={styles.Icon}>
             <MaterialCommunityIcons
               name="bell-outline"
@@ -38,8 +39,8 @@ const SavedScreen = () => {
           </View>
         </View>
         <View style={styles.body}>
-          <Text style={styles.saveEvent}>Saved Events</Text>
-          <Text style={styles.eventCount}>Total Event: {SavedData.length}</Text>
+          <CustomText variant="bold" style={styles.saveEvent}>Saved Events</CustomText>
+          <CustomText variant="bold" style={styles.eventCount}>Total Event: {SavedData.length}</CustomText>
           <FlatList
             data={SavedData}
             renderItem={({ item }) => (
@@ -73,9 +74,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     color: Colors.color.white,
   },
-  event: {
-    fontWeight: 700,
-  },
+  event: {},
   accountIcon: {
     height: 40,
     backgroundColor: "#afc5e1",
@@ -94,7 +93,6 @@ const styles = StyleSheet.create({
   },
   saveEvent: {
     fontSize: 20,
-    fontWeight: "bold",
     marginRight: "auto",
   },
   headerBody: {
@@ -102,7 +100,6 @@ const styles = StyleSheet.create({
   },
   eventCount: {
     fontSize: 20,
-    fontWeight: "bold",
     marginLeft: "auto",
   },
 });

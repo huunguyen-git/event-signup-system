@@ -3,19 +3,22 @@ import {
   View,
   StyleSheet,
   TextInput,
-  Text,
   TouchableOpacity,
   Alert,
   ActivityIndicator,
 } from "react-native";
+import { CustomText } from "@/components/CustomText";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { Colors } from "../../constants/theme";
 import { SafeAreaView } from "react-native-safe-area-context";
 import HeaderText from "@/components/HeaderText";
 import { useRouter } from "expo-router";
 import { AuthService } from "../../axios/authService";
-// import { authApi } from "@/services/api";
-import { saveToken, saveUserId } from "@/services/storage";
+import { saveToken, saveUserId, getToken } from "@/services/storage";
+import * as Notifications from 'expo-notifications';
+import * as Device from 'expo-device';
+import { NotificationService } from "@/axios/notificationService";
+import Constants from 'expo-constants';
 
 const LoginScreen = () => {
   const [email, setEmail] = useState("");
@@ -33,16 +36,35 @@ const LoginScreen = () => {
     try {
       setLoading(true);
       const data = await AuthService.login({ email, password });
-      console.log("Login successful:", data);
       await saveToken(data.access_token);
       await saveUserId(data.user.id);
-      router.replace("/HomeScreen");
-    } catch (err: any) {
-      console.log("Lỗi chi tiết:", err);
-      if (err.request) {
-        console.log("API URL đang gọi là:", err.config.url);
+      if (Device.isDevice) {
+        const { status: existingStatus } = await Notifications.getPermissionsAsync();
+        let finalStatus = existingStatus;
+        
+        if (existingStatus !== 'granted') {
+          const { status } = await Notifications.requestPermissionsAsync();
+          finalStatus = status;
+        }
+        
+        if (finalStatus === 'granted') {
+          Notifications.setNotificationHandler({
+          handleNotification: async () => ({
+            shouldShowAlert: true,
+            shouldPlaySound: true,
+            shouldSetBadge: false,
+            shouldShowBanner: true,
+            shouldShowList: true,
+          }),
+        });
+          const token = await getToken();
+          const tok = {token: token};
+          await NotificationService.SaveToken(data.user.id, tok); 
+        }
       }
-      Alert.alert("Login Failed", err?.message || "Invalid email or password");
+      router.replace("/HomeScreen");
+    } catch (error: any) {
+      Alert.alert("Login Failed", "Invalid email or password");
     } finally {
       setLoading(false);
     }
@@ -59,10 +81,10 @@ const LoginScreen = () => {
         <HeaderText />
       </View>
       <View style={styles.body}>
-        <Text style={styles.welcomeText}>Welcome Back</Text>
-        <Text style={styles.eventText}>
+        <CustomText variant="bold" style={styles.welcomeText}>Welcome Back</CustomText>
+        <CustomText style={styles.eventText}>
           Please log in to manage or attend events.
-        </Text>
+        </CustomText>
         <View style={styles.input}>
           <View style={styles.inputContainer}>
             <MaterialCommunityIcons
@@ -114,14 +136,14 @@ const LoginScreen = () => {
           {loading ? (
             <ActivityIndicator color={Colors.color.white} />
           ) : (
-            <Text style={styles.loginButtonText}>LOGIN</Text>
+            <CustomText variant='bold'style={styles.loginButtonText}>LOGIN</CustomText>
           )}
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.forgotButton}
           onPress={() => router.push("/ForgotPasswordScreen")}
         >
-          <Text style={styles.forgotButtonText}>Forget password?</Text>
+          <CustomText style={styles.forgotButtonText}>Forget password?</CustomText>
         </TouchableOpacity>
       </View>
       <View style={styles.footer}>
@@ -129,10 +151,10 @@ const LoginScreen = () => {
           style={styles.registerButton}
           onPress={() => router.push("/CreateAccount")}
         >
-          <Text style={styles.registerButtonText}>Register for an account</Text>
+          <CustomText style={styles.registerButtonText}>Register for an account</CustomText>
         </TouchableOpacity>
         <TouchableOpacity style={styles.recoverButton}>
-          <Text style={styles.recoverButtonText}>Recover Password</Text>
+          <CustomText style={styles.recoverButtonText}>Recover Password</CustomText>
         </TouchableOpacity>
       </View>
     </SafeAreaView>
@@ -165,7 +187,6 @@ const styles = StyleSheet.create({
   },
   welcomeText: {
     fontSize: 32,
-    fontWeight: "bold",
   },
   eventText: {
     fontSize: 16,
@@ -179,26 +200,35 @@ const styles = StyleSheet.create({
   inputContainer: {
     flexDirection: "row",
     alignItems: "center",
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.color.placeholder,
-    marginBottom: 10,
+    backgroundColor: "#f4f6f9",
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 4,
+    marginBottom: 16,
   },
   textInput: {
     flex: 1,
     fontSize: 16,
     marginLeft: 10,
+    height: 45,
   },
   eyeIcon: {
     marginLeft: "auto",
   },
   loginButton: {
     width: "90%",
-    height: 50,
+    height: 54,
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: Colors.color.primary,
-    borderRadius: 30,
+    borderRadius: 27,
     marginBottom: 10,
+    marginTop: 10,
+    shadowColor: Colors.color.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+    elevation: 4,
   },
   loginButtonText: {
     color: Colors.color.white,
@@ -215,21 +245,19 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   footer: {
-    width: "91%",
-    height: 100,
+    width: "100%",
     flexDirection: "row",
     justifyContent: "space-between",
-    marginStart: 15,
+    paddingHorizontal: 20,
+    paddingBottom: 20,
   },
   registerButton: {
-    width: "55%",
-    alignItems: "center",
-    padding: 10,
+    alignItems: "flex-start",
+    paddingVertical: 10,
   },
   recoverButton: {
-    width: "45%",
-    alignItems: "center",
-    padding: 10,
+    alignItems: "flex-end",
+    paddingVertical: 10,
   },
   registerButtonText: {
     color: Colors.color.primary,

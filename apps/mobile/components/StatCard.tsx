@@ -1,4 +1,5 @@
-import { StyleSheet, View, Text } from "react-native";
+import { StyleSheet, View } from "react-native";
+import { CustomText } from "@/components/CustomText";
 
 interface StatCardProps {
   title: string;
@@ -19,21 +20,21 @@ const StatCard = ({
 }: StatCardProps) => {
   return (
     <View style={styles.statCard}>
-      <Text style={styles.statTitle}>{title}</Text>
+      <CustomText variant="bold" style={styles.statTitle}>{title}</CustomText>
 
       <View style={styles.statMain}>
-        <Text style={styles.statValue}>
+        <CustomText variant="bold" style={styles.statValue}>
           {value}
           {trend && (
             <View style={styles.trendBadge}>
-              <Text style={styles.trendText}>{trend}</Text>
+              <CustomText variant="bold" style={styles.trendText}>{trend}</CustomText>
             </View>
           )}
-        </Text>
+        </CustomText>
 
         {subtext && (
           <View style={styles.subtextContainer}>
-            <Text style={styles.subtext}>{subtext}</Text>
+            <CustomText style={styles.subtext}>{subtext}</CustomText>
           </View>
         )}
 
@@ -66,22 +67,17 @@ const styles = StyleSheet.create({
   statCard: {
     width: "48%",
     backgroundColor: "white",
-    padding: 12,
-    borderRadius: 12,
+    padding: 15,
+    borderRadius: 16,
     marginBottom: 12,
-    // Shadow for iOS
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 3,
-    // Elevation for Android
-    elevation: 2,
-    borderWidth: 1,
-    borderColor: "#F0F4F8",
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    elevation: 4,
   },
   statTitle: {
     fontSize: 10,
-    fontWeight: "800",
     color: "#1B2B52",
     opacity: 0.8,
   },
@@ -92,7 +88,6 @@ const styles = StyleSheet.create({
   },
   statValue: {
     fontSize: 22,
-    fontWeight: "bold",
     color: "#000",
   },
   trendBadge: {
@@ -104,13 +99,12 @@ const styles = StyleSheet.create({
   trendText: {
     color: "#28A745",
     fontSize: 14,
-    fontWeight: "bold",
   },
   subtextContainer: {
     backgroundColor: "#E9ECEF",
-    paddingVertical: 2,
-    paddingHorizontal: 8,
-    borderRadius: 10,
+    paddingVertical: 3,
+    paddingHorizontal: 10,
+    borderRadius: 12,
     marginTop: 8,
     alignSelf: "flex-start",
   },
@@ -137,7 +131,6 @@ const styles = StyleSheet.create({
   },
   progressPercent: {
     fontSize: 9,
-    fontWeight: "bold",
     color: "#666",
   },
   chartPlaceholder: {

@@ -2,7 +2,6 @@ import { useState } from "react";
 import {
   StyleSheet,
   View,
-  Text,
   FlatList,
   TextInput,
   TouchableOpacity,
@@ -10,6 +9,7 @@ import {
   Platform,
   ScrollView,
 } from "react-native";
+import { CustomText } from "@/components/CustomText";
 import { Ionicons } from "@expo/vector-icons";
 import { Colors } from "../../constants/theme";
 
@@ -35,8 +35,8 @@ export default function ViewAttendeesScreen() {
       </View>
 
       <View style={styles.infoSection}>
-        <Text style={styles.nameText}>{item.name}</Text>
-        <Text style={styles.eventText}>{item.event}</Text>
+        <CustomText variant="bold" style={styles.nameText}>{item.name}</CustomText>
+        <CustomText style={styles.eventText}>{item.event}</CustomText>
       </View>
 
       <View style={styles.rightSection}>
@@ -46,9 +46,9 @@ export default function ViewAttendeesScreen() {
             styles[`status${item.status.replace("-", "")}`],
           ]}
         >
-          <Text style={styles.statusText}>{item.status}</Text>
+          <CustomText variant="bold" style={styles.statusText}>{item.status}</CustomText>
         </View>
-        <Text style={styles.ticketText}>{item.ticket}</Text>
+        <CustomText variant="medium" style={styles.ticketText}>{item.ticket}</CustomText>
       </View>
     </View>
   );
@@ -62,7 +62,7 @@ export default function ViewAttendeesScreen() {
         <TouchableOpacity>
           <Ionicons name="arrow-back" size={24} color="white" />
         </TouchableOpacity>
-        <Text style={styles.headerText}>VIEW ALL ATTENDEES (1410 TOTAL)</Text>
+        <CustomText variant="bold" style={styles.headerText}>VIEW ALL ATTENDEES (1410 TOTAL)</CustomText>
         <View style={{ width: 24 }} />
       </View>
 
@@ -87,18 +87,20 @@ export default function ViewAttendeesScreen() {
 
       {/* LIST HEADERS */}
       <View style={styles.listHeaderRow}>
-        <Text style={[styles.listHeaderText, { flex: 0.2 }]}>Select</Text>
-        <Text style={[styles.listHeaderText, { flex: 0.4 }]}>Event</Text>
-        <Text
+        <CustomText variant="bold" style={[styles.listHeaderText, { flex: 0.2 }]}>Select</CustomText>
+        <CustomText variant="bold" style={[styles.listHeaderText, { flex: 0.4 }]}>Event</CustomText>
+        <CustomText
+          variant="bold"
           style={[styles.listHeaderText, { flex: 0.2, textAlign: "center" }]}
         >
           Status
-        </Text>
-        <Text
+        </CustomText>
+        <CustomText
+          variant="bold"
           style={[styles.listHeaderText, { flex: 0.2, textAlign: "right" }]}
         >
           Ticket
-        </Text>
+        </CustomText>
       </View>
 
       {/* THE LIST */}
@@ -112,23 +114,23 @@ export default function ViewAttendeesScreen() {
 
       {/* FOOTER ACTIONS */}
       <View style={styles.footer}>
-        <Text style={styles.managementTitle}>Management Actions</Text>
+        <CustomText variant="bold" style={styles.managementTitle}>Management Actions</CustomText>
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
           style={styles.actionScroll}
         >
           <TouchableOpacity style={styles.actionBtn}>
-            <Text style={styles.actionBtnText}>Send Email</Text>
+            <CustomText variant="bold" style={styles.actionBtnText}>Send Email</CustomText>
           </TouchableOpacity>
           <TouchableOpacity style={[styles.actionBtn, styles.btnOutline]}>
-            <Text style={styles.actionBtnTextOutline}>Export CSV</Text>
+            <CustomText variant="bold" style={styles.actionBtnTextOutline}>Export CSV</CustomText>
           </TouchableOpacity>
           <TouchableOpacity style={styles.actionBtn}>
-            <Text style={styles.actionBtnText}>Check-In</Text>
+            <CustomText variant="bold" style={styles.actionBtnText}>Check-In</CustomText>
           </TouchableOpacity>
           <TouchableOpacity style={styles.actionBtn}>
-            <Text style={styles.actionBtnText}>Assign Team</Text>
+            <CustomText variant="bold" style={styles.actionBtnText}>Assign Team</CustomText>
           </TouchableOpacity>
         </ScrollView>
       </View>
@@ -151,7 +153,6 @@ function createStyles() {
     headerText: {
       color: "white",
       fontSize: 16,
-      fontWeight: "700",
     },
 
     searchBarRow: {
@@ -188,7 +189,6 @@ function createStyles() {
     },
     listHeaderText: {
       fontSize: 12,
-      fontWeight: "700",
       color: "#888",
     },
 
@@ -225,7 +225,6 @@ function createStyles() {
     },
     nameText: {
       fontSize: 14,
-      fontWeight: "700",
       color: "#333",
     },
     eventText: {
@@ -245,7 +244,6 @@ function createStyles() {
     },
     statusText: {
       fontSize: 10,
-      fontWeight: "700",
       color: "white",
     },
     statusAttending: {
@@ -259,7 +257,6 @@ function createStyles() {
     },
     ticketText: {
       fontSize: 11,
-      fontWeight: "600",
       color: "#666",
     },
 
@@ -275,7 +272,6 @@ function createStyles() {
     },
     managementTitle: {
       fontSize: 14,
-      fontWeight: "800",
       marginBottom: 10,
       color: "#333",
     },
@@ -297,12 +293,10 @@ function createStyles() {
     actionBtnText: {
       color: "white",
       fontSize: 12,
-      fontWeight: "700",
     },
     actionBtnTextOutline: {
       color: "#1a2a44",
       fontSize: 12,
-      fontWeight: "700",
     },
   });
 }

@@ -2,7 +2,6 @@ import * as SecureStore from "expo-secure-store";
 
 export const saveToken = (token: string) => {
   SecureStore.setItemAsync("access_token", token);
-  console.log("Saved token: ", token);
 };
 
 export const getToken = () => {
@@ -15,7 +14,6 @@ export const removeToken = () => {
 
 export const saveUserId = (id: string)=>{
   SecureStore.setItemAsync("CurrentUserId", id);
-  console.log("Saved UserId: ", id);
 }
 
 export const getUserId = () => {

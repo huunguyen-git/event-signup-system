@@ -1,18 +1,18 @@
-import { Text, StyleSheet } from "react-native";
+import { StyleSheet } from "react-native";
+import { CustomText } from "./CustomText";
 
 const HeaderText = () => {
   return (
     <>
-      <Text style={styles.connect}>
+      <CustomText style={styles.connect}>
         {" "}
-        <Text style={styles.event}>EVENT </Text>CONNECT
-      </Text>
+        <CustomText variant="bold" style={styles.event}>EVENT </CustomText>CONNECT
+      </CustomText>
     </>
   );
 };
 const styles = StyleSheet.create({
   event: {
-    fontWeight: 700,
     color: "#ffffff",
   },
   connect: {

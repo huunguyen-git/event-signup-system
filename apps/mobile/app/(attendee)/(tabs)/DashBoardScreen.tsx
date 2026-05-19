@@ -1,4 +1,5 @@
-import { View, StyleSheet, TextInput, Text } from "react-native";
+import { View, StyleSheet, TextInput } from "react-native";
+import { CustomText } from "@/components/CustomText";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { Colors } from "../../../constants/theme";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -9,6 +10,7 @@ import React, { useState, useEffect } from "react";
 import { EventService } from "../../../axios/eventService";
 import { ICreateEvent } from "../../../axios/dto/eventModel";
 import { getUserId } from "@/services/storage";
+import Header from "@/components/Header";
 
 const DashBoardScreen = () => {
   const [data, setData] = useState<ICreateEvent[]>([]);
@@ -28,30 +30,7 @@ const DashBoardScreen = () => {
     <>
       <Stack.Screen options={{ headerShown: false }} />
       <SafeAreaView style={styles.container}>
-        <View style={styles.header}>
-          <MaterialCommunityIcons
-            name="domain"
-            size={40}
-            color={Colors.color.white}
-          />
-          <Text style={styles.connect}>
-            {" "}
-            <Text style={styles.event}>EVENT </Text>CONNECT
-          </Text>
-          <View style={styles.Icon}>
-            <MaterialCommunityIcons
-              name="bell-outline"
-              size={40}
-              color={Colors.color.white}
-            />
-            <MaterialCommunityIcons
-              name="account"
-              size={40}
-              color={Colors.color.primary}
-              style={styles.accountIcon}
-            />
-          </View>
-        </View>
+        <Header />
         <View style={styles.body}>
           <View style={styles.searchBar}>
             <MaterialCommunityIcons
@@ -66,8 +45,8 @@ const DashBoardScreen = () => {
             />
           </View>
           <View style={styles.headerBody}>
-            <Text style={styles.upcomingEvent}>My Event</Text>
-            <Text style={styles.eventCount}>Total Event: {data?.length}</Text>
+            <CustomText variant="bold" style={styles.upcomingEvent}>My Event</CustomText>
+            <CustomText variant="bold" style={styles.eventCount}>Total Event: {data?.length}</CustomText>
           </View>
 
           <FlatList
@@ -98,9 +77,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     color: Colors.color.white,
   },
-  event: {
-    fontWeight: 700,
-  },
+  event: {},
   accountIcon: {
     height: 40,
     backgroundColor: "#afc5e1",
@@ -118,15 +95,18 @@ const styles = StyleSheet.create({
     padding: 10,
   },
   searchBar: {
-    height: 40,
+    height: 45,
     width: "100%",
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
-    borderWidth: 1,
-    borderColor: Colors.color.placeholder,
     borderRadius: 30,
     backgroundColor: Colors.color.white,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 10,
+    elevation: 4,
     gap: 5,
     marginTop: 10,
     marginBottom: 20,
@@ -139,7 +119,6 @@ const styles = StyleSheet.create({
   },
   upcomingEvent: {
     fontSize: 20,
-    fontWeight: "bold",
     marginRight: "auto",
   },
   headerBody: {
@@ -147,7 +126,6 @@ const styles = StyleSheet.create({
   },
   eventCount: {
     fontSize: 20,
-    fontWeight: "bold",
     marginLeft: "auto",
   },
 });

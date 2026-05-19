@@ -30,4 +30,8 @@ export class RegisterDto {
   @IsString()
   @IsOptional()
   phone_number?: string;
+
+  @IsString()
+  @IsOptional()
+  token?: string;
 }

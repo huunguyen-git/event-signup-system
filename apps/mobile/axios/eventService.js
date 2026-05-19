@@ -1,4 +1,3 @@
-import { get } from "react-native/Libraries/TurboModule/TurboModuleRegistry";
 import apiClient from "./axios.js";
 
 export const EventService = {

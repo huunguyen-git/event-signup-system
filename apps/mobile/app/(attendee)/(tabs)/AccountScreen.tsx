@@ -4,12 +4,12 @@ import {
   View,
   StyleSheet,
   Image,
-  Text,
   TouchableOpacity,
   Alert,
   ActivityIndicator,
   ScrollView,
 } from "react-native";
+import { CustomText } from "@/components/CustomText";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { Colors } from "../../../constants/theme";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -19,6 +19,7 @@ import { getToken, removeToken } from "@/services/storage";
 import { UserService } from "../../../axios/userService";
 import { AuthService } from "../../../axios/authService";
 import { ResponseUser } from "../../../axios/dto/responseUserModel";
+import Header from "@/components/Header";
 
 type User = {
   full_name: string;
@@ -89,23 +90,7 @@ const AccountScreen = () => {
     <>
       <Stack.Screen options={{ headerShown: false }} />
       <SafeAreaView style={styles.container}>
-        <View style={styles.header}>
-          <MaterialCommunityIcons
-            name="domain"
-            size={40}
-            color={Colors.color.white}
-          />
-          <Text style={styles.connect}>
-            <Text style={styles.event}>EVENT </Text>CONNECT
-          </Text>
-          <View style={styles.Icon}>
-            <MaterialCommunityIcons
-              name="bell-outline"
-              size={40}
-              color={Colors.color.white}
-            />
-          </View>
-        </View>
+        <Header />
 
         <ScrollView
           style={styles.body}
@@ -129,14 +114,14 @@ const AccountScreen = () => {
                     />
                   ) : (
                     <View style={styles.avatarFallback}>
-                      <Text style={styles.avatarInitial}>
+                      <CustomText variant="bold" style={styles.avatarInitial}>
                         {user?.full_name?.charAt(0).toUpperCase() ?? "?"}
-                      </Text>
+                      </CustomText>
                     </View>
                   )}
                 </View>
-                <Text style={styles.profileName}>{user?.full_name}</Text>
-                <Text style={styles.profileEmail}>{user?.email}</Text>
+                <CustomText variant="bold" style={styles.profileName}>{user?.full_name}</CustomText>
+                <CustomText style={styles.profileEmail}>{user?.email}</CustomText>
               </View>
 
               {/* Info Cards */}
@@ -168,7 +153,7 @@ const AccountScreen = () => {
                   size={20}
                   color={Colors.color.white}
                 />
-                <Text style={styles.editButtonText}>Edit Profile</Text>
+                <CustomText variant="medium" style={styles.editButtonText}>Edit Profile</CustomText>
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -180,7 +165,7 @@ const AccountScreen = () => {
                   size={20}
                   color={Colors.color.primary}
                 />
-                <Text style={styles.logoutButtonText}>Log Out</Text>
+                <CustomText variant="medium" style={styles.logoutButtonText}>Log Out</CustomText>
               </TouchableOpacity>
             </>
           )}
@@ -207,8 +192,8 @@ const InfoRow = ({
       color={Colors.color.primary}
     />
     <View style={styles.infoTextContainer}>
-      <Text style={styles.infoLabel}>{label}</Text>
-      <Text style={styles.infoValue}>{value}</Text>
+      <CustomText style={styles.infoLabel}>{label}</CustomText>
+      <CustomText variant="medium" style={styles.infoValue}>{value}</CustomText>
     </View>
   </View>
 );
@@ -232,9 +217,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     color: Colors.color.white,
   },
-  event: {
-    fontWeight: "700",
-  },
+  event: {},
   Icon: {
     flexDirection: "row",
     gap: 10,
@@ -274,12 +257,10 @@ const styles = StyleSheet.create({
   },
   avatarInitial: {
     fontSize: 40,
-    fontWeight: "bold",
     color: Colors.color.primary,
   },
   profileName: {
     fontSize: 24,
-    fontWeight: "bold",
     color: Colors.color.text,
   },
   profileEmail: {
@@ -290,14 +271,15 @@ const styles = StyleSheet.create({
   infoCard: {
     width: "100%",
     backgroundColor: Colors.color.white,
-    borderRadius: 12,
+    borderRadius: 16,
     padding: 16,
     marginBottom: 16,
     gap: 12,
     shadowColor: "#000",
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 10,
+    elevation: 4,
   },
   infoRow: {
     flexDirection: "row",
@@ -314,23 +296,26 @@ const styles = StyleSheet.create({
   infoValue: {
     fontSize: 16,
     color: Colors.color.text,
-    fontWeight: "500",
   },
   editButton: {
     width: "100%",
-    height: 50,
+    height: 54,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: Colors.color.primary,
-    borderRadius: 30,
+    borderRadius: 27,
     gap: 8,
     marginBottom: 12,
+    shadowColor: Colors.color.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+    elevation: 4,
   },
   editButtonText: {
     color: Colors.color.white,
     fontSize: 16,
-    fontWeight: "600",
   },
   logoutButton: {
     width: "100%",
@@ -346,6 +331,5 @@ const styles = StyleSheet.create({
   logoutButtonText: {
     color: Colors.color.primary,
     fontSize: 16,
-    fontWeight: "600",
   },
 });

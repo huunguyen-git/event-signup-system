@@ -1,4 +1,4 @@
-import { Ionicons } from "@expo/vector-icons";
+import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { Colors } from "../../../constants/theme";
 import { Tabs } from "expo-router";
 
@@ -17,7 +17,7 @@ export default function TabLayout() {
         options={{
           title: "Home",
           tabBarIcon: ({ color }) => (
-            <Ionicons name="home" size={30} color={color} />
+            <MaterialIcons name="dashboard" size={30} color={color} />
           ),
         }}
       />
@@ -26,7 +26,16 @@ export default function TabLayout() {
         options={{
           title: "Dashboard",
           tabBarIcon: ({ color }) => (
-            <Ionicons name="grid" size={30} color={color} />
+            <MaterialIcons name="admin-panel-settings" size={30} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="HostDashBoardScreen"
+        options={{
+          title: "My Events",
+          tabBarIcon: ({ color }) => (
+            <MaterialIcons name="event" size={30} color={color} />
           ),
         }}
       />
@@ -35,7 +44,7 @@ export default function TabLayout() {
         options={{
           title: "Scan QR",
           tabBarIcon: ({ color }) => (
-            <Ionicons name="qr-code" size={30} color={color} />
+            <MaterialIcons name="qr-code-scanner" size={30} color={color} />
           ),
         }}
       />
@@ -44,7 +53,7 @@ export default function TabLayout() {
         options={{
           title: "Account",
           tabBarIcon: ({ color }) => (
-            <Ionicons name="person" size={30} color={color} />
+            <MaterialIcons name="person" size={30} color={color} />
           ),
         }}
       />

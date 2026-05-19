@@ -1,11 +1,11 @@
 import React from "react";
 import {
   View,
-  Text,
   StyleSheet,
   SafeAreaView,
   TouchableOpacity,
 } from "react-native";
+import { CustomText } from "@/components/CustomText";
 import QRCode from "react-native-qrcode-svg";
 import { useLocalSearchParams, useRouter, Stack } from "expo-router";
 import { Colors } from "../constants/theme";
@@ -27,7 +27,7 @@ const ShowQrScreen = () => {
       />
 
       <View style={styles.content}>
-        <Text style={styles.eventTitle}>{title || "Sự kiện của bạn"}</Text>
+        <CustomText variant="bold" style={styles.eventTitle}>{title || "Sự kiện của bạn"}</CustomText>
 
         <View style={styles.qrWrapper}>
           {/* Component vẽ mã QR */}
@@ -42,12 +42,12 @@ const ShowQrScreen = () => {
           />
         </View>
 
-        <Text style={styles.instruction}>
+        <CustomText style={styles.instruction}>
           Đưa mã này cho nhân viên soát vé để check-in
-        </Text>
+        </CustomText>
 
         <TouchableOpacity style={styles.button} onPress={() => router.back()}>
-          <Text style={styles.buttonText}>Đóng</Text>
+          <CustomText variant="bold" style={styles.buttonText}>Đóng</CustomText>
         </TouchableOpacity>
       </View>
     </SafeAreaView>
@@ -69,37 +69,41 @@ const styles = StyleSheet.create({
   },
   eventTitle: {
     fontSize: 22,
-    fontWeight: "bold",
     color: Colors.color.primary,
     marginBottom: 30,
     textAlign: "center",
   },
   qrWrapper: {
-    padding: 20,
+    padding: 25,
     backgroundColor: "white",
-    borderRadius: 20,
-    elevation: 5, // Hiệu ứng đổ bóng trên Android
+    borderRadius: 24,
+    elevation: 8, // Hiệu ứng đổ bóng trên Android
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.12,
+    shadowRadius: 16,
   },
   instruction: {
     marginTop: 30,
     fontSize: 16,
     color: "#666",
     textAlign: "center",
+    paddingHorizontal: 20,
   },
   button: {
     marginTop: 50,
     backgroundColor: Colors.color.primary,
-    paddingVertical: 12,
-    paddingHorizontal: 40,
-    borderRadius: 25,
+    paddingVertical: 14,
+    paddingHorizontal: 45,
+    borderRadius: 30,
+    shadowColor: Colors.color.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.35,
+    shadowRadius: 10,
+    elevation: 5,
   },
   buttonText: {
     color: "white",
     fontSize: 16,
-    fontWeight: "bold",
   },
 });

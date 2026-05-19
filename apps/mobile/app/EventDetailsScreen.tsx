@@ -11,12 +11,12 @@ import {
   ScrollView,
   Share,
   StyleSheet,
-  Text,
   TouchableOpacity,
   View,
   StatusBar,
   Linking,
 } from "react-native";
+import { CustomText } from "@/components/CustomText";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Colors } from "../constants/theme";
 import { EventService } from "@/axios/eventService";
@@ -126,7 +126,7 @@ export default function EventDetailsScreen() {
       pathname: "/RegistrationFormScreen",
       params: {
         id: eventData?.id,
-        isRegister: "true",
+        isCreate: "false",
       },
     });
   };
@@ -146,11 +146,11 @@ export default function EventDetailsScreen() {
             color="white"
             style={{ marginLeft: 15 }}
           />
-          <Text style={styles.headerTitle}>EVENT CONNECT</Text>
+          <CustomText variant="bold" style={styles.headerTitle}>EVENT CONNECT</CustomText>
         </View>
         <TouchableOpacity style={styles.shareBtn} onPress={handleShare}>
           <Ionicons name="share-social-outline" size={20} color="white" />
-          <Text style={styles.shareBtnText}>Share</Text>
+          <CustomText style={styles.shareBtnText}>Share</CustomText>
         </TouchableOpacity>
       </View>
 
@@ -168,9 +168,9 @@ export default function EventDetailsScreen() {
         />
 
         <View style={styles.content}>
-          <Text style={[styles.mainTitle, { color: themeColor }]}>
+          <CustomText variant="bold" style={[styles.mainTitle, { color: themeColor }]}>
             {eventData?.title}
-          </Text>
+          </CustomText>
 
           <View style={styles.infoRow}>
             <MaterialCommunityIcons
@@ -179,19 +179,19 @@ export default function EventDetailsScreen() {
               color={themeColor}
             />
             <View style={styles.infoTextGroup}>
-              <Text style={styles.infoLabel}>Event Timeline (Time & Date)</Text>
-              <Text style={styles.infoValue}>
+              <CustomText variant="bold" style={styles.infoLabel}>Event Timeline (Time & Date)</CustomText>
+              <CustomText style={styles.infoValue}>
                 {datePart} - {timePart}
-              </Text>
+              </CustomText>
             </View>
           </View>
           <View style={styles.infoRow}>
             <Ionicons name="location-sharp" size={28} color={themeColor} />
             <View style={styles.infoTextGroup}>
-              <Text style={styles.infoLabel}>Location</Text>
-              <Text style={styles.infoValue}>
+              <CustomText variant="bold" style={styles.infoLabel}>Location</CustomText>
+              <CustomText style={styles.infoValue}>
                 {eventData?.location_url || EVENT_LOCATION}
-              </Text>
+              </CustomText>
             </View>
           </View>
 
@@ -203,7 +203,7 @@ export default function EventDetailsScreen() {
               activeOpacity={0.7}
             >
               <Ionicons name="map-outline" size={16} color="#007AFF" />
-              <Text style={styles.mapButtonText}>Open in Maps</Text>
+              <CustomText variant="bold" style={styles.mapButtonText}>Open in Maps</CustomText>
             </TouchableOpacity>
             <View style={styles.mapPin}>
               <Ionicons name="location" size={36} color="red" />
@@ -217,18 +217,18 @@ export default function EventDetailsScreen() {
                 size={24}
                 color={themeColor}
               />
-              <Text style={styles.sectionTitle}>About the Event</Text>
+              <CustomText variant="bold" style={styles.sectionTitle}>About the Event</CustomText>
             </View>
-            <Text style={styles.bodyText}>
+            <CustomText style={styles.bodyText}>
               Join us for the most anticipated tech summit of 2024, featuring
               world-class speakers and cutting-edge innovations in AI and
               Software Engineering.
-            </Text>
+            </CustomText>
           </View>
 
-          <Text style={[styles.sectionTitle, { marginTop: 25 }]}>
+          <CustomText variant="bold" style={[styles.sectionTitle, { marginTop: 25 }]}>
             Key Speakers
-          </Text>
+          </CustomText>
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
@@ -237,12 +237,12 @@ export default function EventDetailsScreen() {
             {speakers.map((s) => (
               <View key={s.id} style={styles.speakerCard}>
                 <Image source={{ uri: s.img }} style={styles.speakerImg} />
-                <Text style={styles.speakerName}>{s.name}</Text>
-                <Text style={styles.speakerRole}>{s.role}</Text>
+                <CustomText variant="bold" style={styles.speakerName}>{s.name}</CustomText>
+                <CustomText style={styles.speakerRole}>{s.role}</CustomText>
                 <TouchableOpacity style={styles.profileTag}>
-                  <Text style={[styles.profileTagText, { color: themeColor }]}>
+                  <CustomText variant="bold" style={[styles.profileTagText, { color: themeColor }]}>
                     Speaker Profile
-                  </Text>
+                  </CustomText>
                 </TouchableOpacity>
               </View>
             ))}
@@ -251,13 +251,13 @@ export default function EventDetailsScreen() {
           <View style={styles.section}>
             <View style={styles.sectionHeaderRow}>
               <Ionicons name="person" size={20} color={themeColor} />
-              <Text style={styles.sectionTitle}>Host/Organization</Text>
+              <CustomText variant="bold" style={styles.sectionTitle}>Host/Organization</CustomText>
             </View>
-            <Text style={styles.hostName}>Tech Innovations Global</Text>
-            <Text style={styles.bodyText}>
+            <CustomText variant="bold" style={styles.hostName}>Tech Innovations Global</CustomText>
+            <CustomText style={styles.bodyText}>
               Leading organizer of international technology conferences across
               South East Asia, focused on digital transformation.
-            </Text>
+            </CustomText>
           </View>
 
           <View style={styles.section}>
@@ -267,15 +267,15 @@ export default function EventDetailsScreen() {
                 size={22}
                 color={themeColor}
               />
-              <Text style={styles.sectionTitle}>Ticket Information</Text>
+              <CustomText variant="bold" style={styles.sectionTitle}>Ticket Information</CustomText>
             </View>
-            <Text style={styles.bodyText}>
+            <CustomText style={styles.bodyText}>
               • Standard Pass: Free access to all main sessions.{"\n"}• Premium
               Pass: Access to VIP networking and workshops.
-            </Text>
+            </CustomText>
           </View>
 
-          <Text style={[styles.sectionTitle, { marginTop: 25 }]}>Sponsors</Text>
+          <CustomText variant="bold" style={[styles.sectionTitle, { marginTop: 25 }]}>Sponsors</CustomText>
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
@@ -299,7 +299,7 @@ export default function EventDetailsScreen() {
           style={[styles.regBtn, { backgroundColor: themeColor }]}
           onPress={handleRegister}
         >
-          <Text style={styles.regBtnText}>REGISTER NOW</Text>
+          <CustomText variant="bold" style={styles.regBtnText}>REGISTER NOW</CustomText>
         </TouchableOpacity>
       </View>
     </View>
@@ -319,7 +319,6 @@ const styles = StyleSheet.create({
   headerTitle: {
     color: "white",
     fontSize: 16,
-    fontWeight: "bold",
     marginLeft: 10,
     letterSpacing: 1,
   },
@@ -329,20 +328,24 @@ const styles = StyleSheet.create({
   scrollBody: { paddingBottom: 110 },
   banner: { width: "100%", height: 200, resizeMode: "cover" },
   content: { padding: 20 },
-  mainTitle: { fontSize: 22, fontWeight: "bold", marginBottom: 20 },
+  mainTitle: { fontSize: 22, marginBottom: 20 },
   infoRow: { flexDirection: "row", marginBottom: 15, alignItems: "center" },
   infoTextGroup: { marginLeft: 12, flex: 1 },
-  infoLabel: { fontWeight: "bold", fontSize: 15, color: "#333" },
+  infoLabel: { fontSize: 15, color: "#333" },
   infoValue: { color: "#666", marginTop: 3, fontSize: 13 },
 
   mapContainer: {
     width: "100%",
     height: 150,
-    borderRadius: 15,
+    borderRadius: 16,
     overflow: "hidden",
     marginVertical: 15,
-    borderWidth: 1,
-    borderColor: "#eee",
+    backgroundColor: "white",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 10,
+    elevation: 4,
     position: "relative",
   },
   mapFrame: { width: "100%", height: "100%" },
@@ -366,7 +369,6 @@ const styles = StyleSheet.create({
     color: "#007AFF",
     fontSize: 12,
     marginLeft: 5,
-    fontWeight: "bold",
   },
   mapPin: { position: "absolute", top: "35%", left: "46%" },
 
@@ -378,13 +380,11 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 17,
-    fontWeight: "bold",
     marginLeft: 8,
     color: "#333",
   },
   bodyText: { color: "#666", lineHeight: 20, fontSize: 13 },
   hostName: {
-    fontWeight: "bold",
     color: "#333",
     fontSize: 14,
     marginBottom: 5,
@@ -399,7 +399,6 @@ const styles = StyleSheet.create({
     backgroundColor: "#eee",
   },
   speakerName: {
-    fontWeight: "bold",
     fontSize: 11,
     textAlign: "center",
     marginTop: 8,
@@ -412,7 +411,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     marginTop: 6,
   },
-  profileTagText: { fontSize: 9, fontWeight: "bold" },
+  profileTagText: { fontSize: 9 },
 
   sponsorList: { marginTop: 10, paddingVertical: 10 },
   sponsorCard: { marginRight: 25, justifyContent: "center" },
@@ -428,5 +427,5 @@ const styles = StyleSheet.create({
     borderTopColor: "#eee",
   },
   regBtn: { padding: 16, borderRadius: 30, alignItems: "center" },
-  regBtnText: { color: "white", fontWeight: "bold", fontSize: 16 },
+  regBtnText: { color: "white", fontSize: 16 },
 });

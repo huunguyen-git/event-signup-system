@@ -1,22 +1,23 @@
 import {
   StyleSheet,
   View,
-  Text,
   TextInput,
   TouchableOpacity,
   FlatList,
   StatusBar,
 } from "react-native";
+import { CustomText } from "@/components/CustomText";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useState, useEffect } from "react";
 import { Search, Bell, User } from "lucide-react-native";
-import { Colors } from "../../constants/theme";
-import StatCard from "../../components/StatCard";
-import HostEventItem from "../../components/HostEventItem";
+import { Colors } from "../../../constants/theme";
+import StatCard from "../../../components/StatCard";
+import HostEventItem from "../../../components/HostEventItem";
 import { MaterialCommunityIcons, Ionicons } from "@expo/vector-icons";
 import { ICreateEvent } from "@/axios/dto/eventModel";
 import { EventService } from "@/axios/eventService";
 import { useRouter } from "expo-router";
+import Header from "@/components/Header";
 
 export default function HostDashboardScreen() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -33,7 +34,7 @@ export default function HostDashboardScreen() {
   const renderHeader = () => {
     return (
       <View style={styles.listHeader}>
-        <Text style={styles.sectionTitle}>HOST DASHBOARD</Text>
+        <CustomText variant="bold" style={styles.sectionTitle}>HOST DASHBOARD</CustomText>
 
         <View style={styles.statsGrid}>
           <StatCard
@@ -54,32 +55,13 @@ export default function HostDashboardScreen() {
     <SafeAreaView style={styles.safeArea}>
       <StatusBar barStyle="light-content" />
 
-      <View style={styles.topHeader}>
-        <View style={styles.headerRow}>
-          <View style={styles.logoContainer}>
-            <MaterialCommunityIcons
-              name="domain"
-              size={50}
-              color={Colors.color.white}
-            />
-            <Text style={styles.logoTextMain}>EVENT </Text>
-            <Text style={styles.logoTextSub}>CONNECT</Text>
-          </View>
-          <View style={styles.headerIcons}>
-            <TouchableOpacity style={styles.iconButton}>
-              <Bell size={30} color="white" />
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.iconButton}>
-              <User size={30} color="white" />
-            </TouchableOpacity>
-          </View>
-        </View>
-      </View>
+      <Header />
 
       <View style={styles.searchContainer}>
         <Search size={18} color="#8E8E93" />
         <TextInput
           placeholder="Search events or stats..."
+          placeholderTextColor={Colors.color.placeholder}
           style={styles.searchInput}
           value={searchQuery}
           onChangeText={setSearchQuery}
@@ -102,7 +84,7 @@ export default function HostDashboardScreen() {
         onPress={() => router.push("/CreateEventScreen")}
       >
         <Ionicons name="add" color="white" size={28} />
-        <Text style={styles.createButtonText}>Create new event</Text>
+        <CustomText variant="bold" style={styles.createButtonText}>Create new event</CustomText>
       </TouchableOpacity>
     </SafeAreaView>
   );
@@ -112,16 +94,17 @@ function createStyles() {
   return StyleSheet.create({
     safeArea: {
       flex: 1,
-      backgroundColor: "white",
+      backgroundColor: Colors.color.background || "#F8F9FA",
     },
     topHeader: {
       backgroundColor: Colors.color.primary,
       paddingHorizontal: 20,
       paddingVertical: 8,
-      elevation: 10,
+      elevation: 8,
       shadowColor: "#000",
-      shadowOpacity: 0.2,
-      shadowRadius: 10,
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.15,
+      shadowRadius: 8,
     },
     headerRow: {
       flexDirection: "row",
@@ -135,14 +118,12 @@ function createStyles() {
     logoTextMain: {
       color: "white",
       fontSize: 20,
-      fontWeight: "600",
       letterSpacing: 0.5,
       marginLeft: 10,
     },
     logoTextSub: {
       color: "white",
       fontSize: 20,
-      fontWeight: "300",
       letterSpacing: 0.5,
     },
     headerIcons: {
@@ -154,17 +135,23 @@ function createStyles() {
     },
     searchContainer: {
       flexDirection: "row",
-      backgroundColor: "#cde0f9",
+      backgroundColor: "#FFFFFF",
       borderRadius: 25,
       alignItems: "center",
       paddingHorizontal: 15,
-      height: 40,
+      height: 45,
       marginVertical: 15,
       marginHorizontal: 20,
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.08,
+      shadowRadius: 10,
+      elevation: 4,
     },
     searchInput: {
       flex: 1,
-      marginLeft: 10,
+      color: "#333",
+      fontSize: 16,
     },
     listHeader: {
       paddingVertical: 10,
@@ -172,7 +159,6 @@ function createStyles() {
     },
     sectionTitle: {
       fontSize: 26,
-      fontWeight: "900",
       color: "#1B2B52",
       marginBottom: 15,
     },
@@ -186,17 +172,22 @@ function createStyles() {
       justifyContent: "center",
       alignItems: "center",
       position: "absolute",
-      bottom: 10,
-      right: 5,
+      bottom: 20,
+      right: 20,
       backgroundColor: Colors.color.primary,
-      padding: 15,
+      paddingVertical: 14,
+      paddingHorizontal: 20,
       borderRadius: 30,
+      shadowColor: Colors.color.primary,
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.35,
+      shadowRadius: 12,
+      elevation: 6,
     },
     createButtonText: {
       fontSize: 16,
       color: "white",
-      fontWeight: 600,
-      marginLeft: 5,
+      marginLeft: 6,
     },
     scrollPadding: {
       paddingBottom: 100,

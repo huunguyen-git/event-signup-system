@@ -3,12 +3,12 @@ import {
   View,
   StyleSheet,
   TextInput,
-  Text,
   TouchableOpacity,
   Alert,
   Platform,
   ActivityIndicator,
 } from "react-native";
+import { CustomText } from "@/components/CustomText";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { Colors } from "../../constants/theme";
@@ -77,14 +77,14 @@ const CreateAccountScreen = () => {
           <HeaderText />
         </View>
         <View style={styles.body}>
-          <Text style={styles.welcomeText}>Create Your Account</Text>
-          <Text style={styles.eventText}>
+          <CustomText variant="bold" style={styles.welcomeText}>Create Your Account</CustomText>
+          <CustomText style={styles.eventText}>
             Please fill in the details below to register for the EVENT CONNECT
             platform.{" "}
-          </Text>
+          </CustomText>
 
           <View style={styles.input}>
-            <Text style={styles.labelText}>Full Name</Text>
+            <CustomText variant="bold" style={styles.labelText}>Full Name</CustomText>
             <View style={styles.inputContainer}>
               <MaterialCommunityIcons
                 name="account-outline"
@@ -102,7 +102,7 @@ const CreateAccountScreen = () => {
           </View>
 
           <View style={styles.input}>
-            <Text style={styles.labelText}>Email</Text>
+            <CustomText variant="bold" style={styles.labelText}>Email</CustomText>
             <View style={styles.inputContainer}>
               <MaterialCommunityIcons
                 name="email-outline"
@@ -120,7 +120,7 @@ const CreateAccountScreen = () => {
           </View>
 
           <View style={styles.input}>
-            <Text style={styles.labelText}>Birthdate</Text>
+            <CustomText variant="bold" style={styles.labelText}>Birthdate</CustomText>
             <TouchableOpacity
               style={styles.inputContainer}
               onPress={() => setShowDatePicker(true)}
@@ -130,7 +130,7 @@ const CreateAccountScreen = () => {
                 size={40}
                 color={Colors.color.placeholder}
               />
-              <Text
+              <CustomText
                 style={[
                   styles.textInput,
                   {
@@ -143,7 +143,7 @@ const CreateAccountScreen = () => {
                 {birthdate
                   ? birthdate.toLocaleDateString()
                   : "Select your birthdate"}
-              </Text>
+              </CustomText>
             </TouchableOpacity>
             {showDatePicker && (
               <DateTimePicker
@@ -161,7 +161,7 @@ const CreateAccountScreen = () => {
           </View>
 
           <View style={styles.input}>
-            <Text style={styles.labelText}>Password</Text>
+            <CustomText variant="bold" style={styles.labelText}>Password</CustomText>
             <View style={styles.inputContainer}>
               <MaterialCommunityIcons
                 name="lock-outline"
@@ -189,7 +189,7 @@ const CreateAccountScreen = () => {
             </View>
           </View>
           <View style={styles.input}>
-            <Text style={styles.labelText}>Confirm Password</Text>
+            <CustomText variant="bold" style={styles.labelText}>Confirm Password</CustomText>
             <View style={styles.inputContainer}>
               <MaterialCommunityIcons
                 name="lock-outline"
@@ -224,13 +224,13 @@ const CreateAccountScreen = () => {
             {loading ? (
               <ActivityIndicator color={Colors.color.white} />
             ) : (
-              <Text style={styles.registerButtonText}>REGISTER</Text>
+              <CustomText style={styles.registerButtonText}>REGISTER</CustomText>
             )}
           </TouchableOpacity>
           <View style={styles.footer}>
-            <Text style={styles.footerText}>Already have an account?</Text>
+            <CustomText style={styles.footerText}>Already have an account?</CustomText>
             <TouchableOpacity onPress={() => router.replace("/LoginScreen")}>
-              <Text style={styles.backButtonText}>Login</Text>
+              <CustomText style={styles.backButtonText}>Login</CustomText>
             </TouchableOpacity>
           </View>
         </View>
@@ -262,7 +262,6 @@ const styles = StyleSheet.create({
   },
   welcomeText: {
     fontSize: 32,
-    fontWeight: "bold",
     marginBottom: 10,
   },
   eventText: {
@@ -276,7 +275,6 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   labelText: {
-    fontWeight: "bold",
     marginStart: 53,
     fontSize: 16,
     color: Colors.color.text,
@@ -284,24 +282,33 @@ const styles = StyleSheet.create({
   inputContainer: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 5,
+    backgroundColor: "#f4f6f9",
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 4,
+    marginBottom: 10,
+    marginTop: 5,
   },
   textInput: {
     flex: 1,
     fontSize: 16,
     marginLeft: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.color.placeholder,
+    height: 45,
   },
   registerButton: {
     width: "90%",
-    height: 50,
+    height: 54,
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: Colors.color.primary,
-    borderRadius: 30,
+    borderRadius: 27,
+    marginTop: 10,
     marginBottom: 10,
-    borderWidth: 1,
+    shadowColor: Colors.color.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+    elevation: 4,
   },
   registerButtonText: {
     color: Colors.color.white,

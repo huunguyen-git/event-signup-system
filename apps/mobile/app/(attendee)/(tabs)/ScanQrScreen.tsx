@@ -1,11 +1,11 @@
 import {
   View,
   StyleSheet,
-  Text,
   Alert,
   Button,
   TouchableOpacity,
 } from "react-native";
+import { CustomText } from "@/components/CustomText";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { Colors } from "../../../constants/theme";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -13,6 +13,7 @@ import React, { useEffect, useState } from "react";
 import { Stack, useRouter } from "expo-router";
 import { EventService } from "@/axios/eventService";
 import { CameraView, useCameraPermissions } from "expo-camera";
+import Header from "@/components/Header";
 
 const QrScreen = () => {
   const router = useRouter();
@@ -30,11 +31,11 @@ const QrScreen = () => {
   if (!permission.granted) {
     return (
       <View style={styles.container}>
-        <Text style={{ textAlign: "center" }}>
+        <CustomText style={{ textAlign: "center" }}>
           Chúng tôi cần quyền sử dụng camera
-        </Text>
+        </CustomText>
         <TouchableOpacity onPress={requestPermission}>
-          <Text>Cấp quyền Camera</Text>
+          <CustomText>Cấp quyền Camera</CustomText>
         </TouchableOpacity>
       </View>
     );
@@ -73,34 +74,11 @@ const QrScreen = () => {
     <>
       <Stack.Screen options={{ headerShown: false }} />
       <SafeAreaView style={styles.container}>
-        <View style={styles.header}>
-          <MaterialCommunityIcons
-            name="domain"
-            size={40}
-            color={Colors.color.white}
-          />
-          <Text style={styles.connect}>
-            {" "}
-            <Text style={styles.event}>EVENT </Text>CONNECT
-          </Text>
-          <View style={styles.Icon}>
-            <MaterialCommunityIcons
-              name="bell-outline"
-              size={40}
-              color={Colors.color.white}
-            />
-            <MaterialCommunityIcons
-              name="account"
-              size={40}
-              color={Colors.color.primary}
-              style={styles.accountIcon}
-            />
-          </View>
-        </View>
+        <Header />
         <View style={styles.body}>
-          <Text style={styles.instruction}>
+          <CustomText style={styles.instruction}>
             Căn chỉnh mã QR vào khung để quét
-          </Text>
+          </CustomText>
 
           <View style={styles.cameraWrapper}>
             <CameraView
@@ -160,9 +138,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     color: Colors.color.white,
   },
-  event: {
-    fontWeight: 700,
-  },
+  event: {},
   accountIcon: {
     height: 40,
     backgroundColor: "#afc5e1",
@@ -181,7 +157,6 @@ const styles = StyleSheet.create({
   },
   ScanQr: {
     fontSize: 20,
-    fontWeight: "bold",
     marginRight: "auto",
   },
   instruction: {

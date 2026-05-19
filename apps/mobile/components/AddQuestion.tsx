@@ -1,30 +1,34 @@
-import { StyleSheet, Text, TextInput, View } from "react-native";
+import { StyleSheet, TextInput, View } from "react-native";
+import { CustomText } from "./CustomText";
 
 const styles = StyleSheet.create({
   dynamicQuestionBox: {
     marginBottom: 20,
-    padding: 10,
-    backgroundColor: "#f9f9f9",
-    borderRadius: 12,
+    padding: 16,
+    backgroundColor: "#ffffff",
+    borderRadius: 16,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 10,
+    elevation: 4,
   },
   questionHeader: {
-    marginBottom: 10,
+    marginBottom: 12,
   },
   label: {
-    fontSize: 14,
-    fontWeight: "bold",
-    color: "#333",
+    fontSize: 15,
+    color: "#1B2B52",
   },
   inputWrapper: {
-    borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 8,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
+    backgroundColor: "#f4f6f9",
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
   },
   input: {
-    height: 40,
-    fontSize: 14,
+    height: 45,
+    fontSize: 15,
     color: "#333",
   },
 });
@@ -33,7 +37,7 @@ export default function AddQuestion() {
   return (
     <View style={styles.dynamicQuestionBox}>
       <View style={styles.questionHeader}>
-        <Text style={styles.label}>Nhập câu hỏi</Text>
+        <CustomText variant="bold" style={styles.label}>Nhập câu hỏi</CustomText>
       </View>
       <View style={styles.inputWrapper}>
         <TextInput

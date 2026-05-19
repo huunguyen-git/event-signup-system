@@ -3,9 +3,9 @@ import {
   View,
   StyleSheet,
   TextInput,
-  Text,
   TouchableOpacity,
 } from "react-native";
+import { CustomText } from "@/components/CustomText";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { Colors } from "../../constants/theme";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -14,6 +14,7 @@ import { Stack, useRouter } from "expo-router";
 
 const ForgotPasswordScreen = () => {
   const [RegisterEmail, setRegisterEmail] = useState("");
+  const router = useRouter();
   return (
     <>
       <Stack.Screen options={{ headerShown: false }} />
@@ -27,11 +28,11 @@ const ForgotPasswordScreen = () => {
           <HeaderText />
         </View>
         <View style={styles.body}>
-          <Text style={styles.welcomeText}>Forgot Password</Text>
-          <Text style={styles.eventText}>
+          <CustomText variant="bold" style={styles.welcomeText}>Forgot Password</CustomText>
+          <CustomText style={styles.eventText}>
             Enter your registered email address to receive a password reset
             instructions.{" "}
-          </Text>
+          </CustomText>
           <View style={styles.input}>
             <View style={styles.inputContainer}>
               <MaterialCommunityIcons
@@ -49,10 +50,12 @@ const ForgotPasswordScreen = () => {
             </View>
           </View>
           <TouchableOpacity style={styles.sendButton}>
-            <Text style={styles.sendButtonText}>SEND INSTRUCTIONS</Text>
+            <CustomText style={styles.sendButtonText}>SEND INSTRUCTIONS</CustomText>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.backButton}>
-            <Text style={styles.backButtonText}>Back to Login</Text>
+          <TouchableOpacity 
+            style={styles.backButton}
+            onPress={()=>{router.replace('/LoginScreen')}}>
+            <CustomText style={styles.backButtonText}>Back to Login</CustomText>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -81,7 +84,6 @@ const styles = StyleSheet.create({
   },
   welcomeText: {
     fontSize: 32,
-    fontWeight: "bold",
     marginBottom: 10,
   },
   eventText: {
@@ -97,23 +99,32 @@ const styles = StyleSheet.create({
   inputContainer: {
     flexDirection: "row",
     alignItems: "center",
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.color.placeholder,
-    marginBottom: 10,
+    backgroundColor: "#f4f6f9",
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 4,
+    marginBottom: 16,
   },
   textInput: {
     flex: 1,
     fontSize: 16,
     marginLeft: 10,
+    height: 45,
   },
   sendButton: {
     width: "90%",
-    height: 50,
+    height: 54,
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: Colors.color.primary,
-    borderRadius: 30,
+    borderRadius: 27,
     marginBottom: 10,
+    marginTop: 10,
+    shadowColor: Colors.color.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+    elevation: 4,
   },
   sendButtonText: {
     color: Colors.color.white,

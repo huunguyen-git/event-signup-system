@@ -1,8 +1,9 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter, useLocalSearchParams } from "expo-router"; // 1. Thêm useLocalSearchParams
 import React from "react";
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { StyleSheet, TouchableOpacity, View } from "react-native";
 import { Colors } from "../constants/theme";
+import { CustomText } from "@/components/CustomText";
 
 export default function SuccessScreen() {
   const router = useRouter();
@@ -17,50 +18,50 @@ export default function SuccessScreen() {
           <Ionicons name="checkmark" size={50} color="#4CAF50" />
         </View>
 
-        <Text style={styles.mainTitle}>REGISTRATION SUCCESSFUL!</Text>
+        <CustomText variant="bold" style={styles.mainTitle}>REGISTRATION SUCCESSFUL!</CustomText>
 
-        <Text style={styles.description}>
+        <CustomText style={styles.description}>
           Thank you for registering for the{" "}
-          <Text style={{ fontWeight: "bold" }}>
+          <CustomText variant="bold">
             International Tech Summit 2024
-          </Text>
+          </CustomText>
           . Your registration for the{" "}
-          <Text style={{ fontWeight: "bold", color: themeColor }}>
+          <CustomText variant="bold" style={{ color: themeColor }}>
             {ticketType || "Standard Pass"}
-          </Text>{" "}
+          </CustomText>{" "}
           is confirmed.
-        </Text>
+        </CustomText>
 
         <View style={styles.detailsBox}>
           <View style={styles.detailRow}>
-            <Text style={styles.detailLabel}>Order Number:</Text>
-            <Text style={styles.detailValue}>ITS-2026-5678</Text>
+            <CustomText style={styles.detailLabel}>Order Number:</CustomText>
+            <CustomText variant="bold" style={styles.detailValue}>ITS-2026-5678</CustomText>
           </View>
           <View style={styles.detailRow}>
-            <Text style={styles.detailLabel}>Pass Type:</Text>
-            <Text style={styles.detailValue}>
+            <CustomText style={styles.detailLabel}>Pass Type:</CustomText>
+            <CustomText variant="bold" style={styles.detailValue}>
               {ticketType || "Standard Pass"}
-            </Text>
+            </CustomText>
           </View>
           <View style={styles.detailRow}>
-            <Text style={styles.detailLabel}>Date:</Text>
-            <Text style={styles.detailValue}>Oct 12-14, 2026</Text>
+            <CustomText style={styles.detailLabel}>Date:</CustomText>
+            <CustomText variant="bold" style={styles.detailValue}>Oct 12-14, 2026</CustomText>
           </View>
         </View>
 
         <TouchableOpacity
           style={[styles.primaryBtn, { backgroundColor: themeColor }]}
         >
-          <Text style={styles.primaryBtnText}>VIEW MY TICKET</Text>
+          <CustomText variant="bold" style={styles.primaryBtnText}>VIEW MY TICKET</CustomText>
         </TouchableOpacity>
 
         <TouchableOpacity
           style={styles.secondaryBtn}
           onPress={() => router.dismissAll()}
         >
-          <Text style={[styles.secondaryBtnText, { color: "#555" }]}>
+          <CustomText variant="bold" style={[styles.secondaryBtnText, { color: "#555" }]}>
             GO TO MY DASHBOARD
-          </Text>
+          </CustomText>
         </TouchableOpacity>
       </View>
     </View>
@@ -79,6 +80,10 @@ const styles = StyleSheet.create({
     padding: 30,
     borderRadius: 35,
     alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.1,
+    shadowRadius: 20,
     elevation: 15,
   },
   iconCircle: {
@@ -93,7 +98,6 @@ const styles = StyleSheet.create({
   },
   mainTitle: {
     fontSize: 20,
-    fontWeight: "bold",
     textAlign: "center",
     marginBottom: 12,
     color: "#333",
@@ -118,7 +122,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   detailLabel: { color: "#666", fontSize: 13 },
-  detailValue: { fontWeight: "bold", color: "#000", fontSize: 13 },
+  detailValue: { color: "#000", fontSize: 13 },
   primaryBtn: {
     width: "100%",
     padding: 16,
@@ -126,7 +130,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 12,
   },
-  primaryBtnText: { color: "white", fontWeight: "bold", fontSize: 15 },
+  primaryBtnText: { color: "white", fontSize: 15 },
   secondaryBtn: {
     width: "100%",
     padding: 16,
@@ -134,5 +138,5 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: "#F1F3F5",
   },
-  secondaryBtnText: { fontWeight: "bold", fontSize: 15 },
+  secondaryBtnText: { fontSize: 15 },
 });
