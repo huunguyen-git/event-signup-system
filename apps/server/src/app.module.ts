@@ -9,13 +9,20 @@ import { SupabaseModule } from './supabase/supabase.module.js';
 import { AuthModule } from './auth/auth.module.js';
 import { UserModule } from './user/user.module.js';
 import { ApplicationsModule } from './applications/applications.module.js';
-import { CommentsModule } from './comments/comments.module.js'; 
+import { CommentsModule } from './comments/comments.module.js';
 import { NotificationController } from './notification/notification.controller.js';
 import { NotificationService } from './notification/notification.service.js';
 
 @Module({
-  imports: [ConfigModule.forRoot(), SupabaseModule, AuthModule, UserModule],
-  controllers: [EventController, NotificationController, AppController],
-  providers: [EventService, NotificationService, PrismaService, AppService],
+  imports: [
+    ConfigModule.forRoot(),
+    SupabaseModule,
+    AuthModule,
+    UserModule,
+    ApplicationsModule,
+    CommentsModule,
+  ],
+  controllers: [EventController, AppController, NotificationController],
+  providers: [EventService, PrismaService, AppService, NotificationService],
 })
 export class AppModule {}

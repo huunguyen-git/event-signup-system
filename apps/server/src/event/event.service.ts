@@ -13,22 +13,38 @@ export class EventService {
       process.env.SUPABASE_SERVICE_ROLE_KEY!,
     );
   }
-  async getEvent(where: Prisma.EventWhereUniqueInput): Promise<Event | null> {
-    return this.prisma.event.findUnique({ where });
+
+  async getEvent(where: Prisma.EventWhereUniqueInput) {
+    return this.prisma.event.findUnique({
+      where,
+      include: {
+        host: true,
+      }
+    });
   }
-  async getEvents(): Promise<Event[]> {
-    return this.prisma.event.findMany();
+
+  async getEvents() {
+    return this.prisma.event.findMany({
+      include: {
+        host: true,
+      }
+    });
   }
-  async getEventByUserId(user_id: string): Promise<Event[] | null> {
+
+  async getEventByUserId(user_id: string) {
     return this.prisma.event.findMany({
       where: {
         host_id: user_id,
+      },
+      include: {
+        host: true,
       },
       orderBy: {
         event_date: 'desc',
       },
     });
   }
+
   async createEvent(
     data: CreateEventDto,
     file?: Express.Multer.File,
@@ -61,6 +77,7 @@ export class EventService {
       },
     });
   }
+
   async updateEvent(param: {
     where: Prisma.EventWhereUniqueInput;
     data: CreateEventDto;
@@ -78,6 +95,7 @@ export class EventService {
       },
     });
   }
+
   async deleteEvent(where: Prisma.EventWhereUniqueInput): Promise<Event> {
     return this.prisma.event.delete({ where });
   }

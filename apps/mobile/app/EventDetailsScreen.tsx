@@ -2,125 +2,337 @@ import {
   FontAwesome5,
   Ionicons,
   MaterialCommunityIcons,
+  Entypo,
 } from "@expo/vector-icons";
 import { useRouter, useLocalSearchParams } from "expo-router";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import {
   Image,
   Platform,
   ScrollView,
-  Share,
   StyleSheet,
   TouchableOpacity,
   View,
   StatusBar,
   Linking,
+  TextInput,
+  ActivityIndicator,
+  Modal,
+  Alert,
 } from "react-native";
 import { CustomText } from "@/components/CustomText";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Colors } from "../constants/theme";
 import { EventService } from "@/axios/eventService";
-import { ICreateEvent } from "@/axios/dto/eventModel";
+import { CommentService } from "@/axios/commentService";
+import { getToken, getUserId } from "@/services/storage";
 
-// Dữ liệu mẫu
-const speakers = [
-  {
-    id: "1",
-    name: "Kim Jisoo",
-    role: "AI Expert",
-    img: "https://tse3.mm.bing.net/th/id/OIP.cRjV5n4L0G9MtaWKbS3PUQHaNK?rs=1&pid=ImgDetMain&o=7&rm=3",
-  },
-  {
-    id: "2",
-    name: "Jang Won-young",
-    role: "AI Expert",
-    img: "https://th.bing.com/th/id/OSK.cBFp5a8GSyrienSlKkMaFE_Bh8Rcb8nV0EmXH80ToDE?w=200&h=200&c=12&o=6&dpr=1.3&pid=SANGAM",
-  },
-  {
-    id: "3",
-    name: "Go Youn-jung",
-    role: "Director",
-    img: "https://th.bing.com/th/id/OIP.I2n_XlYSdyKXOUkAtfeLSgHaJh?w=208&h=268&c=7&r=0&o=7&dpr=1.3&pid=1.7&rm=3",
-  },
-  {
-    id: "4",
-    name: "Kim Ji-won",
-    role: "Speaker",
-    img: "https://media-cdn-v2.laodong.vn/storage/newsportal/2024/3/19/1317075/Kim-Ji-Won-8.jpg",
-  },
-];
+interface IUser {
+  id: string;
+  full_name: string;
+  avatar_url: string | null;
+}
 
-const sponsors = [
-  {
-    id: "1",
-    img: "https://th.bing.com/th/id/OIP.awyTkpkOsZJjYt7Qgcv73AHaEK?w=320&h=180&c=7&r=0&o=7&dpr=1.3&pid=1.7&rm=3",
-  },
-  {
-    id: "2",
-    img: "https://th.bing.com/th/id/R.681caf025e059780e4dcdf5f03722e77?rik=0b8TB7kvASFtZA&pid=ImgRaw&r=0",
-  },
-  {
-    id: "3",
-    img: "https://static.vecteezy.com/system/resources/previews/021/972/603/original/minsk-belarus-03-27-2023-openai-and-chatgpt-logo-artifical-chatbot-system-chat-bot-button-for-web-app-and-phone-icon-symbol-editorial-illustration-free-vector.jpg",
-  },
-  {
-    id: "4",
-    img: "https://tse4.mm.bing.net/th/id/OIP._Wfo7QpuwP4YJhoKZ2KHmwHaE8?rs=1&pid=ImgDetMain&o=7&rm=3",
-  },
-];
+interface IComment {
+  id: string;
+  event_id: string;
+  user_id: string;
+  parent_id: string | null;
+  content: string;
+  is_pinned: boolean;
+  created_at: string | Date;
+  user?: IUser;
+}
+
+const CommentItem = ({
+  comment,
+  allReplies,
+  themeColor,
+  hostId,
+  isHost,
+  previewMode,
+  onReplyClick,
+  onViewRepliesInModal,
+  onPinClick,
+  rootId,
+  commentMap,
+  replyingToName
+}: {
+  comment: IComment;
+  allReplies: IComment[];
+  themeColor: string;
+  hostId: string;
+  isHost: boolean;
+  previewMode: boolean;
+  onReplyClick: (parentId: string, userName: string) => void;
+  onViewRepliesInModal?: () => void;
+  onPinClick: (comment: IComment) => void;
+  rootId?: string;
+  commentMap?: Map<string, IComment>;
+  replyingToName?: string | null;
+}) => {
+
+  const [showReplies, setShowReplies] = useState(false);
+
+  const timeAgo = (date: string | Date) => {
+    const seconds = Math.floor((new Date().getTime() - new Date(date).getTime()) / 1000);
+    let interval = seconds / 86400;
+    if (interval > 1) return Math.floor(interval) + "d ago";
+    interval = seconds / 3600;
+    if (interval > 1) return Math.floor(interval) + "h ago";
+    interval = seconds / 60;
+    if (interval > 1) return Math.floor(interval) + "m ago";
+    return "just now";
+  };
+
+  const displayedReplies = previewMode ? [] : (showReplies ? allReplies : []);
+
+  const latestHostReply = useMemo(() => {
+    if (!previewMode || allReplies.length === 0) return null;
+    const hostReplies = allReplies.filter(r => r.user_id === hostId);
+    if (hostReplies.length === 0) return null;
+    return hostReplies.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0];
+  }, [allReplies, hostId, previewMode]);
+
+  return (
+    <View style={styles.commentContainer}>
+      <View style={styles.commentMain}>
+        {comment.user?.avatar_url ? (
+          <Image source={{ uri: comment.user.avatar_url }} style={styles.commentAvatar} />
+        ) : (
+          <View style={[styles.commentAvatar, { backgroundColor: '#e1e4e8', justifyContent: 'center', alignItems: 'center' }]}>
+            <Ionicons name="person" size={18} color="#a3a6ac" />
+          </View>
+        )}
+
+        <View style={styles.commentBody}>
+          <View style={styles.commentHeader}>
+            <CustomText style={styles.commentUserName}>
+              {comment.user?.full_name || "User"}
+              {comment.user_id === hostId && <CustomText style={{color: themeColor, fontSize: 11}}> (Host)</CustomText>}
+            </CustomText>
+
+            {/* 🟢 TIKTOK STYLE: HIỆN TAM GIÁC VÀ TÊN NGƯỜI ĐƯỢC REPLY NẾU LÀ NESTED REPLY */}
+            {replyingToName && (
+              <View style={{flexDirection: 'row', alignItems: 'center', marginRight: 8}}>
+                <Entypo name="triangle-right" size={14} color="#888" style={{marginLeft: -2, marginRight: 2}} />
+                <CustomText style={{fontSize: 12, fontWeight: 'bold', color: '#666'}}>{replyingToName}</CustomText>
+              </View>
+            )}
+
+            {comment.is_pinned && (
+              <View style={[styles.pinnedBadge, { backgroundColor: themeColor + '20' }]}>
+                <Entypo name="pin" size={10} color={themeColor} />
+                <CustomText style={[styles.pinnedText, { color: themeColor }]}>Pinned</CustomText>
+              </View>
+            )}
+            <CustomText style={styles.commentTime}>{timeAgo(comment.created_at)}</CustomText>
+          </View>
+          <CustomText style={styles.commentContent}>{comment.content}</CustomText>
+
+          <View style={styles.actionButtonsRow}>
+            <TouchableOpacity style={styles.actionBtn} onPress={() => onReplyClick(comment.id, comment.user?.full_name || "User")}>
+              <CustomText style={[styles.actionBtnText, { color: themeColor }]}>Reply</CustomText>
+            </TouchableOpacity>
+
+            {isHost && !comment.parent_id && (
+              <TouchableOpacity style={[styles.actionBtn, { marginLeft: 15 }]} onPress={() => onPinClick(comment)}>
+                <Entypo name="pin" size={12} color={comment.is_pinned ? themeColor : '#777'} style={{marginRight: 4}} />
+                <CustomText style={[styles.actionBtnText, { color: comment.is_pinned ? themeColor : '#777', fontWeight: comment.is_pinned ? 'bold' : 'normal' }]}>
+                  {comment.is_pinned ? "Unpin" : "Pin"}
+                </CustomText>
+              </TouchableOpacity>
+            )}
+          </View>
+        </View>
+      </View>
+
+      {previewMode && latestHostReply && (
+        <View style={styles.repliesList}>
+          <CommentItem
+            comment={latestHostReply}
+            allReplies={[]}
+            themeColor={themeColor}
+            hostId={hostId}
+            isHost={isHost}
+            previewMode={true}
+            onReplyClick={onReplyClick}
+            onPinClick={onPinClick}
+            rootId={rootId || comment.id}
+            commentMap={commentMap}
+            replyingToName={
+              (latestHostReply.parent_id !== (rootId || comment.id) && latestHostReply.parent_id !== null)
+              ? commentMap?.get(latestHostReply.parent_id)?.user?.full_name
+              : null
+            }
+          />
+        </View>
+      )}
+
+      {!previewMode && displayedReplies.length > 0 && (
+        <View style={styles.repliesList}>
+          {displayedReplies.map(reply => {
+            const rId = rootId || comment.id;
+            const isNested = reply.parent_id !== rId && reply.parent_id !== null;
+            const rName = isNested ? commentMap?.get(reply.parent_id)?.user?.full_name : null;
+
+            return (
+              <CommentItem
+                key={reply.id}
+                comment={reply}
+                allReplies={[]}
+                themeColor={themeColor}
+                hostId={hostId}
+                isHost={isHost}
+                previewMode={false}
+                onReplyClick={onReplyClick}
+                onPinClick={onPinClick}
+                rootId={rId}
+                commentMap={commentMap}
+                replyingToName={rName}
+              />
+            );
+          })}
+        </View>
+      )}
+
+      {!previewMode && allReplies.length > 0 && (
+        <TouchableOpacity style={styles.viewMoreRepliesBtn} onPress={() => setShowReplies(!showReplies)}>
+          <View style={styles.viewMoreDash} />
+          <CustomText style={styles.viewMoreRepliesText}>
+            {showReplies ? "Hide replies" : `View all ${allReplies.length} replies`}
+          </CustomText>
+        </TouchableOpacity>
+      )}
+
+      {previewMode && allReplies.length > (latestHostReply ? 1 : 0) && (
+        <TouchableOpacity style={styles.viewMoreRepliesBtn} onPress={onViewRepliesInModal}>
+          <View style={styles.viewMoreDash} />
+          <CustomText style={[styles.viewMoreRepliesText, { color: themeColor }]}>
+            {latestHostReply
+              ? `View all ${allReplies.length} replies`
+              : `View ${allReplies.length} ${allReplies.length > 1 ? 'replies' : 'reply'}`}
+          </CustomText>
+        </TouchableOpacity>
+      )}
+    </View>
+  );
+};
 
 export default function EventDetailsScreen() {
   const router = useRouter();
-  const themeColor = Colors.light.tint; // Màu Navy
-  const EVENT_LOCATION =
-    "Gigamall, 240-242 Phạm Văn Đồng, Hiệp Bình Chánh, Thủ Đức, Hồ Chí Minh";
+  const themeColor = Colors.light.tint;
+
   const { id } = useLocalSearchParams();
-  const [eventData, setEventData] = useState<ICreateEvent | null>(null);
+  const [eventData, setEventData] = useState<any | null>(null);
   const [datePart, setDatePart] = useState("");
   const [timePart, setTimePart] = useState("");
+
+  const [comments, setComments] = useState<IComment[]>([]);
+  const [loadingComments, setLoadingComments] = useState(true);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+
+  const [newComment, setNewComment] = useState("");
+  const [replyingTo, setReplyingTo] = useState<{ id: string, name: string } | null>(null);
+
+  const [showAllCommentsModal, setShowAllCommentsModal] = useState(false);
+  const commentInputRef = useRef<TextInput>(null);
+  const modalInputRef = useRef<TextInput>(null);
+
+  const fetchComments = async () => {
+    try {
+      const commentData = await CommentService.getCommentsByEvent(id as string);
+      setComments(commentData || []);
+    } catch (error) {
+      setComments([]);
+    }
+  };
 
   useEffect(() => {
     if (id) {
       const fetchData = async () => {
-        const data = await EventService.getEvent(id);
-        setEventData(data);
-        const eventdate = new Date(data.event_date);
+        try {
+          const savedUserId = await getUserId();
+          if (savedUserId) {
+            setCurrentUserId(savedUserId);
+          }
 
-        const date = new Intl.DateTimeFormat("vi-VN", {
-          day: "2-digit",
-          month: "2-digit",
-          year: "numeric",
-        }).format(eventdate);
+          const data = await EventService.getEvent(id as string);
+          setEventData(data);
 
-        const time = new Intl.DateTimeFormat("vi-VN", {
-          hour: "2-digit",
-          minute: "2-digit",
-          hour12: false,
-        }).format(eventdate);
-        setDatePart(date);
-        setTimePart(time);
+          const eventdate = new Date(data.event_date);
+          const date = new Intl.DateTimeFormat("vi-VN", { day: "2-digit", month: "2-digit", year: "numeric" }).format(eventdate);
+          const time = new Intl.DateTimeFormat("vi-VN", { hour: "2-digit", minute: "2-digit", hour12: false }).format(eventdate);
+
+          setDatePart(date);
+          setTimePart(time);
+
+          await fetchComments();
+          setLoadingComments(false);
+        } catch (error) {
+          console.error("Error fetching event details:", error);
+          setLoadingComments(false);
+        }
       };
       fetchData();
     }
   }, [id]);
 
-  const handleOpenMap = () => {
-    const encodedLocation = encodeURIComponent(
-      eventData ? eventData.location_url : EVENT_LOCATION,
-    );
-    const url = Platform.select({
-      ios: `maps://0,0?q=${encodedLocation}`,
-      android: `geo:0,0?q=${encodedLocation}`,
+  const organizedComments = useMemo(() => {
+    const sorted = [...comments].sort((a, b) => {
+      if (a.is_pinned && !b.is_pinned) return -1;
+      if (!a.is_pinned && b.is_pinned) return 1;
+      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
     });
+
+    const roots: IComment[] = [];
+    const repliesMap = new Map<string, IComment[]>();
+    const commentMap = new Map<string, IComment>();
+
+    sorted.forEach(comment => {
+      commentMap.set(comment.id, comment);
+      if (comment.parent_id === null) {
+        roots.push(comment);
+      } else {
+        if (!repliesMap.has(comment.parent_id)) {
+          repliesMap.set(comment.parent_id, []);
+        }
+        repliesMap.get(comment.parent_id)?.push(comment);
+      }
+    });
+
+    // 🟢 LÀM PHẲNG CÂY REPLY ĐỂ TẠO STYLE TIKTOK
+    const flatRepliesMap = new Map<string, IComment[]>();
+
+    roots.forEach(root => {
+      const getDescendants = (parentId: string): IComment[] => {
+        const children = repliesMap.get(parentId) || [];
+        let descendants: IComment[] = [];
+        children.forEach(child => {
+          descendants.push(child);
+          descendants = descendants.concat(getDescendants(child.id));
+        });
+        return descendants;
+      };
+
+      const allDescendants = getDescendants(root.id).sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+      flatRepliesMap.set(root.id, allDescendants);
+    });
+
+    return { roots, flatRepliesMap, commentMap };
+  }, [comments]);
+
+  const handleOpenMap = () => {
+    if (!eventData?.location_url) return;
+    const encodedLocation = encodeURIComponent(eventData.location_url);
+    const url = Platform.select({ ios: `maps://0,0?q=${encodedLocation}`, android: `geo:0,0?q=${encodedLocation}` });
     if (url) Linking.openURL(url);
   };
 
   const handleShare = () => {
-    router.push({
-      pathname: "/ShowQrScreen",
-      params: { id: eventData?.id, title: eventData?.title },
-    });
+    router.push({ pathname: "/ShowQrScreen", params: { id: eventData?.id, title: eventData?.title } });
   };
+
   const handleRegister = () => {
     router.push({
       pathname: "/RegistrationFormScreen",
@@ -130,6 +342,60 @@ export default function EventDetailsScreen() {
       },
     });
   };
+
+  const handleReplyClick = (parentId: string, userName: string) => {
+    setReplyingTo({ id: parentId, name: userName });
+    setTimeout(() => {
+      if (showAllCommentsModal) {
+        modalInputRef.current?.focus();
+      } else {
+        commentInputRef.current?.focus();
+      }
+    }, 200);
+  };
+
+  const handleSendComment = async () => {
+    if (!newComment.trim()) return;
+
+    const textToSend = newComment;
+    const currentReply = replyingTo;
+    setNewComment("");
+    setReplyingTo(null);
+
+    try {
+      const token = await getToken();
+      if (!token) return;
+
+      await CommentService.postComment(token, id as string, textToSend, currentReply ? currentReply.id : null);
+      await fetchComments();
+    } catch (error) {
+      console.error("Lỗi gửi bình luận:", error);
+    }
+  };
+
+  // 🟢 FIX LỖI GHIM ĐỘC TÔN (CHỈ 1 COMMENT ĐƯỢC GHIM)
+  const handlePinAction = async (comment: IComment) => {
+    try {
+      const token = await getToken();
+      if (!token) return;
+
+      if (!comment.is_pinned) {
+        const currentPinned = comments.find(c => c.is_pinned);
+        if (currentPinned && currentPinned.id !== comment.id) {
+          await CommentService.pinComment(token, currentPinned.id);
+        }
+      }
+
+      await CommentService.pinComment(token, comment.id);
+      await fetchComments();
+    } catch (apiError: any) {
+      console.error("Lỗi ghim:", apiError);
+    }
+  };
+
+  const eventHostId = eventData?.host?.id || eventData?.host_id || "";
+  const isUserHost = currentUserId !== null && eventHostId !== "" && currentUserId === eventHostId;
+
   return (
     <View style={styles.container}>
       <SafeAreaView style={{ backgroundColor: "white" }} edges={["top"]} />
@@ -154,30 +420,15 @@ export default function EventDetailsScreen() {
         </TouchableOpacity>
       </View>
 
-      <ScrollView
-        contentContainerStyle={styles.scrollBody}
-        showsVerticalScrollIndicator={false}
-      >
-        <Image
-          source={
-            eventData?.banner_url
-              ? { uri: eventData.banner_url }
-              : require("../assets/images/icon.png")
-          }
-          style={styles.banner}
-        />
-
-        <View style={styles.content}>
+      <ScrollView contentContainerStyle={styles.scrollBody} showsVerticalScrollIndicator={false}>
+        <Image source={eventData?.banner_url ? { uri: eventData.banner_url } : require("../assets/images/icon.png")} style={styles.banner} />
+          <View style={styles.content}>
           <CustomText variant="bold" style={[styles.mainTitle, { color: themeColor }]}>
             {eventData?.title}
           </CustomText>
-
+          </View>
           <View style={styles.infoRow}>
-            <MaterialCommunityIcons
-              name="calendar-month"
-              size={28}
-              color={themeColor}
-            />
+            <MaterialCommunityIcons name="calendar-month" size={28} color={themeColor} />
             <View style={styles.infoTextGroup}>
               <CustomText variant="bold" style={styles.infoLabel}>Event Timeline (Time & Date)</CustomText>
               <CustomText style={styles.infoValue}>
@@ -190,7 +441,7 @@ export default function EventDetailsScreen() {
             <View style={styles.infoTextGroup}>
               <CustomText variant="bold" style={styles.infoLabel}>Location</CustomText>
               <CustomText style={styles.infoValue}>
-                {eventData?.location_url || EVENT_LOCATION}
+                {eventData?.location_url}
               </CustomText>
             </View>
           </View>
@@ -208,92 +459,166 @@ export default function EventDetailsScreen() {
             <View style={styles.mapPin}>
               <Ionicons name="location" size={36} color="red" />
             </View>
-          </View>
+          {eventData?.description && (
+            <View style={styles.section}>
+              <View style={styles.sectionHeaderRow}>
+                <Ionicons name="information-circle" size={24} color={themeColor} />
+                <CustomText style={styles.sectionTitle}>About the Event</CustomText>
+              </View>
+              <CustomText style={styles.bodyText}>{eventData.description}</CustomText>
+            </View>
+          )}
 
-          <View style={styles.section}>
+          {(eventData?.host || eventData?.host_id) && (
+            <View style={styles.section}>
+              <View style={styles.sectionHeaderRow}>
+                <Ionicons name="person" size={20} color={themeColor} />
+                <CustomText style={styles.sectionTitle}>Host/Organization</CustomText>
+              </View>
+              <TouchableOpacity
+                style={styles.hostCard}
+                activeOpacity={0.7}
+                onPress={() => {
+                  const targetId = eventData?.host?.id || eventData?.host_id;
+                  if (targetId) {
+                    router.push({
+                      pathname: "/OrganizerProfileScreen",
+                      params: {
+                        userId: targetId,
+                        full_name: eventData?.host?.full_name || "",
+                        avatar_url: eventData?.host?.avatar_url || "",
+                        email: eventData?.host?.email || "",
+                        phone_number: eventData?.host?.phone_number || "",
+                        birthdate: eventData?.host?.birthdate || "",
+                        created_at: eventData?.host?.created_at || "",
+                      }
+                    });
+                  }
+                }}
+              >
+                {eventData?.host?.avatar_url ? (
+                  <Image source={{ uri: eventData.host.avatar_url }} style={styles.hostAvatar} />
+                ) : (
+                  <View style={[styles.hostAvatar, { backgroundColor: '#e1e4e8', justifyContent: 'center', alignItems: 'center' }]}>
+                    <Ionicons name="person" size={24} color="#a3a6ac" />
+                  </View>
+                )}
+                <View>
+                    <CustomText style={styles.hostName}>{eventData?.host?.full_name ? eventData.host.full_name : "Event Organizer"}</CustomText>
+                    <CustomText style={styles.hostSubText}>Host</CustomText>
+                </View>
+              </TouchableOpacity>
+            </View>
+          )}
+
+          <View style={[styles.section, {marginBottom: 20}]}>
             <View style={styles.sectionHeaderRow}>
               <Ionicons
                 name="information-circle"
                 size={24}
                 color={themeColor}
               />
-              <CustomText variant="bold" style={styles.sectionTitle}>About the Event</CustomText>
+              <CustomText style={styles.sectionTitle}>Comments ({comments.length})</CustomText>
             </View>
-            <CustomText style={styles.bodyText}>
-              Join us for the most anticipated tech summit of 2024, featuring
-              world-class speakers and cutting-edge innovations in AI and
-              Software Engineering.
-            </CustomText>
-          </View>
 
-          <CustomText variant="bold" style={[styles.sectionTitle, { marginTop: 25 }]}>
-            Key Speakers
-          </CustomText>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            style={styles.speakerList}
-          >
-            {speakers.map((s) => (
-              <View key={s.id} style={styles.speakerCard}>
-                <Image source={{ uri: s.img }} style={styles.speakerImg} />
-                <CustomText variant="bold" style={styles.speakerName}>{s.name}</CustomText>
-                <CustomText style={styles.speakerRole}>{s.role}</CustomText>
-                <TouchableOpacity style={styles.profileTag}>
-                  <CustomText variant="bold" style={[styles.profileTagText, { color: themeColor }]}>
-                    Speaker Profile
-                  </CustomText>
+            {loadingComments && (
+              <ActivityIndicator size="small" color={themeColor} style={{marginTop: 20}} />
+            )}
+
+            {!loadingComments && organizedComments.roots.length > 0 && (
+              <View style={[styles.commentList, { marginTop: 15 }]}>
+                {organizedComments.roots.slice(0, 3).map(comment => (
+                  <CommentItem
+                    key={comment.id}
+                    comment={comment}
+                    allReplies={organizedComments.flatRepliesMap.get(comment.id) || []}
+                    themeColor={themeColor}
+                    hostId={eventHostId}
+                    isHost={isUserHost}
+                    previewMode={true}
+                    onReplyClick={handleReplyClick}
+                    onPinClick={handlePinAction}
+                    rootId={comment.id}
+                    commentMap={organizedComments.commentMap}
+                    onViewRepliesInModal={() => setShowAllCommentsModal(true)}
+                  />
+                ))}
+              </View>
+            )}
+
+            {!loadingComments && organizedComments.roots.length > 3 && (
+              <TouchableOpacity style={[styles.viewAllCommentsBtn, { marginBottom: 15 }]} onPress={() => setShowAllCommentsModal(true)}>
+                <CustomText style={styles.viewAllCommentsText}>View all {comments.length} comments</CustomText>
+              </TouchableOpacity>
+            )}
+
+            <View style={{marginTop: 5, marginBottom: 10}}>
+              {replyingTo && (
+                <View style={styles.replyingToHeader}>
+                  <CustomText style={styles.replyingToText}>Replying to <CustomText style={{fontWeight: 'bold'}}>{replyingTo.name}</CustomText></CustomText>
+                  <TouchableOpacity onPress={() => setReplyingTo(null)}>
+                    <Ionicons name="close-circle" size={16} color="#888" />
+                  </TouchableOpacity>
+                </View>
+              )}
+              <View style={styles.commentInputRow}>
+                <TextInput ref={commentInputRef} style={styles.commentInput} placeholder="Add a public comment..." value={newComment} onChangeText={setNewComment} multiline />
+                <TouchableOpacity style={[styles.postCommentBtn, {backgroundColor: newComment.trim() ? themeColor : '#ccc'}]} disabled={!newComment.trim()} onPress={handleSendComment} >
+                  <Ionicons name="send" size={18} color="white" />
                 </TouchableOpacity>
               </View>
-            ))}
-          </ScrollView>
-
-          <View style={styles.section}>
-            <View style={styles.sectionHeaderRow}>
-              <Ionicons name="person" size={20} color={themeColor} />
-              <CustomText variant="bold" style={styles.sectionTitle}>Host/Organization</CustomText>
             </View>
-            <CustomText variant="bold" style={styles.hostName}>Tech Innovations Global</CustomText>
-            <CustomText style={styles.bodyText}>
-              Leading organizer of international technology conferences across
-              South East Asia, focused on digital transformation.
-            </CustomText>
           </View>
-
-          <View style={styles.section}>
-            <View style={styles.sectionHeaderRow}>
-              <MaterialCommunityIcons
-                name="ticket-confirmation"
-                size={22}
-                color={themeColor}
-              />
-              <CustomText variant="bold" style={styles.sectionTitle}>Ticket Information</CustomText>
-            </View>
-            <CustomText style={styles.bodyText}>
-              • Standard Pass: Free access to all main sessions.{"\n"}• Premium
-              Pass: Access to VIP networking and workshops.
-            </CustomText>
-          </View>
-
-          <CustomText variant="bold" style={[styles.sectionTitle, { marginTop: 25 }]}>Sponsors</CustomText>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            style={styles.sponsorList}
-          >
-            {sponsors.map((sp) => (
-              <View key={sp.id} style={styles.sponsorCard}>
-                <Image
-                  source={{ uri: sp.img }}
-                  style={styles.sponsorImg}
-                  resizeMode="contain"
-                />
-              </View>
-            ))}
-          </ScrollView>
         </View>
       </ScrollView>
 
+      <Modal visible={showAllCommentsModal} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => {setShowAllCommentsModal(false); setReplyingTo(null);}}>
+        <SafeAreaView style={styles.modalContainer}>
+          <View style={styles.modalHeader}>
+            <View style={{width: 30}}/>
+            <CustomText style={styles.modalTitle}>Comments ({comments.length})</CustomText>
+            <TouchableOpacity style={styles.modalCloseBtn} onPress={() => {setShowAllCommentsModal(false); setReplyingTo(null);}}>
+              <Ionicons name="close" size={26} color="#333" />
+            </TouchableOpacity>
+          </View>
+
+          <ScrollView style={{flex: 1, paddingHorizontal: 20, paddingTop: 10}} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+            {organizedComments.roots.map(comment => (
+              <CommentItem
+                key={comment.id}
+                comment={comment}
+                allReplies={organizedComments.flatRepliesMap.get(comment.id) || []}
+                themeColor={themeColor}
+                hostId={eventHostId}
+                isHost={isUserHost}
+                previewMode={false}
+                onReplyClick={handleReplyClick}
+                onPinClick={handlePinAction}
+                rootId={comment.id}
+                commentMap={organizedComments.commentMap}
+              />
+            ))}
+            <View style={{height: 40}}/>
+          </ScrollView>
+
+          <View style={[styles.footer, { position: 'relative', borderTopWidth: 1, borderColor: '#eee', paddingHorizontal: 15, paddingVertical: 10 }]}>
+            {replyingTo && (
+              <View style={[styles.replyingToHeader, { marginLeft: 0, marginBottom: 5 }]}>
+                <CustomText style={styles.replyingToText}>Replying to <CustomText style={{fontWeight: 'bold'}}>{replyingTo.name}</CustomText></CustomText>
+                <TouchableOpacity onPress={() => setReplyingTo(null)}>
+                  <Ionicons name="close-circle" size={16} color="#888" />
+                </TouchableOpacity>
+              </View>
+            )}
+            <View style={styles.commentInputRow}>
+              <TextInput ref={modalInputRef} style={styles.commentInput} placeholder="Add a public comment..." value={newComment} onChangeText={setNewComment} multiline />
+              <TouchableOpacity style={[styles.postCommentBtn, {backgroundColor: newComment.trim() ? themeColor : '#ccc'}]} disabled={!newComment.trim()} onPress={handleSendComment} >
+                <Ionicons name="send" size={18} color="white" />
+              </TouchableOpacity>
+            </View>
+          </View>
+        </SafeAreaView>
+      </Modal>
       <View style={styles.footer}>
         <TouchableOpacity
           style={[styles.regBtn, { backgroundColor: themeColor }]}
@@ -303,18 +628,11 @@ export default function EventDetailsScreen() {
         </TouchableOpacity>
       </View>
     </View>
-  );
-}
+    )};
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "white" },
-  blueHeader: {
-    height: 60,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 15,
-  },
+  blueHeader: { height: 60, flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 15, zIndex: 100 },
   headerLeft: { flexDirection: "row", alignItems: "center" },
   headerTitle: {
     color: "white",
@@ -324,7 +642,6 @@ const styles = StyleSheet.create({
   },
   shareBtn: { flexDirection: "row", alignItems: "center" },
   shareBtnText: { color: "white", marginLeft: 5, fontSize: 14 },
-
   scrollBody: { paddingBottom: 110 },
   banner: { width: "100%", height: 200, resizeMode: "cover" },
   content: { padding: 20 },
@@ -333,7 +650,6 @@ const styles = StyleSheet.create({
   infoTextGroup: { marginLeft: 12, flex: 1 },
   infoLabel: { fontSize: 15, color: "#333" },
   infoValue: { color: "#666", marginTop: 3, fontSize: 13 },
-
   mapContainer: {
     width: "100%",
     height: 150,
@@ -371,7 +687,6 @@ const styles = StyleSheet.create({
     marginLeft: 5,
   },
   mapPin: { position: "absolute", top: "35%", left: "46%" },
-
   section: { marginTop: 25 },
   sectionHeaderRow: {
     flexDirection: "row",
@@ -428,4 +743,37 @@ const styles = StyleSheet.create({
   },
   regBtn: { padding: 16, borderRadius: 30, alignItems: "center" },
   regBtnText: { color: "white", fontSize: 16 },
+  capacityText: { color: "#666", fontSize: 13, marginTop: 5 },
+  hostCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#f9f9f9', padding: 15, borderRadius: 12, marginTop: 10, borderWidth: 1, borderColor: '#eee' },
+  hostAvatar: { width: 50, height: 50, borderRadius: 25, marginRight: 15 },
+  hostSubText: { color: '#888', fontSize: 12, marginTop: 2 },
+  replyingToHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#f0f2f5', paddingHorizontal: 15, paddingVertical: 6, borderTopLeftRadius: 10, borderTopRightRadius: 10, alignSelf: 'flex-start', marginLeft: 5 },
+  replyingToText: { fontSize: 12, color: '#555', marginRight: 10 },
+  commentInputRow: { flexDirection: 'row', alignItems: 'flex-start' },
+  commentInput: { flex: 1, backgroundColor: '#f0f2f5', borderRadius: 20, paddingHorizontal: 15, paddingVertical: Platform.OS === 'ios' ? 10 : 8, fontSize: 13, maxHeight: 100, marginRight: 10 },
+  postCommentBtn: { width: 36, height: 36, borderRadius: 18, justifyContent: 'center', alignItems: 'center', marginTop: 2 },
+  commentList: { marginTop: 5 },
+  commentContainer: { marginBottom: 20 },
+  commentMain: { flexDirection: 'row', alignItems: 'flex-start' },
+  commentAvatar: { width: 36, height: 36, borderRadius: 18, marginRight: 12 },
+  commentBody: { flex: 1 },
+  commentHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 2 },
+  commentUserName: { fontWeight: 'bold', fontSize: 13, marginRight: 8, color: '#333' },
+  commentTime: { fontSize: 11, color: '#aaa', marginLeft: 'auto' },
+  commentContent: { fontSize: 13, color: '#444', lineHeight: 18 },
+  actionButtonsRow: { flexDirection: 'row', alignItems: 'center', marginTop: 8 },
+  actionBtn: { flexDirection: 'row', alignItems: 'center', paddingVertical: 2 },
+  actionBtnText: { fontSize: 12, fontWeight: '500' },
+  pinnedBadge: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 10, marginRight: 5 },
+  pinnedText: { fontSize: 9, fontWeight: 'bold', marginLeft: 3 },
+  repliesList: { marginLeft: 48, marginTop: 12 },
+  viewAllCommentsBtn: { alignSelf: 'center', marginTop: 10, paddingVertical: 8, paddingHorizontal: 15, backgroundColor: '#f0f2f5', borderRadius: 20 },
+  viewAllCommentsText: { fontSize: 13, fontWeight: 'bold', color: '#555' },
+  viewMoreRepliesBtn: { flexDirection: 'row', alignItems: 'center', marginLeft: 48, marginTop: 8 },
+  viewMoreDash: { width: 24, height: 1, backgroundColor: '#aaa', marginRight: 8 },
+  viewMoreRepliesText: { fontSize: 13, fontWeight: 'bold', color: '#666' },
+  modalContainer: { flex: 1, backgroundColor: 'white' },
+  modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 15, paddingVertical: 15, borderBottomWidth: 1, borderBottomColor: '#eee' },
+  modalTitle: { fontSize: 16, fontWeight: 'bold', color: '#111' },
+  modalCloseBtn: { padding: 4 },
 });

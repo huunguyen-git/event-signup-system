@@ -20,4 +20,9 @@ export class ApplicationsController {
   findAll(@Param('id') id: string) {
     return this.applicationsService.getByEvent(id);
   }
+
+  @Get('applications/user/:userId')
+  findByUser(@Param('userId') userId: string) {
+    return this.applicationsService.getByUser(userId);
+  }
 }

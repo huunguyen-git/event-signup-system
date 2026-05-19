@@ -5,27 +5,32 @@ import { Colors } from "../../../constants/theme";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { FlatList } from "react-native-gesture-handler";
 import MyEventItem from "@/components/MyEventItem";
-import { Stack } from "expo-router";
-import React, { useState, useEffect } from "react";
+import { Stack, useFocusEffect } from "expo-router";
+import React, { useState, useCallback } from "react";
 import { EventService } from "../../../axios/eventService";
-import { ICreateEvent } from "../../../axios/dto/eventModel";
 import { getUserId } from "@/services/storage";
 import Header from "@/components/Header";
 
 const DashBoardScreen = () => {
-  const [data, setData] = useState<ICreateEvent[]>([]);
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const UserId = await getUserId();
-        const data = await EventService.getEventsByUser(UserId);
-        setData(data);
-      } catch (error) {
-        console.error("Error fetching data:", error);
-      }
-    };
-    fetchData();
-  }, []);
+  const [data, setData] = useState<any[]>([]);
+
+  useFocusEffect(
+    useCallback(() => {
+      const fetchData = async () => {
+        try {
+          const UserId = await getUserId();
+          if (UserId) {
+            const responseData = await EventService.getMyRegisteredEvents(UserId);
+            setData(responseData);
+          }
+        } catch (error) {
+          console.error("Error fetching data:", error);
+        }
+      };
+      fetchData();
+    }, [])
+  );
+
   return (
     <>
       <Stack.Screen options={{ headerShown: false }} />
@@ -51,7 +56,7 @@ const DashBoardScreen = () => {
 
           <FlatList
             data={data}
-            renderItem={({ item }) => <MyEventItem event={item} />}
+            renderItem={({ item }) => <MyEventItem event={item.event} />}
             keyExtractor={(item) => item.id}
           />
         </View>
@@ -60,6 +65,7 @@ const DashBoardScreen = () => {
   );
 };
 export default DashBoardScreen;
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,

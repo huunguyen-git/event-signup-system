@@ -22,7 +22,24 @@ export const EventService = {
         console.error(error.message);
         throw error;
     }
-    
+  },
+  registerForEvent: async (applicationData) => {
+    try {
+      const response = await apiClient.post("/applications", applicationData);
+      return response.data;
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
+  },
+  getMyRegisteredEvents: async (userId) => {
+    try {
+      const response = await apiClient.get(`/applications/user/${userId}`);
+      return response.data;
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
   },
   createEvent: async (eventData) => {
     try {

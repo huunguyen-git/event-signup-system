@@ -1,6 +1,7 @@
 import { MaterialCommunityIcons, Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { use, useEffect, useState } from "react";
+import { getUserId } from "@/services/storage";
 import {
   KeyboardAvoidingView,
   Platform,
@@ -17,7 +18,6 @@ import { ICreateEvent } from "@/axios/dto/eventModel";
 import { EventService } from "@/axios/eventService";
 import * as Notifications from 'expo-notifications';
 import { NotificationService } from "@/axios/notificationService";
-import { getUserId } from "@/services/storage";
 import { SchedulableTriggerInputTypes } from 'expo-notifications';
 
 export default function RegistrationFormScreen() {
@@ -25,6 +25,10 @@ export default function RegistrationFormScreen() {
   const themeColor = Colors.light.tint;
 
   const [agreed, setAgreed] = useState(false);
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [email, setEmail] = useState("");
+  const [jobTitle, setJobTitle] = useState("");
   const [ticketType, setTicketType] = useState("Standard Pass");
 
   const [showTicketPicker, setShowTicketPicker] = useState(false);
@@ -101,7 +105,6 @@ export default function RegistrationFormScreen() {
     setShowCustomQuestionModal(false);
     setQuestion("");
   };
-
   const handleCreateEvent = async() => {
     try {
       console.log("du lieu dang ki:", data);
@@ -124,6 +127,35 @@ export default function RegistrationFormScreen() {
       console.error("Error creating event:", error);
     }
   };
+  const handleRegisterEvent = async () => {
+      try {
+        const currentUserId = await getUserId();
+        if (!currentUserId) {
+          return;
+        }
+        const applicationData = {
+          event_id: id as string,
+          user_id: currentUserId,
+          answers: {
+            firstName: firstName,
+            lastName: lastName,
+            email: email,
+            jobTitle: jobTitle,
+            ticketType: ticketType,
+          },
+        };
+        console.log("Đang gửi đơn đăng ký sự kiện lên server...", applicationData);
+        await EventService.registerForEvent(applicationData);
+        router.replace({
+          pathname: '/SuccessScreen',
+          params: { ticketType: ticketType }
+        });
+        scheduleEventReminder(data.title,data.event_date);
+      } catch (error: any) {
+        console.error("Error creating event application:", error);
+        const errorMsg = error.response?.data?.message || "Không thể kết nối đến Server!";
+      }
+    };
 
   async function scheduleEventReminder(eventTitle: string, eventStartStr: string) {
     const eventTime = new Date(data.event_date).getTime();
@@ -145,7 +177,7 @@ export default function RegistrationFormScreen() {
     { id: "2", name: "Premium Pass" },
   ];
 
-  const InputField = ({ label, placeholder, isShort }: any) => (
+  const InputField = ({ label, placeholder, isShort, value, onChangeText }: any) => (
     <View style={[styles.inputGroup, isShort && { flex: 1 }]}>
       <CustomText variant="bold" style={styles.label}>{label}</CustomText>
       <View style={styles.inputWrapper}>
@@ -153,6 +185,8 @@ export default function RegistrationFormScreen() {
           style={styles.input}
           placeholder={placeholder}
           placeholderTextColor="#bbb"
+          value={value}
+          onChangeText={onChangeText}
         />
       </View>
     </View>
@@ -240,9 +274,6 @@ export default function RegistrationFormScreen() {
           </View>
         </View>
       </Modal>
-      <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-      >
         <View style={styles.modalCard}>
           <CustomText style={styles.eventSmallTitle}>
             International Tech Summit 2024
@@ -268,16 +299,13 @@ export default function RegistrationFormScreen() {
             style={{ maxHeight: 300 }}
           >
             <View style={styles.row}>
-              <InputField label="First Name" placeholder="A" isShort />
+              <InputField label="First Name" placeholder="A" isShort value={firstName} onChangeText={setFirstName} />
               <View style={{ width: 10 }} />
-              <InputField label="Last Name" placeholder="Nguyễn Văn" isShort />
+              <InputField label="Last Name" placeholder="Nguyễn Văn" isShort value={lastName} onChangeText={setLastName} />
             </View>
-            <InputField
-              label="Company Email"
-              placeholder="nguyenvana@gmail.com"
-            />
-            <InputField label="Job Title" placeholder="Software Engineer" />
-            {customQuestions?.map((q) => (
+            <InputField label="Company Email" placeholder="nguyenvana@gm.uit.edu.vn" value={email} onChangeText={setEmail} />
+            <InputField label="Job Title" placeholder="Software Engineer" value={jobTitle} onChangeText={setJobTitle} />
+            {customQuestions.map((q) => (
               <InputField
                 key={q.id}
                 label={q.question}
@@ -330,13 +358,12 @@ export default function RegistrationFormScreen() {
                 { backgroundColor: themeColor, opacity: agreed ? 1 : 0.5 },
               ]}
               disabled={!agreed}
-              onPress={handleCreateEvent}
+              onPress={IsCreate? handleCreateEvent : handleRegisterEvent}
             >
               <CustomText variant="bold" style={styles.completeBtnText}>COMPLETE REGISTRATION</CustomText>
             </TouchableOpacity>
           </View>
         </View>
-      </KeyboardAvoidingView>
 
       <Modal visible={showTicketPicker} transparent animationType="slide">
         <View style={styles.pickerOverlay}>

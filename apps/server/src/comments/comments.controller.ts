@@ -1,22 +1,26 @@
-import { Controller, Post, Body, Patch, Param, Get, Query } from '@nestjs/common';
+import { Controller, Post, Body, Patch, Param, Get, Req, UseGuards } from '@nestjs/common';
 import { CommentsService } from './comments.service.js';
+import { JwtGuard } from '../auth/guards/jwt.guard.js';
 
-@Controller()
+@Controller('comments')
 export class CommentsController {
   constructor(private readonly commentsService: CommentsService) {}
 
-  @Post('comments')
-  create(@Body() dto: any) {
+  @UseGuards(JwtGuard)
+  @Post()
+  create(@Req() req, @Body() dto: any) {
+    dto.user_id = req.user.id;
     return this.commentsService.create(dto);
   }
 
-  @Get('events/:id/comments')
+  @Get('event/:id')
   findAll(@Param('id') id: string) {
     return this.commentsService.findByEvent(id);
   }
 
-  @Patch('comments/:id/pin')
-  pin(@Param('id') id: string, @Query('user_id') user_id: string) {
-    return this.commentsService.pin(id, user_id);
+  @UseGuards(JwtGuard)
+  @Patch(':id/pin')
+  pin(@Req() req, @Param('id') id: string) {
+    return this.commentsService.pin(id, req.user.id);
   }
 }

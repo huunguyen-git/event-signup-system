@@ -6,15 +6,19 @@ export class CommentsService {
   constructor(private readonly prisma: PrismaService) {}
 
   async create(dto: any) {
-    return this.prisma.comment.create({ data: dto });
+    return this.prisma.comment.create({
+      data: dto,
+      include: {
+        user: { select: { id: true, full_name: true, avatar_url: true } }
+      }
+    });
   }
 
   async findByEvent(event_id: string) {
     return this.prisma.comment.findMany({
-      where: { event_id, parent_id: null },
+      where: { event_id },
       include: {
-        user: { select: { full_name: true, avatar_url: true } },
-        replies: { include: { user: { select: { full_name: true } } } }
+        user: { select: { id: true, full_name: true, avatar_url: true } },
       },
       orderBy: [{ is_pinned: 'desc' }, { created_at: 'desc' }]
     });
@@ -30,7 +34,7 @@ export class CommentsService {
 
     return this.prisma.comment.update({
       where: { id },
-      data: { is_pinned: true }
+      data: { is_pinned: !comment.is_pinned }
     });
   }
 }
