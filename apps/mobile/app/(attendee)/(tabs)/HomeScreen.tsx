@@ -3,7 +3,6 @@ import {
   View,
   StyleSheet,
   TextInput,
-  TouchableOpacity,
 } from "react-native";
 import { CustomText } from "@/components/CustomText";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
@@ -11,7 +10,7 @@ import { Colors } from "../../../constants/theme";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { FlatList } from "react-native-gesture-handler";
 import EventItem from "@/components/EventItem";
-import { Stack, useRouter, } from "expo-router";
+import { Stack } from "expo-router";
 import { ICreateEvent } from "@/axios/dto/eventModel";
 import { EventService } from "@/axios/eventService";
 import Header from "@/components/Header";
@@ -22,7 +21,8 @@ const HomeScreen = () => {
     const fetchData = async () => {
       try {
         const data = await EventService.getEvents();
-        setData(data);
+        setData(data.filter((item: ICreateEvent) => item.status === "PUBLISHED")
+                    .sort((a: ICreateEvent, b: ICreateEvent) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()));
       } catch (error) {
         console.error("Error fetching data:", error);
       }

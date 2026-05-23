@@ -6,14 +6,14 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { FlatList } from "react-native-gesture-handler";
 import MyEventItem from "@/components/MyEventItem";
 import { Stack, useFocusEffect } from "expo-router";
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useMemo } from "react";
 import { EventService } from "../../../axios/eventService";
 import { getUserId } from "@/services/storage";
 import Header from "@/components/Header";
 
 const DashBoardScreen = () => {
   const [data, setData] = useState<any[]>([]);
-
+  const [searchText,setSearchText] = useState<string>("");
   useFocusEffect(
     useCallback(() => {
       const fetchData = async () => {
@@ -30,7 +30,14 @@ const DashBoardScreen = () => {
       fetchData();
     }, [])
   );
-
+  const filterData = useMemo(() => {
+      if(!searchText) return data;
+      const formatQuery = searchText.toLowerCase(); 
+  
+      return data.filter(item => 
+        item.title.toLowerCase().includes(formatQuery)
+      );
+    },[searchText, data]);
   return (
     <>
       <Stack.Screen options={{ headerShown: false }} />
@@ -47,6 +54,8 @@ const DashBoardScreen = () => {
               style={styles.searchText}
               placeholder="Search by event name, date or location..."
               placeholderTextColor={Colors.color.placeholder}
+              value = {searchText}
+              onChangeText={(text) => setSearchText(text)}
             />
           </View>
           <View style={styles.headerBody}>
@@ -55,7 +64,7 @@ const DashBoardScreen = () => {
           </View>
 
           <FlatList
-            data={data}
+            data={filterData}
             renderItem={({ item }) => <MyEventItem event={item.event} />}
             keyExtractor={(item) => item.id}
           />

@@ -122,7 +122,7 @@ const LoginScreen = () => {
             >
               <MaterialCommunityIcons
                 name={showPassword ? "eye" : "eye-off"}
-                size={40}
+                size={30}
                 color={Colors.color.placeholder}
               />
             </TouchableOpacity>

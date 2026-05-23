@@ -16,7 +16,6 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import HeaderText from "@/components/HeaderText";
 import { Stack, useRouter } from "expo-router";
 import { AuthService } from "../../axios/authService";
-// import { authApi } from "@/services/api";
 
 const CreateAccountScreen = () => {
   const [fullName, setFullName] = useState("");
@@ -46,7 +45,7 @@ const CreateAccountScreen = () => {
 
     try {
       setLoading(true);
-      const data = await AuthService.register({
+      await AuthService.register({
         email,
         password,
         full_name: fullName,

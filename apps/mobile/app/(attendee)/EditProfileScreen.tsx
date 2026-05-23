@@ -8,14 +8,15 @@ import {
   ActivityIndicator,
   ScrollView,
   Platform,
+  Image,
 } from "react-native";
 import { CustomText } from "@/components/CustomText";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { MaterialCommunityIcons, Ionicons } from "@expo/vector-icons";
 import { Colors } from "../../constants/theme";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Stack, useRouter } from "expo-router";
 import DateTimePicker from "@react-native-community/datetimepicker";
-// import { userApi } from "@/services/api/user";
+import * as ImagePicker from "expo-image-picker";
 import { getToken } from "@/services/storage";
 import { UserService } from "../../axios/userService";
 
@@ -28,6 +29,19 @@ const EditProfileScreen = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const router = useRouter();
+
+  const pickImage = async () => {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,       
+        allowsEditing: true,
+        aspect: [1,1],
+        quality: 1,
+      });
+  
+      if (!result.canceled) {
+        setAvatarUrl(result.assets[0].uri);
+      }
+    };
 
   // Load current values on mount
   useEffect(() => {
@@ -188,21 +202,22 @@ const EditProfileScreen = () => {
 
           <View style={styles.field}>
             <CustomText variant="medium" style={styles.label}>Avatar URL</CustomText>
-            <View style={styles.inputContainer}>
-              <MaterialCommunityIcons
-                name="image-outline"
-                size={22}
-                color={Colors.color.placeholder}
-              />
-              <TextInput
-                style={styles.input}
-                value={avatarUrl}
-                onChangeText={setAvatarUrl}
-                placeholder="Paste an image URL"
-                placeholderTextColor={Colors.color.placeholder}
-                autoCapitalize="none"
-              />
-            </View>
+            <TouchableOpacity
+            style={[styles.imageContainer, avatarUrl && styles.imageActive]}
+            onPress={pickImage}
+          >
+            {avatarUrl ? (
+              <Image source={{ uri: avatarUrl }} style={styles.previewImage} />
+            ) : (
+              <View style={styles.uploadPlaceholder}>
+                <View style={styles.cameraCircle}>
+                  <Ionicons name="camera-outline" size={24} color="#FFF" />
+                </View>
+                <CustomText variant="medium" style={styles.uploadMainText}>Tap to add</CustomText>
+                <CustomText style={styles.uploadSubText}>Recommended (1:1)</CustomText>
+              </View>
+            )}
+          </TouchableOpacity>
           </View>
 
           <TouchableOpacity
@@ -297,4 +312,47 @@ const styles = StyleSheet.create({
     color: Colors.color.white,
     fontSize: 16,
   },
+  imageContainer: {
+      height: 120,
+      borderWidth: 1,
+      borderColor: "#cccccccb",
+      borderStyle: "dashed",
+      borderRadius: 12,
+      justifyContent: "center",
+      alignItems: "center",
+      marginBottom: 20,
+      overflow: "hidden",
+      backgroundColor: "#FFF",
+    },
+    imageActive: {
+      borderStyle: "solid",
+      borderColor: "#1a2a44",
+    },
+    uploadPlaceholder: {
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    cameraCircle: {
+      width: 46,
+      height: 46,
+      borderRadius: 23,
+      backgroundColor: "#1a2a44",
+      justifyContent: "center",
+      alignItems: "center",
+      marginBottom: 8,
+    },
+    uploadMainText: {
+      fontSize: 14,
+      color: "#333",
+    },
+    uploadSubText: {
+      fontSize: 12,
+      color: "#888",
+      marginTop: 2,
+    },
+    previewImage: {
+      width: "100%",
+      height: "100%",
+      resizeMode: "cover",
+    },
 });

@@ -8,6 +8,8 @@ import {
   KeyboardAvoidingView,
   Platform,
   Image,
+  Alert,
+  ActivityIndicator,
 } from "react-native";
 import { CustomText } from "@/components/CustomText";
 import { Ionicons } from "@expo/vector-icons";
@@ -15,18 +17,8 @@ import { Colors } from "../../constants/theme";
 import * as ImagePicker from "expo-image-picker";
 import { ICreateEvent } from "../../axios/dto/eventModel";
 import { EventService } from "../../axios/eventService";
-import { useLocalSearchParams } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import DateTimePicker from "@react-native-community/datetimepicker";
-
-// const eventToEdit = {
-//     title: 'International Tech Summit 2023',
-//     description: 'International Tech Summit 2023 is a premium event focused on...',
-//     location: 'Tech Hub Auditorium, San Francisco',
-//     capacity: 150,
-//     price: 49.99,
-//     status: 'Live',
-//     imageUrl: 'https://via.placeholder.com/300x200',
-// };
 
 export default function EditEventScreen() {
   const [isStatusOpen, setIsStatusOpen] = useState(false);
@@ -35,6 +27,8 @@ export default function EditEventScreen() {
   const [event, setEvent] = useState<ICreateEvent>(new ICreateEvent());
   const [showStartPicker, setShowStartPicker] = useState(false);
   const [showEndPicker, setShowEndPicker] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const router =useRouter();
   useEffect(() => {
     const fetchData = async () => {
       const data = await EventService.getEvent(id);
@@ -43,7 +37,7 @@ export default function EditEventScreen() {
     fetchData();
   }, [id]);
   const statusOptions = [
-    { label: "LIVE", color: "#4CAF50" },
+    { label: "PUBLISHED", color: "#4CAF50" },
     { label: "DRAFT", color: "#FFC107" },
     { label: "COMPLETE", color: "#2196F3" },
   ];
@@ -52,16 +46,6 @@ export default function EditEventScreen() {
     setStatus(val);
     setIsStatusOpen(false);
   };
-
-  // const [image, setImage] = useState(eventToEdit.imageUrl);
-  // const [form, setForm] = useState({
-  //     title: eventToEdit.title,
-  //     description: eventToEdit.description,
-  //     location: eventToEdit.location,
-  //     capacity: eventToEdit.capacity.toString(),
-  //     price: eventToEdit.price.toString(),
-  //     status: eventToEdit.status,
-  // });
 
   const pickImage = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -76,13 +60,18 @@ export default function EditEventScreen() {
     }
   };
 
-  const handleSaveChanges = () => {
-    console.log("Submitting UPDATED form to Backend:", event);
-    EventService.updateEvent(event.id, event);
+  const handleSaveChanges = async () => {
+    setIsLoading(true);
+    await EventService.updateEvent(event.id, event);
+    Alert.alert("Đăng kí sự kiên thành công");
+    router.push("/HostDashBoardScreen");
+    setIsLoading(false);
   };
 
   const handleCancel = () => {
-    console.log("Cancelling edits and going back...");
+    setIsLoading(true);
+    router.push("/HostDashBoardScreen");
+    setIsLoading(false);
   };
 
   const styles = createStyles();
@@ -108,7 +97,8 @@ export default function EditEventScreen() {
           onPress={handleSaveChanges}
           style={styles.headerSaveBtn}
         >
-          <CustomText variant="bold" style={styles.saveBtnText}>Save</CustomText>
+          {isLoading ? (<ActivityIndicator size="small" color="#ffffff" />) : (<CustomText variant="bold" style={styles.saveBtnText}>Save</CustomText>)}
+          
         </TouchableOpacity>
       </View>
 
@@ -247,7 +237,7 @@ export default function EditEventScreen() {
                 color="#1a2a44"
               />
               <CustomText variant="medium" style={styles.selectorMainText}>
-                {event.event_date ? event?.event_date : "Start Date"}
+                {event.event_date ? new Date(event.event_date).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }) : "Start Date"}
               </CustomText>
             </TouchableOpacity>
 
@@ -258,7 +248,7 @@ export default function EditEventScreen() {
             >
               <Ionicons name="time-outline" size={18} color="#1a2a44" />
               <CustomText variant="medium" style={styles.selectorMainText}>
-                {event.end_date ? event?.end_date : "End Date"}
+                {event.end_date ? new Date(event.end_date).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }) : "End Date"}
               </CustomText>
             </TouchableOpacity>
             {showStartPicker && (
@@ -330,7 +320,6 @@ export default function EditEventScreen() {
                 style={[styles.wrapperInput, { marginLeft: 5 }]}
                 keyboardType="numeric"
                 value="20"
-                // onChangeText={(val) => setForm({...form, price: val})}
               />
             </View>
           </View>

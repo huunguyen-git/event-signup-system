@@ -87,29 +87,55 @@ export const EventService = {
     }
   },
   updateEvent: async (id, eventData) => {
+  try {
     const formData = new FormData();
+
     Object.keys(eventData).forEach((key) => {
-      if (key !== "image") {
-        formData.append(key, eventData[key]);
-        if (key === "max_attendees") {
-          eventData[key] = parseInt(eventData[key]).toString();
-        }
+      if (key === "host" || key === "image" || key === "banner_url") return;
+
+      let value = eventData[key];
+
+      if (key === "max_attendees") {
+        value = parseInt(value).toString();
+      }
+      if (value !== null && value !== undefined) {
+        formData.append(key, value);
       }
     });
-    if (eventData.image && eventData.image.uri) {
-      const uri = eventData.image.uri;
-      const fileName = uri.split("/").pop();
-      const fileType = fileName.split(".").pop();
 
-      formData.append("file", {
-        uri: uri,
-        name: fileName,
-        type: `image/${fileType === "jpg" ? "jpeg" : fileType}`,
-      });
+    console.log("bien event banner_url:", eventData.banner_url);
+    if (eventData.banner_url) {
+      const uri = eventData.banner_url;
+
+      if (uri.startsWith("file://")) {
+        const fileName = uri.split("/").pop();
+        const fileType = fileName.split(".").pop();
+
+        formData.append("banner_url", {
+          uri: uri,
+          name: fileName,
+          type: `image/${fileType === "jpg" ? "jpeg" : fileType}`,
+        });
+      } else if (uri.startsWith("http")) {
+        formData.append("banner_url", uri);
+      }
     }
-    const response = await apiClient.put(`/events/${id}`, formData);
+    const response = await apiClient.put(`/events/${id}`, formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+
     return response.data;
-  },
+  } catch (error) {
+    if (error.response) {
+      console.log("❌ LỖI BACKEND:", error.response.data);
+    } else {
+      console.log("❌ LỖI MẠNG:", error.message);
+    }
+    throw error;
+  }
+},
   deleteEvent: async (id) => {
     const response = await apiClient.delete(`/events/${id}`);
     return response.data;

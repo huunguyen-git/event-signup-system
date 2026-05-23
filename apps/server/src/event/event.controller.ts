@@ -57,11 +57,13 @@ export class EventController {
     return this.eventService.createEvent(data, file);
   }
   @Put(':id')
+  @UseInterceptors(FileInterceptor('banner_url'))
   async updateEvent(
     @Param('id') id: string,
     @Body() data: CreateEventDto,
+    @UploadedFile() file: Express.Multer.File,
   ): Promise<Event> {
-    return this.eventService.updateEvent({ where: { id }, data });
+    return this.eventService.updateEvent({ where: { id }, data, file });
   }
   @Delete(':id')
   async deleteEvent(@Param('id') id: string): Promise<Event> {

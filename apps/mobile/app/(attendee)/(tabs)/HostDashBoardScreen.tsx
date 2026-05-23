@@ -8,16 +8,16 @@ import {
 } from "react-native";
 import { CustomText } from "@/components/CustomText";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useState, useEffect } from "react";
-import { Search, Bell, User } from "lucide-react-native";
+import { useState, useEffect, useMemo } from "react";
+import { Search } from "lucide-react-native";
 import { Colors } from "../../../constants/theme";
-import StatCard from "../../../components/StatCard";
 import HostEventItem from "../../../components/HostEventItem";
-import { MaterialCommunityIcons, Ionicons } from "@expo/vector-icons";
+import { Ionicons } from "@expo/vector-icons";
 import { ICreateEvent } from "@/axios/dto/eventModel";
 import { EventService } from "@/axios/eventService";
 import { useRouter } from "expo-router";
 import Header from "@/components/Header";
+import { getUserId } from '@/services/storage';
 
 export default function HostDashboardScreen() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -25,7 +25,8 @@ export default function HostDashboardScreen() {
   useEffect(() => {
     const fetchData = async () => {
       const events = await EventService.getEvents();
-      setData(events);
+      const userId = await getUserId() ?? "";
+      setData(events.filter((item: ICreateEvent) => item.host_id === userId));
     };
     fetchData();
   });
@@ -35,22 +36,17 @@ export default function HostDashboardScreen() {
     return (
       <View style={styles.listHeader}>
         <CustomText variant="bold" style={styles.sectionTitle}>HOST DASHBOARD</CustomText>
-
-        <View style={styles.statsGrid}>
-          <StatCard
-            title="TOTAL ATTENDEES"
-            value="1410"
-            subtext="replaces previous week"
-            trend="+"
-          />
-          <StatCard title="REVENUE" value="$27.5K" isChart />
-          <StatCard title="EVENT FEEDBACK" value="4.7/5" />
-          <StatCard title="TICKET SALES" value="1550/2000" progress={77.5} />
-        </View>
       </View>
     );
   };
-
+  const filterData = useMemo(() => {
+      if(!searchQuery) return data;
+      const formatQuery = searchQuery.toLowerCase(); 
+  
+      return data.filter(item => 
+        item.title.toLowerCase().includes(formatQuery)
+      );
+    },[searchQuery, data]);
   return (
     <SafeAreaView style={styles.safeArea}>
       <StatusBar barStyle="light-content" />
@@ -69,7 +65,7 @@ export default function HostDashboardScreen() {
       </View>
 
       <FlatList
-        data={data}
+        data={filterData}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => {
           return <HostEventItem event={item} />;

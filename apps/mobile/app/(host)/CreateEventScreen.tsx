@@ -8,26 +8,31 @@ import {
   KeyboardAvoidingView,
   Platform,
   Image,
+  ActivityIndicator,
+  Alert,
 } from "react-native";
 import { CustomText } from "@/components/CustomText";
 import { Ionicons } from "@expo/vector-icons";
 import { Colors } from "../../constants/theme";
-import { EventService } from "../../axios/eventService.js";
 import * as ImagePicker from "expo-image-picker";
-import DateTimePicker from "@react-native-community/datetimepicker";
+import DatePicker from 'react-native-date-picker';
 import { ICreateEvent } from "@/axios/dto/eventModel";
 import { useRouter } from "expo-router";
+import { getUserId } from "@/services/storage";
+import { EventService } from "@/axios/eventService";
 
 export default function CreateEventScreen() {
   const [image, setImage] = useState("");
   const [form, setForm] = useState<ICreateEvent>(new ICreateEvent());
   const [showStartPicker, setShowStartPicker] = useState(false);
   const [showEndPicker, setShowEndPicker] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
   const pickImage = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,       
       allowsEditing: true,
       aspect: [6, 9],
       quality: 1,
@@ -38,15 +43,26 @@ export default function CreateEventScreen() {
     }
   };
 
-  const handlePublish = () => {
-    form.host_id = "0c3a5974-2232-4e83-87db-942c0b410c1c";
+  const handlePublish = async () => {
+    setIsLoading(true);
+    form.host_id = await getUserId() ?? "";
     form.allowed_domain = "all";
     form.created_at = new Date().toISOString();
     form.form_config = JSON.stringify({});
     form.banner_url = image;
-    form.status = "DRAFT";
-    console.log("du lieu create event", form);
-    console.log("du lieu dang ki:", form.status);
+    form.status = "PUBLISHED";
+    if(!form.title || !form.end_date || !form.event_date || !form.max_attendees || !form.location_url){
+      Alert.alert("Vui lòng nhập thông tin bắt buộc");
+      setIsLoading(false);
+      return;
+    }
+    if(form.event_date>=form.end_date){
+        setErrorMsg("Ngày bắt đầu phải nhỏ hơn ngày kết thúc");
+        setIsLoading(false);
+        return;
+      }
+      setErrorMsg("");
+    
     router.push({
       pathname: "/RegistrationFormScreen",
       params: {
@@ -65,9 +81,31 @@ export default function CreateEventScreen() {
         isCreate: "true",
       },
     });
-
-    // EventService.createEvent(form);
+    setIsLoading(false);
   };
+  const handleDraft = async () => {
+    setIsLoading(true);
+    if(!form.title || !form.end_date || !form.event_date || form.max_attendees || form.location_url){
+      Alert.alert("Vui lòng nhập đầy đủ thông tin bắt buộc");
+      setIsLoading(false);
+      return;
+    }
+    if(form.event_date>=form.end_date){
+        setErrorMsg("Ngày bắt đầu phải nhỏ hơn ngày kết thúc");
+        setIsLoading(false);
+        return;
+      }
+      setErrorMsg("");
+    form.host_id = await getUserId() ?? "";
+    form.allowed_domain = "all";
+    form.created_at = new Date().toISOString();
+    form.form_config = JSON.stringify({});
+    form.banner_url = image;
+    form.status = "DRAFT";
+    EventService.createEvent(form);
+    router.push("/HostDashBoardScreen");
+    setIsLoading(false);
+  }
   const styles = createStyles();
 
   return (
@@ -88,8 +126,10 @@ export default function CreateEventScreen() {
         {/* EVENT INFORMATION CARD */}
         <View style={styles.card}>
           <CustomText variant="bold" style={styles.cardSectionTitle}>EVENT INFORMATION</CustomText>
-
-          <CustomText variant="medium" style={styles.label}>Event Title</CustomText>
+          <View style={{flexDirection: 'row', justifyContent: 'space-between'}}>
+            <CustomText variant="medium" style={styles.label}>Event Title </CustomText>
+            <CustomText style={{color: 'red'}}>Bắt buộc</CustomText>
+          </View>
           <View style={styles.inputWrapper}>
             <TextInput
               style={styles.wrapperInput}
@@ -139,7 +179,10 @@ export default function CreateEventScreen() {
 
         {/* DATE & LOCATION CARD */}
         <View style={styles.card}>
-          <CustomText variant="bold" style={styles.cardSectionTitle}>DATE & LOCATION</CustomText>
+          <View style={{flexDirection: 'row', justifyContent: 'space-between'}}>
+            <CustomText variant="bold" style={styles.cardSectionTitle}>DATE & LOCATION</CustomText>
+            <CustomText style={{color: 'red'}}>Bắt buộc</CustomText>
+          </View>
           <View style={styles.selectorRow}>
             <TouchableOpacity
               style={styles.dateTimeSelector}
@@ -154,7 +197,7 @@ export default function CreateEventScreen() {
                 {form.event_date ? new Date(form.event_date).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }) : "Start Date"}
               </CustomText>
             </TouchableOpacity>
-
+            
             {/* Nút chọn End Date */}
             <TouchableOpacity
               style={styles.dateTimeSelector}
@@ -166,36 +209,44 @@ export default function CreateEventScreen() {
               </CustomText>
             </TouchableOpacity>
             {showStartPicker && (
-              <DateTimePicker
-                value={new Date()}
-                mode="date"
-                display="calendar"
-                onChange={(event, selectedDate) => {
+              <DatePicker
+                modal
+                open={showStartPicker}
+                date={new Date()}
+                mode="datetime"
+                onConfirm={(selectedDate) => {
                   setShowStartPicker(false);
-                  if (selectedDate) {
-                    setForm({
-                      ...form,
-                      event_date: selectedDate.toISOString(),
-                    });
-                  }
+                  setForm({
+                    ...form,
+                    event_date: selectedDate.toISOString(),
+                  });
                 }}
-              />
+                onCancel={() => {
+                  setShowStartPicker(false);
+                }}
+            />
             )}
 
             {showEndPicker && (
-              <DateTimePicker
-                value={new Date()}
-                mode="date"
-                display="calendar"
-                onChange={(event, selectedDate) => {
+              <DatePicker
+                modal
+                open={showEndPicker}
+                date={new Date()}
+                mode="datetime"
+                onConfirm={(selectedDate) => {
                   setShowEndPicker(false);
-                  if (selectedDate) {
-                    setForm({ ...form, end_date: selectedDate.toISOString() });
-                  }
+                  setForm({
+                    ...form,
+                    end_date: selectedDate.toISOString(),
+                  });
+                }}
+                onCancel={() => {
+                  setShowEndPicker(false);
                 }}
               />
             )}
           </View>
+          {errorMsg ? <CustomText style={{ color: 'red' }}>{errorMsg}</CustomText> : null}
           <View style={styles.inputWrapper}>
             <TextInput
               style={styles.wrapperInput}
@@ -208,7 +259,10 @@ export default function CreateEventScreen() {
 
         {/* CAPACITY & PRICE */}
         <View style={styles.card}>
-          <CustomText variant="bold" style={styles.cardSectionTitle}>CAPACITY & TICKETING</CustomText>
+          <View style={{flexDirection: 'row', justifyContent: 'space-between'}}>
+            <CustomText variant="bold" style={styles.cardSectionTitle}>CAPACITY & TICKETING</CustomText>
+            <CustomText style={{color: 'red', fontStyle: 'italic'}}>Bắt buộc</CustomText>
+          </View>
           <View style={styles.ticketRow}>
             <View style={[styles.inputWrapper, { flex: 1, marginRight: 10 }]}>
               <TextInput
@@ -240,11 +294,11 @@ export default function CreateEventScreen() {
 
         {/* ACTIONS */}
         <View style={styles.footer}>
-          <TouchableOpacity style={styles.btnSecondary}>
-            <CustomText variant="bold" style={styles.btnSecondaryText}>Save Draft</CustomText>
+          <TouchableOpacity style={styles.btnSecondary} onPress={handleDraft}>
+            {isLoading ? (<ActivityIndicator size="small" color="#ffffff" />) : (<CustomText variant="bold" style={styles.btnSecondaryText}>Save Draft</CustomText>)}
           </TouchableOpacity>
           <TouchableOpacity style={styles.btnPrimary} onPress={handlePublish}>
-            <CustomText variant="bold" style={styles.btnPrimaryText}>Publish</CustomText>
+            {isLoading ? (<ActivityIndicator size="small" color="#ffffff" />) : (<CustomText variant="bold" style={styles.btnPrimaryText}>Publish</CustomText>)}
           </TouchableOpacity>
         </View>
       </ScrollView>

@@ -1,16 +1,15 @@
 import { MaterialCommunityIcons, Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import React, { use, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { getUserId } from "@/services/storage";
 import {
-  KeyboardAvoidingView,
-  Platform,
   ScrollView,
   StyleSheet,
   TextInput,
   TouchableOpacity,
   View,
   Modal,
+  ActivityIndicator,
 } from "react-native";
 import { CustomText } from "@/components/CustomText";
 import { Colors } from "../constants/theme";
@@ -30,6 +29,7 @@ export default function RegistrationFormScreen() {
   const [email, setEmail] = useState("");
   const [jobTitle, setJobTitle] = useState("");
   const [ticketType, setTicketType] = useState("Standard Pass");
+  const [isLoading, setIsLoading] = useState(false);
 
   const [showTicketPicker, setShowTicketPicker] = useState(false);
   const [showTerms, setShowTerms] = useState(false);
@@ -55,7 +55,6 @@ export default function RegistrationFormScreen() {
   const [customQuestions, setCustomQuestions] = useState<any[]>([]);
   const [question, setQuestion] = useState("");
   const IsCreate = isCreate === "true" ? true : false;
-  console.log (IsCreate);
   useEffect(() => {
     const fetchData = async () => {
       if (IsCreate) {
@@ -79,7 +78,7 @@ export default function RegistrationFormScreen() {
         console.log("event duoc lay ve:", event);
         setData(event);
         const formConfig = event.form_config ? JSON.parse(event.form_config) : [];
-        if(Array.isArray(formConfig)) {
+        if (Array.isArray(formConfig)) {
           setCustomQuestions(formConfig);
         }
       }
@@ -92,10 +91,11 @@ export default function RegistrationFormScreen() {
       id: Date.now().toString(),
       question: question,
     };
-    setCustomQuestions([...customQuestions, newQuestion]);
+    const updatedQuestions = [...customQuestions, newQuestion];
+    setCustomQuestions(updatedQuestions);
     setData({
       ...data,
-      form_config: JSON.stringify(customQuestions),
+      form_config: JSON.stringify(updatedQuestions),
     });
     setShowCustomQuestionModal(false);
     setQuestion("");
@@ -105,73 +105,77 @@ export default function RegistrationFormScreen() {
     setShowCustomQuestionModal(false);
     setQuestion("");
   };
-  const handleCreateEvent = async() => {
+  const handleCreateEvent = async () => {
     try {
-      console.log("du lieu dang ki:", data);
+      setIsLoading(true);
       await EventService.createEvent(data);
       const notification = {
         userId: await getUserId(),
         title: data.title,
-        body: "Bạn vừa đăng kí sự kiện "+ data.title,
+        body: "Bạn vừa đăng kí sự kiện " + data.title,
       }
       await Notifications.scheduleNotificationAsync({
-      content: {
-        title: notification.title,
-        body: notification.body,
-        data: { eventId: data.id },
-      },
-      trigger: null,
-    });
+        content: {
+          title: notification.title,
+          body: notification.body,
+          data: { eventId: data.id },
+        },
+        trigger: null,
+      });
       await NotificationService.sendAndSaveNotification(notification);
+      router.push("/HostDashBoardScreen");
+      setIsLoading(false);
     } catch (error) {
       console.error("Error creating event:", error);
     }
   };
   const handleRegisterEvent = async () => {
-      try {
-        const currentUserId = await getUserId();
-        if (!currentUserId) {
-          return;
-        }
-        const applicationData = {
-          event_id: id as string,
-          user_id: currentUserId,
-          answers: {
-            firstName: firstName,
-            lastName: lastName,
-            email: email,
-            jobTitle: jobTitle,
-            ticketType: ticketType,
-          },
-        };
-        console.log("Đang gửi đơn đăng ký sự kiện lên server...", applicationData);
-        await EventService.registerForEvent(applicationData);
-        router.replace({
-          pathname: '/SuccessScreen',
-          params: { ticketType: ticketType }
-        });
-        scheduleEventReminder(data.title,data.event_date);
-      } catch (error: any) {
-        console.error("Error creating event application:", error);
-        const errorMsg = error.response?.data?.message || "Không thể kết nối đến Server!";
+    try {
+      setIsLoading(true);
+      const currentUserId = await getUserId();
+      if (!currentUserId) {
+        return;
       }
-    };
+      const applicationData = {
+        event_id: id as string,
+        user_id: currentUserId,
+        answers: {
+          firstName: firstName,
+          lastName: lastName,
+          email: email,
+          jobTitle: jobTitle,
+          ticketType: ticketType,
+        },
+      };
+      console.log("Đang gửi đơn đăng ký sự kiện lên server...", applicationData);
+      await EventService.registerForEvent(applicationData);
+      router.replace({
+        pathname: '/SuccessScreen',
+        params: { ticketType: ticketType }
+      });
+      scheduleEventReminder(data.title, data.event_date);
+      setIsLoading(false);
+    } catch (error: any) {
+      console.error("Error creating event application:", error);
+      const errorMsg = error.response?.data?.message || "Không thể kết nối đến Server!";
+    }
+  };
 
   async function scheduleEventReminder(eventTitle: string, eventStartStr: string) {
     const eventTime = new Date(data.event_date).getTime();
     const triggerDate = new Date(eventTime - 30 * 60 * 1000);
-    const notificationId = await Notifications.scheduleNotificationAsync({
+    await Notifications.scheduleNotificationAsync({
       content: {
         title: `⏰ Sắp diễn ra: ${eventTitle}`,
         body: 'Sự kiện của bạn sẽ bắt đầu sau 30 phút nữa. Hãy chuẩn bị nhé!',
         sound: true,
       },
       trigger: {
-        type: SchedulableTriggerInputTypes.DATE, 
+        type: SchedulableTriggerInputTypes.DATE,
         date: triggerDate,
       },
     });
-}
+  }
   const ticketOptions = [
     { id: "1", name: "Standard Pass" },
     { id: "2", name: "Premium Pass" },
@@ -182,11 +186,12 @@ export default function RegistrationFormScreen() {
       <CustomText variant="bold" style={styles.label}>{label}</CustomText>
       <View style={styles.inputWrapper}>
         <TextInput
-          style={styles.input}
+          style={[styles.input, isCreate && { opacity: 0.5 }]}
           placeholder={placeholder}
           placeholderTextColor="#bbb"
           value={value}
           onChangeText={onChangeText}
+          editable={!IsCreate}
         />
       </View>
     </View>
@@ -227,7 +232,7 @@ export default function RegistrationFormScreen() {
           <Ionicons name="add" size={28} color="white" />
         </TouchableOpacity>
       )}
-      
+
       <Modal
         visible={showCustomQuestionModal}
         transparent
@@ -274,96 +279,103 @@ export default function RegistrationFormScreen() {
           </View>
         </View>
       </Modal>
-        <View style={styles.modalCard}>
-          <CustomText style={styles.eventSmallTitle}>
-            International Tech Summit 2024
-          </CustomText>
-          <CustomText variant="bold" style={[styles.mainTitle, { color: themeColor }]}>
-            CONFIRM REGISTRATION
-          </CustomText>
+      <View style={styles.modalCard}>
+        <CustomText style={styles.eventSmallTitle}>
+          International Tech Summit 2024
+        </CustomText>
+        <CustomText variant="bold" style={[styles.mainTitle, { color: themeColor }]}>
+          CONFIRM REGISTRATION
+        </CustomText>
 
-          <View style={styles.ticketSummary}>
-            <View>
-              <CustomText variant="bold" style={styles.ticketLabel}>REGISTERING AS:</CustomText>
-              <CustomText variant="bold" style={styles.ticketType}>{ticketType}</CustomText>
-            </View>
-            <TouchableOpacity onPress={() => setShowTicketPicker(true)}>
-              <CustomText variant="bold" style={[styles.changeLink, { color: themeColor }]}>
-                Change
-              </CustomText>
-            </TouchableOpacity>
+        {!IsCreate && (<View style={styles.ticketSummary}>
+          <View>
+            <CustomText variant="bold" style={styles.ticketLabel}>REGISTERING AS:</CustomText>
+            <CustomText variant="bold" style={styles.ticketType}>{ticketType}</CustomText>
           </View>
-
-          <ScrollView
-            showsVerticalScrollIndicator={false}
-            style={{ maxHeight: 300 }}
-          >
-            <View style={styles.row}>
-              <InputField label="First Name" placeholder="A" isShort value={firstName} onChangeText={setFirstName} />
-              <View style={{ width: 10 }} />
-              <InputField label="Last Name" placeholder="Nguyễn Văn" isShort value={lastName} onChangeText={setLastName} />
-            </View>
-            <InputField label="Company Email" placeholder="nguyenvana@gm.uit.edu.vn" value={email} onChangeText={setEmail} />
-            <InputField label="Job Title" placeholder="Software Engineer" value={jobTitle} onChangeText={setJobTitle} />
-            {customQuestions.map((q) => (
-              <InputField
-                key={q.id}
-                label={q.question}
-                placeholder="Your answer here..."
-              />
-            ))}
-
-            <View style={styles.checkboxRow}>
-              <TouchableOpacity onPress={() => setAgreed(!agreed)}>
-                <MaterialCommunityIcons
-                  name={agreed ? "checkbox-marked" : "checkbox-blank-outline"}
-                  size={24}
-                  color={themeColor}
-                />
-              </TouchableOpacity>
-              <CustomText style={styles.checkboxText}>
-                I agree to the{" "}
-                <CustomText
-                  variant="bold"
-                  style={styles.boldLink}
-                  onPress={() => setShowTerms(true)}
-                >
-                  Terms of Service
-                </CustomText>{" "}
-                and{" "}
-                <CustomText
-                  variant="bold"
-                  style={styles.boldLink}
-                  onPress={() => setShowPrivacy(true)}
-                >
-                  Privacy Policy
-                </CustomText>
-                .
-              </CustomText>
-            </View>
-          </ScrollView>
-
-          <View style={styles.footerRow}>
-            <TouchableOpacity
-              style={styles.cancelBtn}
-              onPress={() => router.back()}
-            >
-              <CustomText variant="bold" style={[styles.cancelBtnText, { color: themeColor }]}>
-                CANCEL
-              </CustomText>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[
-                styles.completeBtn,
-                { backgroundColor: themeColor, opacity: agreed ? 1 : 0.5 },
-              ]}
-              disabled={!agreed}
-              onPress={IsCreate? handleCreateEvent : handleRegisterEvent}
-            >
-              <CustomText variant="bold" style={styles.completeBtnText}>COMPLETE REGISTRATION</CustomText>
-            </TouchableOpacity>
-          </View>
+          <TouchableOpacity onPress={() => setShowTicketPicker(true)}>
+            <CustomText variant="bold" style={[styles.changeLink, { color: themeColor }]}>
+              Change
+            </CustomText>
+          </TouchableOpacity>
         </View>
+        )}
+
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          style={{ maxHeight: 300 }}
+        >
+          <View style={styles.row}>
+            <InputField
+              label="First Name"
+              placeholder="A"
+              isShort
+              value={firstName}
+              onChangeText={setFirstName} />
+            <View style={{ width: 10 }} />
+            <InputField label="Last Name" placeholder="Nguyễn Văn" isShort value={lastName} onChangeText={setLastName} />
+          </View>
+          <InputField label="Company Email" placeholder="nguyenvana@gm.uit.edu.vn" value={email} onChangeText={setEmail} />
+          <InputField label="Job Title" placeholder="Software Engineer" value={jobTitle} onChangeText={setJobTitle} />
+          {customQuestions.map((q) => (
+            <InputField
+              key={q.id}
+              label={q.question}
+              placeholder="Your answer here..."
+            />
+          ))}
+
+          {!isCreate && (<View style={styles.checkboxRow}>
+            <TouchableOpacity onPress={() => setAgreed(!agreed)}>
+              <MaterialCommunityIcons
+                name={agreed ? "checkbox-marked" : "checkbox-blank-outline"}
+                size={24}
+                color={themeColor}
+              />
+            </TouchableOpacity>
+            <CustomText style={styles.checkboxText}>
+              I agree to the{" "}
+              <CustomText
+                variant="bold"
+                style={styles.boldLink}
+                onPress={() => setShowTerms(true)}
+              >
+                Terms of Service
+              </CustomText>{" "}
+              and{" "}
+              <CustomText
+                variant="bold"
+                style={styles.boldLink}
+                onPress={() => setShowPrivacy(true)}
+              >
+                Privacy Policy
+              </CustomText>
+              .
+            </CustomText>
+          </View>
+          )}
+        </ScrollView>
+
+        <View style={styles.footerRow}>
+          <TouchableOpacity
+            style={styles.cancelBtn}
+            onPress={() => router.back()}
+          >
+            <CustomText variant="bold" style={[styles.cancelBtnText, { color: themeColor }]}>
+              CANCEL
+            </CustomText>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[
+              styles.completeBtn,
+              { backgroundColor: themeColor, opacity: isCreate ? 1 : (agreed ? 1 : 0.5) },
+            ]}
+            disabled={IsCreate ? false : !agreed}
+            onPress={IsCreate ? handleCreateEvent : handleRegisterEvent}
+          >
+            {isLoading ? (<ActivityIndicator size="small" color="#ffffff" />) : (<CustomText variant="bold" style={styles.completeBtnText}>{IsCreate ? "SAVE" : "COMPLETE REGISTRATION"}</CustomText>)}
+          </TouchableOpacity>
+        </View>
+      </View>
 
       <Modal visible={showTicketPicker} transparent animationType="slide">
         <View style={styles.pickerOverlay}>

@@ -19,7 +19,7 @@ export class EventService {
       where,
       include: {
         host: true,
-      }
+      },
     });
   }
 
@@ -27,7 +27,7 @@ export class EventService {
     return this.prisma.event.findMany({
       include: {
         host: true,
-      }
+      },
     });
   }
 
@@ -49,8 +49,8 @@ export class EventService {
     data: CreateEventDto,
     file?: Express.Multer.File,
   ): Promise<Event> {
-    let imageUrl: string | null = null;
     const { banner_url, ...restData } = data;
+    let imageUrl: string | null = banner_url;
     if (file) {
       const fileName = `${Date.now()}-${file.originalname}`;
       const { error } = await this.supabase.storage
@@ -81,12 +81,31 @@ export class EventService {
   async updateEvent(param: {
     where: Prisma.EventWhereUniqueInput;
     data: CreateEventDto;
+    file?: Express.Multer.File;
   }): Promise<Event> {
-    const { where, data } = param;
+    const { where, data, file } = param;
+    const { banner_url, ...restData } = data;
+    let finalImageUrl: string | null | undefined = banner_url;
+    if (file) {
+      const fileName = `${Date.now()}-${file.originalname}`;
+      const { error } = await this.supabase.storage
+        .from('banner')
+        .upload(fileName, file.buffer, {
+          contentType: file.mimetype,
+          upsert: false,
+        });
+      if (error) throw new Error(error.message);
+      const { data: publicUrl } = this.supabase.storage
+        .from('banner')
+        .getPublicUrl(fileName);
+      finalImageUrl = publicUrl.publicUrl;
+    }
+
     return this.prisma.event.update({
       where,
       data: {
-        ...data,
+        ...restData,
+        banner_url: finalImageUrl,
         event_date: new Date(data.event_date),
         end_date: new Date(data.end_date),
         created_at: new Date(data.created_at),

@@ -25,6 +25,7 @@ import { Colors } from "../constants/theme";
 import { EventService } from "@/axios/eventService";
 import { CommentService } from "@/axios/commentService";
 import { getToken, getUserId } from "@/services/storage";
+import  Header  from "@/components/Header";
 
 interface IUser {
   id: string;
@@ -397,21 +398,7 @@ export default function EventDetailsScreen() {
   return (
     <View style={styles.container}>
       <SafeAreaView style={{ backgroundColor: "white" }} edges={["top"]} />
-      <StatusBar barStyle="dark-content" backgroundColor="white" />
-
-      <View style={[styles.blueHeader, { backgroundColor: themeColor }]}>
-        <View style={styles.headerLeft}>
-          <TouchableOpacity onPress={() => router.back()}>
-            <Ionicons name="arrow-back" size={24} color="white" />
-          </TouchableOpacity>
-          <FontAwesome5 name="building" size={20} color="white" style={{ marginLeft: 15 }} />
-          <CustomText variant="bold" style={styles.headerTitle}>EVENT CONNECT</CustomText>
-        </View>
-        <TouchableOpacity style={styles.shareBtn} onPress={handleShare}>
-          <Ionicons name="share-social-outline" size={20} color="white" />
-          <CustomText style={styles.shareBtnText}>Share</CustomText>
-        </TouchableOpacity>
-      </View>
+      <Header/>
 
       <ScrollView contentContainerStyle={styles.scrollBody} showsVerticalScrollIndicator={false}>
         <Image source={eventData?.banner_url ? { uri: eventData.banner_url } : require("../assets/images/icon.png")} style={styles.banner} />
