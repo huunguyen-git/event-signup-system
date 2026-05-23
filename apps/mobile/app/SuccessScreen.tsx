@@ -54,14 +54,6 @@ export default function SuccessScreen() {
         </View>
 
         <TouchableOpacity
-          style={[styles.primaryBtn, { backgroundColor: themeColor }]}
-        >
-          <CustomText variant="bold" style={styles.primaryBtnText}>
-            VIEW MY TICKET
-          </CustomText>
-        </TouchableOpacity>
-
-        <TouchableOpacity
           style={styles.secondaryBtn}
           onPress={() => router.replace("/DashBoardScreen")}
         >

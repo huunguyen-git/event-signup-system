@@ -55,10 +55,11 @@ export class ApplicationsService {
   async getByEvent(event_id: string) {
     return this.prisma.application.findMany({
       where: { event_id },
-      include: { user: { select: { full_name: true, email: true } } },
+      include: { user: { select: { full_name: true, email: true, avatar_url: true } } },
       orderBy: { applied_at: 'desc' },
     });
   }
+
   async getByUser(userId: string) {
     return this.prisma.application.findMany({
       where: { user_id: userId },
@@ -66,6 +67,17 @@ export class ApplicationsService {
         event: true,
       },
       orderBy: { applied_at: 'desc' },
+    });
+  }
+
+  async bulkUpdateStatus(ids: string[], status: string) {
+    return this.prisma.application.updateMany({
+      where: {
+        id: { in: ids },
+      },
+      data: {
+        status: status as ApplicationStatus,
+      },
     });
   }
 }

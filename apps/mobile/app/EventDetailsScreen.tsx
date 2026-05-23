@@ -133,7 +133,6 @@ const CommentItem = ({
               )}
             </CustomText>
 
-            {/* 🟢 TIKTOK STYLE: HIỆN TAM GIÁC VÀ TÊN NGƯỜI ĐƯỢC REPLY NẾU LÀ NESTED REPLY */}
             {replyingToName && (
               <View
                 style={{
@@ -993,13 +992,13 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    backgroundColor: "#f0f2f5",
+    backgroundColor: "#e4e6eb",
     paddingHorizontal: 15,
     paddingVertical: 6,
-    borderTopLeftRadius: 10,
-    borderTopRightRadius: 10,
+    borderRadius: 16,
     alignSelf: "flex-start",
-    marginLeft: 5,
+    marginLeft: 0,
+    marginBottom: 0,
   },
   replyingToText: { fontSize: 12, color: "#555", marginRight: 10 },
   commentInputRow: { flexDirection: "row", alignItems: "flex-start" },

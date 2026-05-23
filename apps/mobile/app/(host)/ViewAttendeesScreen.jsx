@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   StyleSheet,
   View,
@@ -6,162 +6,241 @@ import {
   TextInput,
   TouchableOpacity,
   Image,
-  Platform,
-  ScrollView,
+  ActivityIndicator,
+  Alert,
 } from "react-native";
 import { CustomText } from "@/components/CustomText";
 import { Ionicons } from "@expo/vector-icons";
 import { Colors } from "../../constants/theme";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import apiClient from "@/axios/axios";
+import { getToken } from "@/services/storage";
 
-const MOCK_ATTENDEES = Array.from({ length: 20 }, (_, i) => ({
-  id: i.toString(),
-  name: ["Alex Chen", "Jane Smith", "John Doe", "Anne Name"][i % 4],
-  event: "WebDev Conf",
-  status: i % 3 === 0 ? "Attending" : i % 3 === 1 ? "Check-In" : "Invited",
-  ticket: i % 2 === 0 ? "VIP" : "Standard",
-  image: `https://i.pravatar.cc/150?u=${i}`,
-}));
+const STATUS_TABS = ["All", "PENDING", "APPROVED", "REJECTED", "WAITLISTED"];
 
 export default function ViewAttendeesScreen() {
+  const { id } = useLocalSearchParams();
+  const router = useRouter();
+
   const [search, setSearch] = useState("");
+  const [activeTab, setActiveTab] = useState("All");
 
-  const renderAttendee = ({ item }) => (
-    <View style={styles.attendeeRow}>
-      <View style={styles.leftSection}>
-        <TouchableOpacity style={styles.checkbox}>
-          <View style={styles.checkboxInner} />
-        </TouchableOpacity>
-        <Image source={{ uri: item.image }} style={styles.avatar} />
-      </View>
+  const [attendees, setAttendees] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedIds, setSelectedIds] = useState([]);
 
-      <View style={styles.infoSection}>
-        <CustomText variant="bold" style={styles.nameText}>
-          {item.name}
-        </CustomText>
-        <CustomText style={styles.eventText}>{item.event}</CustomText>
-      </View>
+  const fetchAttendees = async () => {
+    try {
+      setLoading(true);
+      const token = await getToken();
 
-      <View style={styles.rightSection}>
-        <View
-          style={[
-            styles.statusBadge,
-            styles[`status${item.status.replace("-", "")}`],
-          ]}
-        >
-          <CustomText variant="bold" style={styles.statusText}>
-            {item.status}
-          </CustomText>
+      const response = await apiClient.get(`/events/${id}/applications`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setAttendees(response.data || []);
+    } catch (error) {
+      console.error("Lỗi fetch attendees:", error);
+      Alert.alert("Lỗi", "Không thể lấy danh sách người đăng ký.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (id) {
+      fetchAttendees();
+    }
+  }, [id]);
+
+  const filteredAttendees = attendees.filter((item) => {
+    const matchStatus = activeTab === "All" || item.status === activeTab;
+    const matchSearch = item.user?.full_name?.toLowerCase().includes(search.toLowerCase());
+    return matchStatus && matchSearch;
+  });
+
+  const toggleSelect = (applicationId) => {
+    if (selectedIds.includes(applicationId)) {
+      setSelectedIds(selectedIds.filter((selectedId) => selectedId !== applicationId));
+    } else {
+      setSelectedIds([...selectedIds, applicationId]);
+    }
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedIds.length === filteredAttendees.length) {
+      setSelectedIds([]);
+    } else {
+      setSelectedIds(filteredAttendees.map((a) => a.id));
+    }
+  };
+
+  const handleUpdateStatus = async (newStatus) => {
+    if (selectedIds.length === 0) return;
+
+    try {
+      const token = await getToken();
+      await apiClient.patch(
+        `/applications/bulk-update-status`,
+        { ids: selectedIds, status: newStatus },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      Alert.alert("Thành công", `Đã chuyển sang ${newStatus}`);
+      setSelectedIds([]);
+      fetchAttendees();
+    } catch (error) {
+      console.error("Lỗi update status:", error);
+      Alert.alert("Lỗi", "Cập nhật thất bại.");
+    }
+  };
+
+  const renderAttendee = ({ item }) => {
+    const isSelected = selectedIds.includes(item.id);
+
+    let statusColor = "#666";
+    if (item.status === "APPROVED") statusColor = "#4CAF50";
+    if (item.status === "REJECTED") statusColor = "#F44336";
+    if (item.status === "WAITLISTED") statusColor = "#FF9800";
+    if (item.status === "PENDING") statusColor = "#2196F3";
+
+    return (
+      <View style={styles.attendeeRow}>
+        <View style={styles.leftSection}>
+          <TouchableOpacity style={styles.checkbox} onPress={() => toggleSelect(item.id)}>
+            {isSelected && <View style={styles.checkboxInner} />}
+          </TouchableOpacity>
+          {item.user?.avatar_url ? (
+            <Image
+              source={{ uri: item.user.avatar_url }}
+              style={styles.avatar}
+            />
+          ) : (
+            <View style={[styles.avatar, { backgroundColor: "#e1e4e8", justifyContent: "center", alignItems: "center" }]}>
+              <Ionicons name="person" size={20} color="#a3a6ac" />
+            </View>
+          )}
         </View>
-        <CustomText variant="medium" style={styles.ticketText}>
-          {item.ticket}
-        </CustomText>
+
+        <View style={styles.infoSection}>
+          <CustomText variant="bold" style={styles.nameText}>
+            {item.user?.full_name || "Unknown User"}
+          </CustomText>
+          <CustomText style={styles.eventText}>{item.user?.email}</CustomText>
+        </View>
+
+        <View style={styles.rightSection}>
+          <View style={[styles.statusBadge, { backgroundColor: statusColor }]}>
+            <CustomText variant="bold" style={styles.statusText}>
+              {item.status || "UNKNOWN"}
+            </CustomText>
+          </View>
+        </View>
       </View>
-    </View>
-  );
+    );
+  };
 
   const styles = createStyles();
+  const isAllSelected = filteredAttendees.length > 0 && selectedIds.length === filteredAttendees.length;
 
   return (
     <View style={styles.mainContainer}>
-      {/* HEADER */}
       <View style={styles.header}>
-        <TouchableOpacity>
+        <TouchableOpacity onPress={() => router.back()}>
           <Ionicons name="arrow-back" size={24} color="white" />
         </TouchableOpacity>
         <CustomText variant="bold" style={styles.headerText}>
-          VIEW ALL ATTENDEES (1410 TOTAL)
+          ATTENDEES ({filteredAttendees.length})
         </CustomText>
         <View style={{ width: 24 }} />
       </View>
 
-      {/* SEARCH & FILTERS */}
       <View style={styles.searchBarRow}>
         <View style={styles.searchContainer}>
           <Ionicons name="search" size={18} color="#999" />
           <TextInput
             style={styles.searchInput}
-            placeholder="Search attendees..."
+            placeholder="Search by name..."
             value={search}
             onChangeText={setSearch}
           />
         </View>
-        <TouchableOpacity style={styles.filterBtn}>
-          <Ionicons name="funnel-outline" size={20} color="#666" />
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.filterBtn}>
-          <Ionicons name="swap-vertical" size={20} color="#666" />
-        </TouchableOpacity>
       </View>
 
-      {/* LIST HEADERS */}
-      <View style={styles.listHeaderRow}>
-        <CustomText
-          variant="bold"
-          style={[styles.listHeaderText, { flex: 0.2 }]}
-        >
-          Select
-        </CustomText>
-        <CustomText
-          variant="bold"
-          style={[styles.listHeaderText, { flex: 0.4 }]}
-        >
-          Event
-        </CustomText>
-        <CustomText
-          variant="bold"
-          style={[styles.listHeaderText, { flex: 0.2, textAlign: "center" }]}
-        >
-          Status
-        </CustomText>
-        <CustomText
-          variant="bold"
-          style={[styles.listHeaderText, { flex: 0.2, textAlign: "right" }]}
-        >
-          Ticket
-        </CustomText>
-      </View>
-
-      {/* THE LIST */}
-      <FlatList
-        data={MOCK_ATTENDEES}
-        keyExtractor={(item) => item.id}
-        renderItem={renderAttendee}
-        contentContainerStyle={{ paddingBottom: 100 }}
-        showsVerticalScrollIndicator={false}
-      />
-
-      {/* FOOTER ACTIONS */}
-      <View style={styles.footer}>
-        <CustomText variant="bold" style={styles.managementTitle}>
-          Management Actions
-        </CustomText>
-        <ScrollView
+      <View>
+        <FlatList
           horizontal
           showsHorizontalScrollIndicator={false}
-          style={styles.actionScroll}
-        >
-          <TouchableOpacity style={styles.actionBtn}>
-            <CustomText variant="bold" style={styles.actionBtnText}>
-              Send Email
-            </CustomText>
-          </TouchableOpacity>
-          <TouchableOpacity style={[styles.actionBtn, styles.btnOutline]}>
-            <CustomText variant="bold" style={styles.actionBtnTextOutline}>
-              Export CSV
-            </CustomText>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.actionBtn}>
-            <CustomText variant="bold" style={styles.actionBtnText}>
-              Check-In
-            </CustomText>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.actionBtn}>
-            <CustomText variant="bold" style={styles.actionBtnText}>
-              Assign Team
-            </CustomText>
-          </TouchableOpacity>
-        </ScrollView>
+          data={STATUS_TABS}
+          keyExtractor={(item) => item}
+          contentContainerStyle={{ paddingHorizontal: 15, paddingBottom: 10 }}
+          renderItem={({ item }) => (
+            <TouchableOpacity
+              style={[styles.tabBtn, activeTab === item && styles.tabBtnActive]}
+              onPress={() => {
+                setActiveTab(item);
+                setSelectedIds([]);
+              }}
+            >
+              <CustomText variant={activeTab === item ? "bold" : "medium"} style={[styles.tabText, activeTab === item && styles.tabTextActive]}>
+                {item}
+              </CustomText>
+            </TouchableOpacity>
+          )}
+        />
       </View>
+
+      <View style={styles.listHeaderRow}>
+        <TouchableOpacity style={{ flex: 0.2, flexDirection: "row", alignItems: "center" }} onPress={toggleSelectAll}>
+            <View style={styles.checkbox}>
+              {isAllSelected && <View style={styles.checkboxInner} />}
+            </View>
+            <CustomText variant="bold" style={styles.listHeaderText}>All</CustomText>
+        </TouchableOpacity>
+        <CustomText variant="bold" style={[styles.listHeaderText, { flex: 0.5 }]}>Info</CustomText>
+        <CustomText variant="bold" style={[styles.listHeaderText, { flex: 0.3, textAlign: "right" }]}>Status</CustomText>
+      </View>
+
+      {loading ? (
+        <ActivityIndicator size="large" color={Colors.color.primary} style={{ marginTop: 50 }} />
+      ) : (
+        <FlatList
+          data={filteredAttendees}
+          keyExtractor={(item) => item.id}
+          renderItem={renderAttendee}
+          contentContainerStyle={{ paddingBottom: 120 }}
+          showsVerticalScrollIndicator={false}
+          ListEmptyComponent={
+            <CustomText style={{ textAlign: 'center', marginTop: 50, color: '#999' }}>
+              No applications found.
+            </CustomText>
+          }
+        />
+      )}
+
+      {selectedIds.length > 0 && (
+        <View style={styles.footer}>
+          <CustomText variant="bold" style={styles.managementTitle}>
+            Action for {selectedIds.length} selected
+          </CustomText>
+          <View style={styles.actionScroll}>
+            <TouchableOpacity
+              style={[styles.actionBtn, { backgroundColor: "#4CAF50", flex: 1 }]}
+              onPress={() => handleUpdateStatus("APPROVED")}
+            >
+              <Ionicons name="checkmark-circle" size={18} color="white" style={{ marginRight: 5 }} />
+              <CustomText variant="bold" style={styles.actionBtnText}>APPROVE</CustomText>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.actionBtn, { backgroundColor: "#F44336", flex: 1 }]}
+              onPress={() => handleUpdateStatus("REJECTED")}
+            >
+              <Ionicons name="close-circle" size={18} color="white" style={{ marginRight: 5 }} />
+              <CustomText variant="bold" style={styles.actionBtnText}>REJECT</CustomText>
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
     </View>
   );
 }
@@ -178,16 +257,8 @@ function createStyles() {
       alignItems: "center",
       justifyContent: "space-between",
     },
-    headerText: {
-      color: "white",
-      fontSize: 16,
-    },
-
-    searchBarRow: {
-      flexDirection: "row",
-      padding: 15,
-      lignItems: "center",
-    },
+    headerText: { color: "white", fontSize: 16 },
+    searchBarRow: { flexDirection: "row", padding: 15 },
     searchContainer: {
       flex: 1,
       flexDirection: "row",
@@ -197,15 +268,18 @@ function createStyles() {
       paddingHorizontal: 12,
       height: 45,
     },
-    searchInput: {
-      flex: 1,
-      marginLeft: 8,
-      fontSize: 14,
+    searchInput: { flex: 1, marginLeft: 8, fontSize: 14 },
+
+    tabBtn: {
+      paddingHorizontal: 16,
+      paddingVertical: 8,
+      borderRadius: 20,
+      backgroundColor: "#EEE",
+      marginRight: 10,
     },
-    filterBtn: {
-      marginLeft: 10,
-      padding: 10,
-    },
+    tabBtnActive: { backgroundColor: Colors.color.primary },
+    tabText: { fontSize: 13, color: "#666" },
+    tabTextActive: { color: "white" },
 
     listHeaderRow: {
       flexDirection: "row",
@@ -214,11 +288,9 @@ function createStyles() {
       backgroundColor: "#FFF",
       borderBottomWidth: 1,
       borderBottomColor: "#EEE",
+      alignItems: 'center'
     },
-    listHeaderText: {
-      fontSize: 12,
-      color: "#888",
-    },
+    listHeaderText: { fontSize: 12, color: "#888", marginLeft: 5 },
 
     attendeeRow: {
       flexDirection: "row",
@@ -228,11 +300,7 @@ function createStyles() {
       borderBottomWidth: 1,
       borderBottomColor: "#F0F0F0",
     },
-    leftSection: {
-      flexDirection: "row",
-      alignItems: "center",
-      flex: 0.2,
-    },
+    leftSection: { flex: 0.2, flexDirection: "row", alignItems: "center" },
     checkbox: {
       width: 20,
       height: 20,
@@ -240,53 +308,26 @@ function createStyles() {
       borderColor: "#DDD",
       borderRadius: 4,
       marginRight: 10,
+      justifyContent: 'center',
+      alignItems: 'center'
     },
-    avatar: {
-      width: 35,
-      height: 35,
-      borderRadius: 17.5,
+    checkboxInner: {
+      width: 10,
+      height: 10,
+      backgroundColor: Colors.color.primary,
+      borderRadius: 2,
     },
-
-    infoSection: {
-      flex: 0.4,
-      paddingHorizontal: 5,
-    },
-    nameText: {
-      fontSize: 14,
-      color: "#333",
-    },
-    eventText: {
-      fontSize: 11,
-      color: "#999",
-    },
-
-    rightSection: {
-      flex: 0.4,
-      alignItems: "flex-end",
-    },
+    avatar: { width: 35, height: 35, borderRadius: 17.5 },
+    infoSection: { flex: 0.5, paddingHorizontal: 5 },
+    nameText: { fontSize: 14, color: "#333" },
+    eventText: { fontSize: 11, color: "#999" },
+    rightSection: { flex: 0.3, alignItems: "flex-end" },
     statusBadge: {
       paddingHorizontal: 10,
       paddingVertical: 4,
       borderRadius: 12,
-      marginBottom: 4,
     },
-    statusText: {
-      fontSize: 10,
-      color: "white",
-    },
-    statusAttending: {
-      backgroundColor: "#4CAF50",
-    },
-    statusCheckIn: {
-      backgroundColor: "#1a2a44",
-    },
-    statusInvited: {
-      backgroundColor: "#FFC107",
-    },
-    ticketText: {
-      fontSize: 11,
-      color: "#666",
-    },
+    statusText: { fontSize: 10, color: "white" },
 
     footer: {
       position: "absolute",
@@ -297,34 +338,17 @@ function createStyles() {
       padding: 15,
       borderTopWidth: 1,
       borderTopColor: "#EEE",
+      paddingBottom: 30,
     },
-    managementTitle: {
-      fontSize: 14,
-      marginBottom: 10,
-      color: "#333",
-    },
-    actionScroll: {
-      flexDirection: "row",
-    },
+    managementTitle: { fontSize: 14, marginBottom: 10, color: "#333", textAlign: 'center' },
+    actionScroll: { flexDirection: "row", justifyContent: 'space-between', gap: 10 },
     actionBtn: {
-      backgroundColor: "#1a2a44",
-      paddingHorizontal: 15,
-      paddingVertical: 10,
+      flexDirection: 'row',
+      justifyContent: 'center',
+      alignItems: 'center',
+      paddingVertical: 12,
       borderRadius: 8,
-      marginRight: 10,
     },
-    btnOutline: {
-      backgroundColor: "transparent",
-      borderWidth: 1,
-      borderColor: "#1a2a44",
-    },
-    actionBtnText: {
-      color: "white",
-      fontSize: 12,
-    },
-    actionBtnTextOutline: {
-      color: "#1a2a44",
-      fontSize: 12,
-    },
+    actionBtnText: { color: "white", fontSize: 14 },
   });
 }

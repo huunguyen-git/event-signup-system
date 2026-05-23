@@ -90,7 +90,10 @@ const HostEventItem = (event: HostItem) => {
         <TouchableOpacity
           style={styles.primaryButton}
           onPress={() => {
-            router.push("/ViewAttendeesScreen");
+            router.push({
+                          pathname: "/ViewAttendeesScreen",
+                          params: { id: event.event.id }
+                        });
           }}
         >
           <CustomText variant="medium" style={styles.primaryButtonText}>
