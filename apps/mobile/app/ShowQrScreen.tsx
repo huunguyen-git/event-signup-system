@@ -1,10 +1,5 @@
 import React from "react";
-import {
-  View,
-  StyleSheet,
-  SafeAreaView,
-  TouchableOpacity,
-} from "react-native";
+import { View, StyleSheet, SafeAreaView, TouchableOpacity } from "react-native";
 import { CustomText } from "@/components/CustomText";
 import QRCode from "react-native-qrcode-svg";
 import { useLocalSearchParams, useRouter, Stack } from "expo-router";
@@ -27,7 +22,9 @@ const ShowQrScreen = () => {
       />
 
       <View style={styles.content}>
-        <CustomText variant="bold" style={styles.eventTitle}>{title || "Sự kiện của bạn"}</CustomText>
+        <CustomText variant="bold" style={styles.eventTitle}>
+          {title || "Sự kiện của bạn"}
+        </CustomText>
 
         <View style={styles.qrWrapper}>
           {/* Component vẽ mã QR */}
@@ -47,7 +44,9 @@ const ShowQrScreen = () => {
         </CustomText>
 
         <TouchableOpacity style={styles.button} onPress={() => router.back()}>
-          <CustomText variant="bold" style={styles.buttonText}>Đóng</CustomText>
+          <CustomText variant="bold" style={styles.buttonText}>
+            Đóng
+          </CustomText>
         </TouchableOpacity>
       </View>
     </SafeAreaView>

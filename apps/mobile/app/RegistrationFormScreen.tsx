@@ -15,9 +15,9 @@ import { CustomText } from "@/components/CustomText";
 import { Colors } from "../constants/theme";
 import { ICreateEvent } from "@/axios/dto/eventModel";
 import { EventService } from "@/axios/eventService";
-import * as Notifications from 'expo-notifications';
+import * as Notifications from "expo-notifications";
 import { NotificationService } from "@/axios/notificationService";
-import { SchedulableTriggerInputTypes } from 'expo-notifications';
+import { SchedulableTriggerInputTypes } from "expo-notifications";
 
 export default function RegistrationFormScreen() {
   const router = useRouter();
@@ -77,7 +77,9 @@ export default function RegistrationFormScreen() {
         const event = await EventService.getEvent(id);
         console.log("event duoc lay ve:", event);
         setData(event);
-        const formConfig = event.form_config ? JSON.parse(event.form_config) : [];
+        const formConfig = event.form_config
+          ? JSON.parse(event.form_config)
+          : [];
         if (Array.isArray(formConfig)) {
           setCustomQuestions(formConfig);
         }
@@ -113,7 +115,7 @@ export default function RegistrationFormScreen() {
         userId: await getUserId(),
         title: data.title,
         body: "Bạn vừa đăng kí sự kiện " + data.title,
-      }
+      };
       await Notifications.scheduleNotificationAsync({
         content: {
           title: notification.title,
@@ -147,27 +149,34 @@ export default function RegistrationFormScreen() {
           ticketType: ticketType,
         },
       };
-      console.log("Đang gửi đơn đăng ký sự kiện lên server...", applicationData);
+      console.log(
+        "Đang gửi đơn đăng ký sự kiện lên server...",
+        applicationData,
+      );
       await EventService.registerForEvent(applicationData);
       router.replace({
-        pathname: '/SuccessScreen',
-        params: { ticketType: ticketType }
+        pathname: "/SuccessScreen",
+        params: { ticketType: ticketType },
       });
       scheduleEventReminder(data.title, data.event_date);
       setIsLoading(false);
     } catch (error: any) {
       console.error("Error creating event application:", error);
-      const errorMsg = error.response?.data?.message || "Không thể kết nối đến Server!";
+      const errorMsg =
+        error.response?.data?.message || "Không thể kết nối đến Server!";
     }
   };
 
-  async function scheduleEventReminder(eventTitle: string, eventStartStr: string) {
+  async function scheduleEventReminder(
+    eventTitle: string,
+    eventStartStr: string,
+  ) {
     const eventTime = new Date(data.event_date).getTime();
     const triggerDate = new Date(eventTime - 30 * 60 * 1000);
     await Notifications.scheduleNotificationAsync({
       content: {
         title: `⏰ Sắp diễn ra: ${eventTitle}`,
-        body: 'Sự kiện của bạn sẽ bắt đầu sau 30 phút nữa. Hãy chuẩn bị nhé!',
+        body: "Sự kiện của bạn sẽ bắt đầu sau 30 phút nữa. Hãy chuẩn bị nhé!",
         sound: true,
       },
       trigger: {
@@ -181,9 +190,17 @@ export default function RegistrationFormScreen() {
     { id: "2", name: "Premium Pass" },
   ];
 
-  const InputField = ({ label, placeholder, isShort, value, onChangeText }: any) => (
+  const InputField = ({
+    label,
+    placeholder,
+    isShort,
+    value,
+    onChangeText,
+  }: any) => (
     <View style={[styles.inputGroup, isShort && { flex: 1 }]}>
-      <CustomText variant="bold" style={styles.label}>{label}</CustomText>
+      <CustomText variant="bold" style={styles.label}>
+        {label}
+      </CustomText>
       <View style={styles.inputWrapper}>
         <TextInput
           style={[styles.input, isCreate && { opacity: 0.5 }]}
@@ -201,7 +218,9 @@ export default function RegistrationFormScreen() {
     <Modal visible={visible} transparent animationType="fade">
       <View style={styles.infoOverlay}>
         <View style={styles.infoCard}>
-          <CustomText variant="bold" style={styles.infoTitle}>{title}</CustomText>
+          <CustomText variant="bold" style={styles.infoTitle}>
+            {title}
+          </CustomText>
           <ScrollView style={{ maxHeight: 250 }}>
             <CustomText style={styles.infoBodyText}>{content}</CustomText>
           </ScrollView>
@@ -209,7 +228,9 @@ export default function RegistrationFormScreen() {
             style={[styles.infoCloseBtn, { backgroundColor: themeColor }]}
             onPress={onClose}
           >
-            <CustomText variant="bold" style={styles.infoCloseBtnText}>ĐÓNG</CustomText>
+            <CustomText variant="bold" style={styles.infoCloseBtnText}>
+              ĐÓNG
+            </CustomText>
           </TouchableOpacity>
         </View>
       </View>
@@ -242,7 +263,9 @@ export default function RegistrationFormScreen() {
           <View style={styles.questionCard}>
             <View style={styles.cardHeader}>
               <Ionicons name="create-outline" size={22} color={themeColor} />
-              <CustomText variant="bold" style={styles.cardTitle}>Thêm câu hỏi mới</CustomText>
+              <CustomText variant="bold" style={styles.cardTitle}>
+                Thêm câu hỏi mới
+              </CustomText>
             </View>
 
             <CustomText style={styles.cardSubtitle}>
@@ -266,14 +289,18 @@ export default function RegistrationFormScreen() {
                 style={styles.secondaryBtn}
                 onPress={handleCancelCustomQuestion}
               >
-                <CustomText variant="medium" style={styles.secondaryBtnText}>HỦY</CustomText>
+                <CustomText variant="medium" style={styles.secondaryBtnText}>
+                  HỦY
+                </CustomText>
               </TouchableOpacity>
 
               <TouchableOpacity
                 style={[styles.primaryBtn, { backgroundColor: themeColor }]}
                 onPress={handleSaveCustomQuestion}
               >
-                <CustomText variant="bold" style={styles.primaryBtnText}>LƯU CÂU HỎI</CustomText>
+                <CustomText variant="bold" style={styles.primaryBtnText}>
+                  LƯU CÂU HỎI
+                </CustomText>
               </TouchableOpacity>
             </View>
           </View>
@@ -283,21 +310,32 @@ export default function RegistrationFormScreen() {
         <CustomText style={styles.eventSmallTitle}>
           International Tech Summit 2024
         </CustomText>
-        <CustomText variant="bold" style={[styles.mainTitle, { color: themeColor }]}>
+        <CustomText
+          variant="bold"
+          style={[styles.mainTitle, { color: themeColor }]}
+        >
           CONFIRM REGISTRATION
         </CustomText>
 
-        {!IsCreate && (<View style={styles.ticketSummary}>
-          <View>
-            <CustomText variant="bold" style={styles.ticketLabel}>REGISTERING AS:</CustomText>
-            <CustomText variant="bold" style={styles.ticketType}>{ticketType}</CustomText>
+        {!IsCreate && (
+          <View style={styles.ticketSummary}>
+            <View>
+              <CustomText variant="bold" style={styles.ticketLabel}>
+                REGISTERING AS:
+              </CustomText>
+              <CustomText variant="bold" style={styles.ticketType}>
+                {ticketType}
+              </CustomText>
+            </View>
+            <TouchableOpacity onPress={() => setShowTicketPicker(true)}>
+              <CustomText
+                variant="bold"
+                style={[styles.changeLink, { color: themeColor }]}
+              >
+                Change
+              </CustomText>
+            </TouchableOpacity>
           </View>
-          <TouchableOpacity onPress={() => setShowTicketPicker(true)}>
-            <CustomText variant="bold" style={[styles.changeLink, { color: themeColor }]}>
-              Change
-            </CustomText>
-          </TouchableOpacity>
-        </View>
         )}
 
         <ScrollView
@@ -310,12 +348,29 @@ export default function RegistrationFormScreen() {
               placeholder="A"
               isShort
               value={firstName}
-              onChangeText={setFirstName} />
+              onChangeText={setFirstName}
+            />
             <View style={{ width: 10 }} />
-            <InputField label="Last Name" placeholder="Nguyễn Văn" isShort value={lastName} onChangeText={setLastName} />
+            <InputField
+              label="Last Name"
+              placeholder="Nguyễn Văn"
+              isShort
+              value={lastName}
+              onChangeText={setLastName}
+            />
           </View>
-          <InputField label="Company Email" placeholder="nguyenvana@gm.uit.edu.vn" value={email} onChangeText={setEmail} />
-          <InputField label="Job Title" placeholder="Software Engineer" value={jobTitle} onChangeText={setJobTitle} />
+          <InputField
+            label="Company Email"
+            placeholder="nguyenvana@gm.uit.edu.vn"
+            value={email}
+            onChangeText={setEmail}
+          />
+          <InputField
+            label="Job Title"
+            placeholder="Software Engineer"
+            value={jobTitle}
+            onChangeText={setJobTitle}
+          />
           {customQuestions.map((q) => (
             <InputField
               key={q.id}
@@ -324,34 +379,35 @@ export default function RegistrationFormScreen() {
             />
           ))}
 
-          {!isCreate && (<View style={styles.checkboxRow}>
-            <TouchableOpacity onPress={() => setAgreed(!agreed)}>
-              <MaterialCommunityIcons
-                name={agreed ? "checkbox-marked" : "checkbox-blank-outline"}
-                size={24}
-                color={themeColor}
-              />
-            </TouchableOpacity>
-            <CustomText style={styles.checkboxText}>
-              I agree to the{" "}
-              <CustomText
-                variant="bold"
-                style={styles.boldLink}
-                onPress={() => setShowTerms(true)}
-              >
-                Terms of Service
-              </CustomText>{" "}
-              and{" "}
-              <CustomText
-                variant="bold"
-                style={styles.boldLink}
-                onPress={() => setShowPrivacy(true)}
-              >
-                Privacy Policy
+          {!IsCreate && (
+            <View style={styles.checkboxRow}>
+              <TouchableOpacity onPress={() => setAgreed(!agreed)}>
+                <MaterialCommunityIcons
+                  name={agreed ? "checkbox-marked" : "checkbox-blank-outline"}
+                  size={24}
+                  color={themeColor}
+                />
+              </TouchableOpacity>
+              <CustomText style={styles.checkboxText}>
+                I agree to the{" "}
+                <CustomText
+                  variant="bold"
+                  style={styles.boldLink}
+                  onPress={() => setShowTerms(true)}
+                >
+                  Terms of Service
+                </CustomText>{" "}
+                and{" "}
+                <CustomText
+                  variant="bold"
+                  style={styles.boldLink}
+                  onPress={() => setShowPrivacy(true)}
+                >
+                  Privacy Policy
+                </CustomText>
+                .
               </CustomText>
-              .
-            </CustomText>
-          </View>
+            </View>
           )}
         </ScrollView>
 
@@ -360,19 +416,31 @@ export default function RegistrationFormScreen() {
             style={styles.cancelBtn}
             onPress={() => router.back()}
           >
-            <CustomText variant="bold" style={[styles.cancelBtnText, { color: themeColor }]}>
+            <CustomText
+              variant="bold"
+              style={[styles.cancelBtnText, { color: themeColor }]}
+            >
               CANCEL
             </CustomText>
           </TouchableOpacity>
           <TouchableOpacity
             style={[
               styles.completeBtn,
-              { backgroundColor: themeColor, opacity: isCreate ? 1 : (agreed ? 1 : 0.5) },
+              {
+                backgroundColor: themeColor,
+                opacity: isCreate ? 1 : agreed ? 1 : 0.5,
+              },
             ]}
             disabled={IsCreate ? false : !agreed}
             onPress={IsCreate ? handleCreateEvent : handleRegisterEvent}
           >
-            {isLoading ? (<ActivityIndicator size="small" color="#ffffff" />) : (<CustomText variant="bold" style={styles.completeBtnText}>{IsCreate ? "SAVE" : "COMPLETE REGISTRATION"}</CustomText>)}
+            {isLoading ? (
+              <ActivityIndicator size="small" color="#ffffff" />
+            ) : (
+              <CustomText variant="bold" style={styles.completeBtnText}>
+                {IsCreate ? "SAVE" : "COMPLETE REGISTRATION"}
+              </CustomText>
+            )}
           </TouchableOpacity>
         </View>
       </View>
@@ -380,7 +448,9 @@ export default function RegistrationFormScreen() {
       <Modal visible={showTicketPicker} transparent animationType="slide">
         <View style={styles.pickerOverlay}>
           <View style={styles.pickerCard}>
-            <CustomText variant="bold" style={styles.pickerHeader}>Select Ticket Type</CustomText>
+            <CustomText variant="bold" style={styles.pickerHeader}>
+              Select Ticket Type
+            </CustomText>
             {ticketOptions.map((option) => (
               <TouchableOpacity
                 key={option.id}

@@ -18,13 +18,13 @@ export default function SuccessScreen() {
           <Ionicons name="checkmark" size={50} color="#4CAF50" />
         </View>
 
-        <CustomText variant="bold" style={styles.mainTitle}>REGISTRATION SUCCESSFUL!</CustomText>
+        <CustomText variant="bold" style={styles.mainTitle}>
+          REGISTRATION SUCCESSFUL!
+        </CustomText>
 
         <CustomText style={styles.description}>
           Thank you for registering for the{" "}
-          <CustomText variant="bold">
-            International Tech Summit 2024
-          </CustomText>
+          <CustomText variant="bold">International Tech Summit 2024</CustomText>
           . Your registration for the{" "}
           <CustomText variant="bold" style={{ color: themeColor }}>
             {ticketType || "Standard Pass"}
@@ -35,7 +35,9 @@ export default function SuccessScreen() {
         <View style={styles.detailsBox}>
           <View style={styles.detailRow}>
             <CustomText style={styles.detailLabel}>Order Number:</CustomText>
-            <CustomText variant="bold" style={styles.detailValue}>ITS-2026-5678</CustomText>
+            <CustomText variant="bold" style={styles.detailValue}>
+              ITS-2026-5678
+            </CustomText>
           </View>
           <View style={styles.detailRow}>
             <CustomText style={styles.detailLabel}>Pass Type:</CustomText>
@@ -45,21 +47,28 @@ export default function SuccessScreen() {
           </View>
           <View style={styles.detailRow}>
             <CustomText style={styles.detailLabel}>Date:</CustomText>
-            <CustomText variant="bold" style={styles.detailValue}>Oct 12-14, 2026</CustomText>
+            <CustomText variant="bold" style={styles.detailValue}>
+              Oct 12-14, 2026
+            </CustomText>
           </View>
         </View>
 
         <TouchableOpacity
           style={[styles.primaryBtn, { backgroundColor: themeColor }]}
         >
-          <CustomText variant="bold" style={styles.primaryBtnText}>VIEW MY TICKET</CustomText>
+          <CustomText variant="bold" style={styles.primaryBtnText}>
+            VIEW MY TICKET
+          </CustomText>
         </TouchableOpacity>
 
         <TouchableOpacity
           style={styles.secondaryBtn}
-          onPress={() => router.replace('/DashBoardScreen')}
+          onPress={() => router.replace("/DashBoardScreen")}
         >
-          <CustomText variant="bold" style={[styles.secondaryBtnText, { color: "#555" }]}>
+          <CustomText
+            variant="bold"
+            style={[styles.secondaryBtnText, { color: "#555" }]}
+          >
             GO TO MY DASHBOARD
           </CustomText>
         </TouchableOpacity>

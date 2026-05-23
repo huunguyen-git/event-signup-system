@@ -22,9 +22,9 @@ export const CommentService = {
         },
         {
           headers: {
-            Authorization: `Bearer ${token}`
+            Authorization: `Bearer ${token}`,
           },
-        }
+        },
       );
       return response.data;
     } catch (error) {
@@ -40,14 +40,14 @@ export const CommentService = {
         {},
         {
           headers: {
-            Authorization: `Bearer ${token}`
+            Authorization: `Bearer ${token}`,
           },
-        }
+        },
       );
       return response.data;
     } catch (error) {
       console.error("Lỗi ghim bình luận:", error);
       throw error;
     }
-  }
+  },
 };

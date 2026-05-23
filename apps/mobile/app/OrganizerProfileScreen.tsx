@@ -59,7 +59,10 @@ const OrganizerProfileScreen = () => {
       <Stack.Screen options={{ headerShown: false }} />
       <SafeAreaView style={styles.container}>
         <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
+          <TouchableOpacity
+            onPress={() => router.back()}
+            style={styles.backBtn}
+          >
             <Ionicons name="arrow-back" size={26} color={Colors.color.white} />
           </TouchableOpacity>
           <Text style={styles.connect}>
@@ -74,15 +77,25 @@ const OrganizerProfileScreen = () => {
           </View>
         </View>
 
-        <ScrollView style={styles.body} contentContainerStyle={styles.bodyContent}>
+        <ScrollView
+          style={styles.body}
+          contentContainerStyle={styles.bodyContent}
+        >
           {loading ? (
-            <ActivityIndicator size="large" color={Colors.color.primary} style={styles.loader} />
+            <ActivityIndicator
+              size="large"
+              color={Colors.color.primary}
+              style={styles.loader}
+            />
           ) : (
             <>
               <View style={styles.profileInfo}>
                 <View style={styles.avatarContainer}>
                   {user?.avatar_url ? (
-                    <Image source={{ uri: user.avatar_url }} style={styles.profileImage} />
+                    <Image
+                      source={{ uri: user.avatar_url }}
+                      style={styles.profileImage}
+                    />
                   ) : (
                     <View style={styles.avatarFallback}>
                       <Text style={styles.avatarInitial}>
@@ -96,9 +109,21 @@ const OrganizerProfileScreen = () => {
               </View>
 
               <View style={styles.infoCard}>
-                <InfoRow icon="phone-outline" label="Phone" value={user?.phone_number ?? "Not set"} />
-                <InfoRow icon="calendar-outline" label="Birthdate" value={formatDate(user?.birthdate ?? "")} />
-                <InfoRow icon="clock-outline" label="Member since" value={formatDate(user?.created_at ?? "")} />
+                <InfoRow
+                  icon="phone-outline"
+                  label="Phone"
+                  value={user?.phone_number ?? "Not set"}
+                />
+                <InfoRow
+                  icon="calendar-outline"
+                  label="Birthdate"
+                  value={formatDate(user?.birthdate ?? "")}
+                />
+                <InfoRow
+                  icon="clock-outline"
+                  label="Member since"
+                  value={formatDate(user?.created_at ?? "")}
+                />
               </View>
             </>
           )}
@@ -108,9 +133,21 @@ const OrganizerProfileScreen = () => {
   );
 };
 
-const InfoRow = ({ icon, label, value }: { icon: any; label: string; value: string }) => (
+const InfoRow = ({
+  icon,
+  label,
+  value,
+}: {
+  icon: any;
+  label: string;
+  value: string;
+}) => (
   <View style={styles.infoRow}>
-    <MaterialCommunityIcons name={icon} size={22} color={Colors.color.primary} />
+    <MaterialCommunityIcons
+      name={icon}
+      size={22}
+      color={Colors.color.primary}
+    />
     <View style={styles.infoTextContainer}>
       <Text style={styles.infoLabel}>{label}</Text>
       <Text style={styles.infoValue}>{value}</Text>
@@ -122,22 +159,56 @@ export default OrganizerProfileScreen;
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.color.white },
-  header: { height: 60, alignItems: "center", backgroundColor: Colors.color.primary, flexDirection: "row", gap: 10, paddingHorizontal: 10 },
+  header: {
+    height: 60,
+    alignItems: "center",
+    backgroundColor: Colors.color.primary,
+    flexDirection: "row",
+    gap: 10,
+    paddingHorizontal: 10,
+  },
   backBtn: { paddingRight: 5 },
   connect: { fontSize: 18, color: Colors.color.white },
   event: { fontWeight: "700" },
-  Icon: { flexDirection: "row", gap: 10, alignItems: "center", marginLeft: "auto" },
+  Icon: {
+    flexDirection: "row",
+    gap: 10,
+    alignItems: "center",
+    marginLeft: "auto",
+  },
   body: { flex: 1, backgroundColor: Colors.color.background },
   bodyContent: { padding: 16, alignItems: "center" },
   loader: { marginTop: 60 },
   profileInfo: { alignItems: "center", marginVertical: 20 },
   avatarContainer: { marginBottom: 12 },
   profileImage: { height: 100, width: 100, borderRadius: 50 },
-  avatarFallback: { height: 100, width: 100, borderRadius: 50, backgroundColor: Colors.color.lightblue, alignItems: "center", justifyContent: "center" },
-  avatarInitial: { fontSize: 40, fontWeight: "bold", color: Colors.color.primary },
+  avatarFallback: {
+    height: 100,
+    width: 100,
+    borderRadius: 50,
+    backgroundColor: Colors.color.lightblue,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  avatarInitial: {
+    fontSize: 40,
+    fontWeight: "bold",
+    color: Colors.color.primary,
+  },
   profileName: { fontSize: 24, fontWeight: "bold", color: Colors.color.text },
   profileEmail: { fontSize: 14, color: Colors.color.placeholder, marginTop: 4 },
-  infoCard: { width: "100%", backgroundColor: Colors.color.white, borderRadius: 12, padding: 16, marginBottom: 16, gap: 12, shadowColor: "#000", shadowOpacity: 0.05, shadowRadius: 4, elevation: 2 },
+  infoCard: {
+    width: "100%",
+    backgroundColor: Colors.color.white,
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+    gap: 12,
+    shadowColor: "#000",
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
+  },
   infoRow: { flexDirection: "row", alignItems: "center", gap: 12 },
   infoTextContainer: { flex: 1 },
   infoLabel: { fontSize: 12, color: Colors.color.placeholder },

@@ -20,11 +20,15 @@ export const AuthService = {
   },
   logout: async (token) => {
     try {
-      const response = await apiClient.post("/auth/logout", {}, {
-        headers: {
-          Authorization: `Bearer ${token}`,
+      const response = await apiClient.post(
+        "/auth/logout",
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         },
-      });
+      );
       return response.data;
     } catch (error) {
       throw error;

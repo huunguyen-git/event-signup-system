@@ -1,64 +1,76 @@
-import { View, TouchableOpacity, StyleSheet, Modal, TouchableWithoutFeedback } from "react-native";
+import {
+  View,
+  TouchableOpacity,
+  StyleSheet,
+  Modal,
+  TouchableWithoutFeedback,
+} from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { Colors } from "../constants/theme";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import NotificationsScreen from "@/app/(attendee)/NotificationScreen";
 import { CustomText } from "@/components/CustomText";
-const Header = () =>{
-    const router = useRouter();
-    const [notifications, setNotifications] = useState(false);
-    return(
-        <View style={styles.header}>
+const Header = () => {
+  const router = useRouter();
+  const [notifications, setNotifications] = useState(false);
+  return (
+    <View style={styles.header}>
+      <MaterialCommunityIcons
+        name="domain"
+        size={40}
+        color={Colors.color.white}
+      />
+      <CustomText style={styles.connect}>
+        {" "}
+        <CustomText variant="bold" style={{ color: "#FFFFFF" }}>
+          EVENT{" "}
+        </CustomText>
+        CONNECT
+      </CustomText>
+      <View style={styles.Icon}>
+        <TouchableOpacity onPress={() => setNotifications(true)}>
           <MaterialCommunityIcons
-            name="domain"
+            name="bell-outline"
             size={40}
             color={Colors.color.white}
           />
-          <CustomText style={styles.connect}>
-            {" "}
-            <CustomText variant="bold" style={{color: "#FFFFFF"}}>EVENT </CustomText>CONNECT
-          </CustomText>
-          <View style={styles.Icon}>
-            <TouchableOpacity onPress={()=> setNotifications(true)}>
-            <MaterialCommunityIcons
-              name="bell-outline"
-              size={40}
-              color={Colors.color.white}
-            />
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => router.push("/AccountScreen")}>
-              <MaterialCommunityIcons
-                name="account"
-                size={40}
-                color={Colors.color.primary}
-                style={styles.accountIcon}
-              />
-            </TouchableOpacity>
-          </View>
-          <Modal
-            visible={notifications}
-            onRequestClose={() => setNotifications(false)}
-            animationType="fade"
-            transparent={true}>
-            <TouchableOpacity
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => router.push("/AccountScreen")}>
+          <MaterialCommunityIcons
+            name="account"
+            size={40}
+            color={Colors.color.primary}
+            style={styles.accountIcon}
+          />
+        </TouchableOpacity>
+      </View>
+      <Modal
+        visible={notifications}
+        onRequestClose={() => setNotifications(false)}
+        animationType="fade"
+        transparent={true}
+      >
+        <TouchableOpacity
           style={styles.modalOverlay}
           activeOpacity={1}
-          onPressOut={() => setNotifications(false)}>
+          onPressOut={() => setNotifications(false)}
+        >
           <TouchableWithoutFeedback>
             <View style={styles.notificationBox}>
-              
               <View style={styles.notificationHeader}>
-                <CustomText variant="bold" style={styles.notificationTitle}>Thông báo</CustomText>
+                <CustomText variant="bold" style={styles.notificationTitle}>
+                  Thông báo
+                </CustomText>
               </View>
               <NotificationsScreen isOpen={notifications} />
             </View>
           </TouchableWithoutFeedback>
         </TouchableOpacity>
-          </Modal>
-        </View>
-    )
-}
+      </Modal>
+    </View>
+  );
+};
 export default Header;
 const styles = StyleSheet.create({
   header: {
@@ -120,4 +132,4 @@ const styles = StyleSheet.create({
     color: "#666",
     fontSize: 14,
   },
-})
+});

@@ -120,8 +120,12 @@ const AccountScreen = () => {
                     </View>
                   )}
                 </View>
-                <CustomText variant="bold" style={styles.profileName}>{user?.full_name}</CustomText>
-                <CustomText style={styles.profileEmail}>{user?.email}</CustomText>
+                <CustomText variant="bold" style={styles.profileName}>
+                  {user?.full_name}
+                </CustomText>
+                <CustomText style={styles.profileEmail}>
+                  {user?.email}
+                </CustomText>
               </View>
 
               {/* Info Cards */}
@@ -153,7 +157,9 @@ const AccountScreen = () => {
                   size={20}
                   color={Colors.color.white}
                 />
-                <CustomText variant="medium" style={styles.editButtonText}>Edit Profile</CustomText>
+                <CustomText variant="medium" style={styles.editButtonText}>
+                  Edit Profile
+                </CustomText>
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -165,7 +171,9 @@ const AccountScreen = () => {
                   size={20}
                   color={Colors.color.primary}
                 />
-                <CustomText variant="medium" style={styles.logoutButtonText}>Log Out</CustomText>
+                <CustomText variant="medium" style={styles.logoutButtonText}>
+                  Log Out
+                </CustomText>
               </TouchableOpacity>
             </>
           )}
@@ -193,7 +201,9 @@ const InfoRow = ({
     />
     <View style={styles.infoTextContainer}>
       <CustomText style={styles.infoLabel}>{label}</CustomText>
-      <CustomText variant="medium" style={styles.infoValue}>{value}</CustomText>
+      <CustomText variant="medium" style={styles.infoValue}>
+        {value}
+      </CustomText>
     </View>
   </View>
 );

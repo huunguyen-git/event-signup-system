@@ -24,11 +24,15 @@ const SavedEventItem = ({ organizer, eventName }: EventItemProps) => {
           />
           {organizer}
         </CustomText>
-        <CustomText variant="bold" style={styles.eventName}>{eventName}</CustomText>
+        <CustomText variant="bold" style={styles.eventName}>
+          {eventName}
+        </CustomText>
         <View style={styles.button}>
           <MaterialCommunityIcons name="star" size={30} color={"yellow"} />
           <TouchableOpacity style={styles.detailButton}>
-            <CustomText variant="bold" style={styles.detailButtonText}>View Details</CustomText>
+            <CustomText variant="bold" style={styles.detailButtonText}>
+              View Details
+            </CustomText>
           </TouchableOpacity>
         </View>
       </View>

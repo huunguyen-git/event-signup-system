@@ -37,12 +37,16 @@ const MyEventItem = (event: EventItem) => {
         style={styles.eventImage}
       />
       <View style={styles.event}>
-        <CustomText variant="bold" style={styles.eventName}>{event.event.title}</CustomText>
+        <CustomText variant="bold" style={styles.eventName}>
+          {event.event.title}
+        </CustomText>
         <CustomText style={styles.eventDate}>
           {datePart} - {timePart}
         </CustomText>
         {event.event.status && (
-          <CustomText style={styles.eventStatus}>{event.event.status}</CustomText>
+          <CustomText style={styles.eventStatus}>
+            {event.event.status}
+          </CustomText>
         )}
       </View>
     </TouchableOpacity>

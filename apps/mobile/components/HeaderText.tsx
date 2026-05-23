@@ -6,7 +6,10 @@ const HeaderText = () => {
     <>
       <CustomText style={styles.connect}>
         {" "}
-        <CustomText variant="bold" style={styles.event}>EVENT </CustomText>CONNECT
+        <CustomText variant="bold" style={styles.event}>
+          EVENT{" "}
+        </CustomText>
+        CONNECT
       </CustomText>
     </>
   );

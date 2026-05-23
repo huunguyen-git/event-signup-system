@@ -12,9 +12,9 @@ export const removeToken = () => {
   SecureStore.deleteItemAsync("access_token");
 };
 
-export const saveUserId = (id: string)=>{
+export const saveUserId = (id: string) => {
   SecureStore.setItemAsync("CurrentUserId", id);
-}
+};
 
 export const getUserId = () => {
   return SecureStore.getItemAsync("CurrentUserId");

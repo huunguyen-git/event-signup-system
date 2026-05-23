@@ -13,31 +13,32 @@ import Header from "@/components/Header";
 
 const DashBoardScreen = () => {
   const [data, setData] = useState<any[]>([]);
-  const [searchText,setSearchText] = useState<string>("");
+  const [searchText, setSearchText] = useState<string>("");
   useFocusEffect(
     useCallback(() => {
       const fetchData = async () => {
         try {
           const UserId = await getUserId();
           if (UserId) {
-            const responseData = await EventService.getMyRegisteredEvents(UserId);
+            const responseData =
+              await EventService.getMyRegisteredEvents(UserId);
             setData(responseData);
+            console.log(responseData);
           }
         } catch (error) {
           console.error("Error fetching data:", error);
         }
       };
       fetchData();
-    }, [])
+    }, []),
   );
   const filterData = useMemo(() => {
-      if(!searchText) return data;
-      const formatQuery = searchText.toLowerCase(); 
-  
-      return data.filter(item => 
-        item.title.toLowerCase().includes(formatQuery)
-      );
-    },[searchText, data]);
+    if (!searchText) return data;
+    const formatQuery = searchText.toLowerCase();
+    return data.filter((item) =>
+      item.event.title.toLowerCase().includes(formatQuery),
+    );
+  }, [searchText, data]);
   return (
     <>
       <Stack.Screen options={{ headerShown: false }} />
@@ -54,13 +55,17 @@ const DashBoardScreen = () => {
               style={styles.searchText}
               placeholder="Search by event name, date or location..."
               placeholderTextColor={Colors.color.placeholder}
-              value = {searchText}
+              value={searchText}
               onChangeText={(text) => setSearchText(text)}
             />
           </View>
           <View style={styles.headerBody}>
-            <CustomText variant="bold" style={styles.upcomingEvent}>My Event</CustomText>
-            <CustomText variant="bold" style={styles.eventCount}>Total Event: {data?.length}</CustomText>
+            <CustomText variant="bold" style={styles.upcomingEvent}>
+              My Event
+            </CustomText>
+            <CustomText variant="bold" style={styles.eventCount}>
+              Total Event: {data?.length}
+            </CustomText>
           </View>
 
           <FlatList

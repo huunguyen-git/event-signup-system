@@ -20,14 +20,18 @@ const StatCard = ({
 }: StatCardProps) => {
   return (
     <View style={styles.statCard}>
-      <CustomText variant="bold" style={styles.statTitle}>{title}</CustomText>
+      <CustomText variant="bold" style={styles.statTitle}>
+        {title}
+      </CustomText>
 
       <View style={styles.statMain}>
         <CustomText variant="bold" style={styles.statValue}>
           {value}
           {trend && (
             <View style={styles.trendBadge}>
-              <CustomText variant="bold" style={styles.trendText}>{trend}</CustomText>
+              <CustomText variant="bold" style={styles.trendText}>
+                {trend}
+              </CustomText>
             </View>
           )}
         </CustomText>

@@ -10,12 +10,14 @@ import {
   Image,
   ActivityIndicator,
   Alert,
+  TouchableWithoutFeedback,
+  Keyboard,
 } from "react-native";
 import { CustomText } from "@/components/CustomText";
 import { Ionicons } from "@expo/vector-icons";
 import { Colors } from "../../constants/theme";
 import * as ImagePicker from "expo-image-picker";
-import DatePicker from 'react-native-date-picker';
+import DatePicker from "react-native-date-picker";
 import { ICreateEvent } from "@/axios/dto/eventModel";
 import { useRouter } from "expo-router";
 import { getUserId } from "@/services/storage";
@@ -32,7 +34,7 @@ export default function CreateEventScreen() {
 
   const pickImage = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,       
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
       aspect: [6, 9],
       quality: 1,
@@ -45,24 +47,30 @@ export default function CreateEventScreen() {
 
   const handlePublish = async () => {
     setIsLoading(true);
-    form.host_id = await getUserId() ?? "";
+    form.host_id = (await getUserId()) ?? "";
     form.allowed_domain = "all";
     form.created_at = new Date().toISOString();
     form.form_config = JSON.stringify({});
     form.banner_url = image;
     form.status = "PUBLISHED";
-    if(!form.title || !form.end_date || !form.event_date || !form.max_attendees || !form.location_url){
+    if (
+      !form.title ||
+      !form.end_date ||
+      !form.event_date ||
+      !form.max_attendees ||
+      !form.location_url
+    ) {
       Alert.alert("Vui lòng nhập thông tin bắt buộc");
       setIsLoading(false);
       return;
     }
-    if(form.event_date>=form.end_date){
-        setErrorMsg("Ngày bắt đầu phải nhỏ hơn ngày kết thúc");
-        setIsLoading(false);
-        return;
-      }
-      setErrorMsg("");
-    
+    if (form.event_date >= form.end_date) {
+      setErrorMsg("Ngày bắt đầu phải nhỏ hơn ngày kết thúc");
+      setIsLoading(false);
+      return;
+    }
+    setErrorMsg("");
+
     router.push({
       pathname: "/RegistrationFormScreen",
       params: {
@@ -85,18 +93,24 @@ export default function CreateEventScreen() {
   };
   const handleDraft = async () => {
     setIsLoading(true);
-    if(!form.title || !form.end_date || !form.event_date || form.max_attendees || form.location_url){
+    if (
+      !form.title ||
+      !form.end_date ||
+      !form.event_date ||
+      form.max_attendees ||
+      form.location_url
+    ) {
       Alert.alert("Vui lòng nhập đầy đủ thông tin bắt buộc");
       setIsLoading(false);
       return;
     }
-    if(form.event_date>=form.end_date){
-        setErrorMsg("Ngày bắt đầu phải nhỏ hơn ngày kết thúc");
-        setIsLoading(false);
-        return;
-      }
-      setErrorMsg("");
-    form.host_id = await getUserId() ?? "";
+    if (form.event_date >= form.end_date) {
+      setErrorMsg("Ngày bắt đầu phải nhỏ hơn ngày kết thúc");
+      setIsLoading(false);
+      return;
+    }
+    setErrorMsg("");
+    form.host_id = (await getUserId()) ?? "";
     form.allowed_domain = "all";
     form.created_at = new Date().toISOString();
     form.form_config = JSON.stringify({});
@@ -105,7 +119,7 @@ export default function CreateEventScreen() {
     EventService.createEvent(form);
     router.push("/HostDashBoardScreen");
     setIsLoading(false);
-  }
+  };
   const styles = createStyles();
 
   return (
@@ -113,195 +127,275 @@ export default function CreateEventScreen() {
       behavior={Platform.OS === "ios" ? "padding" : "height"}
       style={styles.mainContainer}
     >
-      {/* HEADER */}
-      <View style={styles.header}>
-        <CustomText variant="bold" style={styles.headerText}>CREATE NEW EVENT</CustomText>
-      </View>
-
-      <ScrollView
-        style={styles.scrollView}
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
-        {/* EVENT INFORMATION CARD */}
-        <View style={styles.card}>
-          <CustomText variant="bold" style={styles.cardSectionTitle}>EVENT INFORMATION</CustomText>
-          <View style={{flexDirection: 'row', justifyContent: 'space-between'}}>
-            <CustomText variant="medium" style={styles.label}>Event Title </CustomText>
-            <CustomText style={{color: 'red'}}>Bắt buộc</CustomText>
-          </View>
-          <View style={styles.inputWrapper}>
-            <TextInput
-              style={styles.wrapperInput}
-              placeholder="e.g, Tech Innovators Conference"
-              placeholderTextColor="#BBB"
-              value={form.title}
-              onChangeText={(val) => setForm({ ...form, title: val })}
-            />
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+        <View style={{ flex: 1 }}>
+          {/* HEADER */}
+          <View style={styles.header}>
+            <CustomText variant="bold" style={styles.headerText}>
+              CREATE NEW EVENT
+            </CustomText>
           </View>
 
-          <CustomText variant="medium" style={styles.label}>Event Image (6:9)</CustomText>
-          <TouchableOpacity
-            style={[styles.imageContainer, image && styles.imageActive]}
-            onPress={pickImage}
+          <ScrollView
+            style={styles.scrollView}
+            contentContainerStyle={styles.scrollContent}
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
           >
-            {image ? (
-              <Image source={{ uri: image }} style={styles.previewImage} />
-            ) : (
-              <View style={styles.uploadPlaceholder}>
-                <View style={styles.cameraCircle}>
-                  <Ionicons name="camera-outline" size={24} color="#FFF" />
-                </View>
-                <CustomText variant="medium" style={styles.uploadMainText}>Tap to add</CustomText>
-                <CustomText style={styles.uploadSubText}>Recommended (6:9)</CustomText>
-              </View>
-            )}
-          </TouchableOpacity>
-
-          {/* DESCRIPTION */}
-          <CustomText variant="medium" style={styles.label}>Description</CustomText>
-          <View
-            style={[
-              styles.inputWrapper,
-              { height: 100, alignItems: "flex-start", paddingVertical: 10 },
-            ]}
-          >
-            <TextInput
-              style={[styles.wrapperInput, styles.textAreaInput]}
-              placeholder="Provide a detailed description..."
-              placeholderTextColor="#BBB"
-              multiline
-              numberOfLines={4}
-              onChangeText={(val) => setForm({ ...form, description: val })}
-            />
-          </View>
-        </View>
-
-        {/* DATE & LOCATION CARD */}
-        <View style={styles.card}>
-          <View style={{flexDirection: 'row', justifyContent: 'space-between'}}>
-            <CustomText variant="bold" style={styles.cardSectionTitle}>DATE & LOCATION</CustomText>
-            <CustomText style={{color: 'red'}}>Bắt buộc</CustomText>
-          </View>
-          <View style={styles.selectorRow}>
-            <TouchableOpacity
-              style={styles.dateTimeSelector}
-              onPress={() => setShowStartPicker(true)}
-            >
-              <Ionicons
-                name="calendar-clear-outline"
-                size={18}
-                color="#1a2a44"
-              />
-              <CustomText variant="medium" style={styles.selectorMainText}>
-                {form.event_date ? new Date(form.event_date).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }) : "Start Date"}
+            {/* EVENT INFORMATION CARD */}
+            <View style={styles.card}>
+              <CustomText variant="bold" style={styles.cardSectionTitle}>
+                EVENT INFORMATION
               </CustomText>
-            </TouchableOpacity>
-            
-            {/* Nút chọn End Date */}
-            <TouchableOpacity
-              style={styles.dateTimeSelector}
-              onPress={() => setShowEndPicker(true)}
-            >
-              <Ionicons name="time-outline" size={18} color="#1a2a44" />
-              <CustomText variant="medium" style={styles.selectorMainText}>
-                {form.end_date ?new Date(form.end_date).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }) : "End Date"}
-              </CustomText>
-            </TouchableOpacity>
-            {showStartPicker && (
-              <DatePicker
-                modal
-                open={showStartPicker}
-                date={new Date()}
-                mode="datetime"
-                onConfirm={(selectedDate) => {
-                  setShowStartPicker(false);
-                  setForm({
-                    ...form,
-                    event_date: selectedDate.toISOString(),
-                  });
+              <View
+                style={{
+                  flexDirection: "row",
+                  justifyContent: "space-between",
                 }}
-                onCancel={() => {
-                  setShowStartPicker(false);
-                }}
-            />
-            )}
-
-            {showEndPicker && (
-              <DatePicker
-                modal
-                open={showEndPicker}
-                date={new Date()}
-                mode="datetime"
-                onConfirm={(selectedDate) => {
-                  setShowEndPicker(false);
-                  setForm({
-                    ...form,
-                    end_date: selectedDate.toISOString(),
-                  });
-                }}
-                onCancel={() => {
-                  setShowEndPicker(false);
-                }}
-              />
-            )}
-          </View>
-          {errorMsg ? <CustomText style={{ color: 'red' }}>{errorMsg}</CustomText> : null}
-          <View style={styles.inputWrapper}>
-            <TextInput
-              style={styles.wrapperInput}
-              placeholder="Venue / Location"
-              placeholderTextColor="#BBB"
-              onChangeText={(val) => setForm({ ...form, location_url: val })}
-            />
-          </View>
-        </View>
-
-        {/* CAPACITY & PRICE */}
-        <View style={styles.card}>
-          <View style={{flexDirection: 'row', justifyContent: 'space-between'}}>
-            <CustomText variant="bold" style={styles.cardSectionTitle}>CAPACITY & TICKETING</CustomText>
-            <CustomText style={{color: 'red', fontStyle: 'italic'}}>Bắt buộc</CustomText>
-          </View>
-          <View style={styles.ticketRow}>
-            <View style={[styles.inputWrapper, { flex: 1, marginRight: 10 }]}>
-              <TextInput
-                style={styles.wrapperInput}
-                placeholder="Capacity"
-                placeholderTextColor="#BBB"
-                keyboardType="numeric"
-                onChangeText={(val) =>
-                  setForm({ ...form, max_attendees: Number(val) })
-                }
-              />
-            </View>
-            <View style={[styles.inputWrapper, { flex: 1 }]}>
-              <CustomText
-                variant="bold"
-                style={{ fontSize: 16, color: "#1a2a44" }}
               >
-                $
-              </CustomText>
-              <TextInput
-                style={[styles.wrapperInput, { marginLeft: 5 }]}
-                placeholder="Price"
-                placeholderTextColor="#BBB"
-                keyboardType="numeric"
-              />
-            </View>
-          </View>
-        </View>
+                <CustomText variant="medium" style={styles.label}>
+                  Event Title{" "}
+                </CustomText>
+                <CustomText style={{ color: "red" }}>Bắt buộc</CustomText>
+              </View>
+              <View style={styles.inputWrapper}>
+                <TextInput
+                  style={styles.wrapperInput}
+                  placeholder="e.g, Tech Innovators Conference"
+                  placeholderTextColor="#BBB"
+                  value={form.title}
+                  onChangeText={(val) => setForm({ ...form, title: val })}
+                />
+              </View>
 
-        {/* ACTIONS */}
-        <View style={styles.footer}>
-          <TouchableOpacity style={styles.btnSecondary} onPress={handleDraft}>
-            {isLoading ? (<ActivityIndicator size="small" color="#ffffff" />) : (<CustomText variant="bold" style={styles.btnSecondaryText}>Save Draft</CustomText>)}
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.btnPrimary} onPress={handlePublish}>
-            {isLoading ? (<ActivityIndicator size="small" color="#ffffff" />) : (<CustomText variant="bold" style={styles.btnPrimaryText}>Publish</CustomText>)}
-          </TouchableOpacity>
+              <CustomText variant="medium" style={styles.label}>
+                Event Image (6:9)
+              </CustomText>
+              <TouchableOpacity
+                style={[styles.imageContainer, image && styles.imageActive]}
+                onPress={pickImage}
+              >
+                {image ? (
+                  <Image source={{ uri: image }} style={styles.previewImage} />
+                ) : (
+                  <View style={styles.uploadPlaceholder}>
+                    <View style={styles.cameraCircle}>
+                      <Ionicons name="camera-outline" size={24} color="#FFF" />
+                    </View>
+                    <CustomText variant="medium" style={styles.uploadMainText}>
+                      Tap to add
+                    </CustomText>
+                    <CustomText style={styles.uploadSubText}>
+                      Recommended (6:9)
+                    </CustomText>
+                  </View>
+                )}
+              </TouchableOpacity>
+
+              {/* DESCRIPTION */}
+              <CustomText variant="medium" style={styles.label}>
+                Description
+              </CustomText>
+              <View
+                style={[
+                  styles.inputWrapper,
+                  {
+                    height: 100,
+                    alignItems: "flex-start",
+                    paddingVertical: 10,
+                  },
+                ]}
+              >
+                <TextInput
+                  style={[styles.wrapperInput, styles.textAreaInput]}
+                  placeholder="Provide a detailed description..."
+                  placeholderTextColor="#BBB"
+                  multiline
+                  numberOfLines={4}
+                  onChangeText={(val) => setForm({ ...form, description: val })}
+                />
+              </View>
+            </View>
+
+            {/* DATE & LOCATION CARD */}
+            <View style={styles.card}>
+              <View
+                style={{
+                  flexDirection: "row",
+                  justifyContent: "space-between",
+                }}
+              >
+                <CustomText variant="bold" style={styles.cardSectionTitle}>
+                  DATE & LOCATION
+                </CustomText>
+                <CustomText style={{ color: "red" }}>Bắt buộc</CustomText>
+              </View>
+              <View style={styles.selectorRow}>
+                <TouchableOpacity
+                  style={styles.dateTimeSelector}
+                  onPress={() => setShowStartPicker(true)}
+                >
+                  <Ionicons
+                    name="calendar-clear-outline"
+                    size={18}
+                    color="#1a2a44"
+                  />
+                  <CustomText variant="medium" style={styles.selectorMainText}>
+                    {form.event_date
+                      ? new Date(form.event_date).toLocaleDateString("en-GB", {
+                          day: "2-digit",
+                          month: "2-digit",
+                          year: "numeric",
+                        })
+                      : "Start Date"}
+                  </CustomText>
+                </TouchableOpacity>
+
+                {/* Nút chọn End Date */}
+                <TouchableOpacity
+                  style={styles.dateTimeSelector}
+                  onPress={() => setShowEndPicker(true)}
+                >
+                  <Ionicons name="time-outline" size={18} color="#1a2a44" />
+                  <CustomText variant="medium" style={styles.selectorMainText}>
+                    {form.end_date
+                      ? new Date(form.end_date).toLocaleDateString("en-GB", {
+                          day: "2-digit",
+                          month: "2-digit",
+                          year: "numeric",
+                        })
+                      : "End Date"}
+                  </CustomText>
+                </TouchableOpacity>
+                {showStartPicker && (
+                  <DatePicker
+                    modal
+                    open={showStartPicker}
+                    date={new Date()}
+                    mode="datetime"
+                    onConfirm={(selectedDate) => {
+                      setShowStartPicker(false);
+                      setForm({
+                        ...form,
+                        event_date: selectedDate.toISOString(),
+                      });
+                    }}
+                    onCancel={() => {
+                      setShowStartPicker(false);
+                    }}
+                  />
+                )}
+
+                {showEndPicker && (
+                  <DatePicker
+                    modal
+                    open={showEndPicker}
+                    date={new Date()}
+                    mode="datetime"
+                    onConfirm={(selectedDate) => {
+                      setShowEndPicker(false);
+                      setForm({
+                        ...form,
+                        end_date: selectedDate.toISOString(),
+                      });
+                    }}
+                    onCancel={() => {
+                      setShowEndPicker(false);
+                    }}
+                  />
+                )}
+              </View>
+              {errorMsg ? (
+                <CustomText style={{ color: "red" }}>{errorMsg}</CustomText>
+              ) : null}
+              <View style={styles.inputWrapper}>
+                <TextInput
+                  style={styles.wrapperInput}
+                  placeholder="Venue / Location"
+                  placeholderTextColor="#BBB"
+                  onChangeText={(val) =>
+                    setForm({ ...form, location_url: val })
+                  }
+                />
+              </View>
+            </View>
+
+            {/* CAPACITY & PRICE */}
+            <View style={styles.card}>
+              <View
+                style={{
+                  flexDirection: "row",
+                  justifyContent: "space-between",
+                }}
+              >
+                <CustomText variant="bold" style={styles.cardSectionTitle}>
+                  CAPACITY & TICKETING
+                </CustomText>
+                <CustomText style={{ color: "red", fontStyle: "italic" }}>
+                  Bắt buộc
+                </CustomText>
+              </View>
+              <View style={styles.ticketRow}>
+                <View
+                  style={[styles.inputWrapper, { flex: 1, marginRight: 10 }]}
+                >
+                  <TextInput
+                    style={styles.wrapperInput}
+                    placeholder="Capacity"
+                    placeholderTextColor="#BBB"
+                    keyboardType="numeric"
+                    onChangeText={(val) =>
+                      setForm({ ...form, max_attendees: Number(val) })
+                    }
+                  />
+                </View>
+                <View style={[styles.inputWrapper, { flex: 1 }]}>
+                  <CustomText
+                    variant="bold"
+                    style={{ fontSize: 16, color: "#1a2a44" }}
+                  >
+                    $
+                  </CustomText>
+                  <TextInput
+                    style={[styles.wrapperInput, { marginLeft: 5 }]}
+                    placeholder="Price"
+                    placeholderTextColor="#BBB"
+                    keyboardType="numeric"
+                  />
+                </View>
+              </View>
+            </View>
+
+            {/* ACTIONS */}
+            <View style={styles.footer}>
+              <TouchableOpacity
+                style={styles.btnSecondary}
+                onPress={handleDraft}
+              >
+                {isLoading ? (
+                  <ActivityIndicator size="small" color="#ffffff" />
+                ) : (
+                  <CustomText variant="bold" style={styles.btnSecondaryText}>
+                    Save Draft
+                  </CustomText>
+                )}
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.btnPrimary}
+                onPress={handlePublish}
+              >
+                {isLoading ? (
+                  <ActivityIndicator size="small" color="#ffffff" />
+                ) : (
+                  <CustomText variant="bold" style={styles.btnPrimaryText}>
+                    Publish
+                  </CustomText>
+                )}
+              </TouchableOpacity>
+            </View>
+          </ScrollView>
         </View>
-      </ScrollView>
+      </TouchableWithoutFeedback>
     </KeyboardAvoidingView>
   );
 }

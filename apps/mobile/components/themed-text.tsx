@@ -24,8 +24,8 @@ export function ThemedText({
         type === "defaultSemiBold"
           ? "medium"
           : type === "title" || type === "subtitle"
-          ? "bold"
-          : undefined
+            ? "bold"
+            : undefined
       }
       style={[
         { color },

@@ -7,6 +7,10 @@ import {
   Alert,
   Platform,
   ActivityIndicator,
+  KeyboardAvoidingView,
+  TouchableWithoutFeedback,
+  Keyboard,
+  ScrollView,
 } from "react-native";
 import { CustomText } from "@/components/CustomText";
 import DateTimePicker from "@react-native-community/datetimepicker";
@@ -67,172 +71,209 @@ const CreateAccountScreen = () => {
     <>
       <Stack.Screen options={{ headerShown: false }} />
       <SafeAreaView style={styles.container}>
-        <View style={styles.header}>
-          <MaterialCommunityIcons
-            name="domain"
-            size={70}
-            color={Colors.color.placeholder}
-          />
-          <HeaderText />
-        </View>
-        <View style={styles.body}>
-          <CustomText variant="bold" style={styles.welcomeText}>Create Your Account</CustomText>
-          <CustomText style={styles.eventText}>
-            Please fill in the details below to register for the EVENT CONNECT
-            platform.{" "}
-          </CustomText>
-
-          <View style={styles.input}>
-            <CustomText variant="bold" style={styles.labelText}>Full Name</CustomText>
-            <View style={styles.inputContainer}>
-              <MaterialCommunityIcons
-                name="account-outline"
-                size={40}
-                color={Colors.color.placeholder}
-              />
-              <TextInput
-                placeholder="Enter your full name"
-                placeholderTextColor={Colors.color.placeholder}
-                value={fullName}
-                onChangeText={(value) => setFullName(value)}
-                style={styles.textInput}
-              />
-            </View>
-          </View>
-
-          <View style={styles.input}>
-            <CustomText variant="bold" style={styles.labelText}>Email</CustomText>
-            <View style={styles.inputContainer}>
-              <MaterialCommunityIcons
-                name="email-outline"
-                size={40}
-                color={Colors.color.placeholder}
-              />
-              <TextInput
-                placeholder="user@gmail.com"
-                placeholderTextColor={Colors.color.placeholder}
-                value={email}
-                onChangeText={(value) => setEmail(value)}
-                style={styles.textInput}
-              />
-            </View>
-          </View>
-
-          <View style={styles.input}>
-            <CustomText variant="bold" style={styles.labelText}>Birthdate</CustomText>
-            <TouchableOpacity
-              style={styles.inputContainer}
-              onPress={() => setShowDatePicker(true)}
-            >
-              <MaterialCommunityIcons
-                name="calendar-outline"
-                size={40}
-                color={Colors.color.placeholder}
-              />
-              <CustomText
-                style={[
-                  styles.textInput,
-                  {
-                    color: birthdate
-                      ? Colors.color.text
-                      : Colors.color.placeholder,
-                  },
-                ]}
-              >
-                {birthdate
-                  ? birthdate.toLocaleDateString()
-                  : "Select your birthdate"}
-              </CustomText>
-            </TouchableOpacity>
-            {showDatePicker && (
-              <DateTimePicker
-                value={birthdate || new Date(2000, 0, 1)}
-                mode="date"
-                maximumDate={new Date()}
-                onChange={(_, date) => {
-                  setShowDatePicker(Platform.OS === "ios");
-                  if (date) {
-                    setBirthdate(date);
-                  }
-                }}
-              />
-            )}
-          </View>
-
-          <View style={styles.input}>
-            <CustomText variant="bold" style={styles.labelText}>Password</CustomText>
-            <View style={styles.inputContainer}>
-              <MaterialCommunityIcons
-                name="lock-outline"
-                size={40}
-                color={Colors.color.placeholder}
-              />
-              <TextInput
-                placeholder="Enter your password"
-                placeholderTextColor={Colors.color.placeholder}
-                value={password}
-                secureTextEntry={!showPassword}
-                onChangeText={(value) => setPassword(value)}
-                style={styles.textInput}
-              />
-              <TouchableOpacity
-                style={styles.eyeIcon}
-                onPress={() => setShowPassword(!showPassword)}
-              >
-                <MaterialCommunityIcons
-                  name={showPassword ? "eye" : "eye-off"}
-                  size={40}
-                  color={Colors.color.placeholder}
-                />
-              </TouchableOpacity>
-            </View>
-          </View>
-          <View style={styles.input}>
-            <CustomText variant="bold" style={styles.labelText}>Confirm Password</CustomText>
-            <View style={styles.inputContainer}>
-              <MaterialCommunityIcons
-                name="lock-outline"
-                size={40}
-                color={Colors.color.placeholder}
-              />
-              <TextInput
-                placeholder="Confirm your password"
-                placeholderTextColor={Colors.color.placeholder}
-                value={confirmPassword}
-                secureTextEntry={!showConfirmPassword}
-                onChangeText={(value) => setConfirmPassword(value)}
-                style={styles.textInput}
-              />
-              <TouchableOpacity
-                style={styles.eyeIcon}
-                onPress={() => setShowConfirmPassword(!showConfirmPassword)}
-              >
-                <MaterialCommunityIcons
-                  name={showConfirmPassword ? "eye" : "eye-off"}
-                  size={40}
-                  color={Colors.color.placeholder}
-                />
-              </TouchableOpacity>
-            </View>
-          </View>
-          <TouchableOpacity
-            style={styles.registerButton}
-            onPress={handleRegister}
-            disabled={loading}
+        <KeyboardAvoidingView
+          style={{ flex: 1 }}
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+        >
+          <ScrollView
+            contentContainerStyle={{ flexGrow: 1 }}
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
           >
-            {loading ? (
-              <ActivityIndicator color={Colors.color.white} />
-            ) : (
-              <CustomText style={styles.registerButtonText}>REGISTER</CustomText>
-            )}
-          </TouchableOpacity>
-          <View style={styles.footer}>
-            <CustomText style={styles.footerText}>Already have an account?</CustomText>
-            <TouchableOpacity onPress={() => router.replace("/LoginScreen")}>
-              <CustomText style={styles.backButtonText}>Login</CustomText>
-            </TouchableOpacity>
-          </View>
-        </View>
+            <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+              <View style={{ flex: 1 }}>
+                <View style={styles.header}>
+                  <MaterialCommunityIcons
+                    name="domain"
+                    size={70}
+                    color={Colors.color.placeholder}
+                  />
+                  <HeaderText />
+                </View>
+                <View style={styles.body}>
+                  <CustomText variant="bold" style={styles.welcomeText}>
+                    Create Your Account
+                  </CustomText>
+                  <CustomText style={styles.eventText}>
+                    Please fill in the details below to register for the EVENT
+                    CONNECT platform.{" "}
+                  </CustomText>
+
+                  <View style={styles.input}>
+                    <CustomText variant="bold" style={styles.labelText}>
+                      Full Name
+                    </CustomText>
+                    <View style={styles.inputContainer}>
+                      <MaterialCommunityIcons
+                        name="account-outline"
+                        size={40}
+                        color={Colors.color.placeholder}
+                      />
+                      <TextInput
+                        placeholder="Enter your full name"
+                        placeholderTextColor={Colors.color.placeholder}
+                        value={fullName}
+                        onChangeText={(value) => setFullName(value)}
+                        style={styles.textInput}
+                      />
+                    </View>
+                  </View>
+
+                  <View style={styles.input}>
+                    <CustomText variant="bold" style={styles.labelText}>
+                      Email
+                    </CustomText>
+                    <View style={styles.inputContainer}>
+                      <MaterialCommunityIcons
+                        name="email-outline"
+                        size={40}
+                        color={Colors.color.placeholder}
+                      />
+                      <TextInput
+                        placeholder="user@gmail.com"
+                        placeholderTextColor={Colors.color.placeholder}
+                        value={email}
+                        onChangeText={(value) => setEmail(value)}
+                        style={styles.textInput}
+                      />
+                    </View>
+                  </View>
+
+                  <View style={styles.input}>
+                    <CustomText variant="bold" style={styles.labelText}>
+                      Birthdate
+                    </CustomText>
+                    <TouchableOpacity
+                      style={styles.inputContainer}
+                      onPress={() => setShowDatePicker(true)}
+                    >
+                      <MaterialCommunityIcons
+                        name="calendar-outline"
+                        size={40}
+                        color={Colors.color.placeholder}
+                      />
+                      <CustomText
+                        style={[
+                          styles.textInput,
+                          {
+                            color: birthdate
+                              ? Colors.color.text
+                              : Colors.color.placeholder,
+                          },
+                        ]}
+                      >
+                        {birthdate
+                          ? birthdate.toLocaleDateString()
+                          : "Select your birthdate"}
+                      </CustomText>
+                    </TouchableOpacity>
+                    {showDatePicker && (
+                      <DateTimePicker
+                        value={birthdate || new Date(2000, 0, 1)}
+                        mode="date"
+                        maximumDate={new Date()}
+                        onChange={(_, date) => {
+                          setShowDatePicker(Platform.OS === "ios");
+                          if (date) {
+                            setBirthdate(date);
+                          }
+                        }}
+                      />
+                    )}
+                  </View>
+
+                  <View style={styles.input}>
+                    <CustomText variant="bold" style={styles.labelText}>
+                      Password
+                    </CustomText>
+                    <View style={styles.inputContainer}>
+                      <MaterialCommunityIcons
+                        name="lock-outline"
+                        size={40}
+                        color={Colors.color.placeholder}
+                      />
+                      <TextInput
+                        placeholder="Enter your password"
+                        placeholderTextColor={Colors.color.placeholder}
+                        value={password}
+                        secureTextEntry={!showPassword}
+                        onChangeText={(value) => setPassword(value)}
+                        style={styles.textInput}
+                      />
+                      <TouchableOpacity
+                        style={styles.eyeIcon}
+                        onPress={() => setShowPassword(!showPassword)}
+                      >
+                        <MaterialCommunityIcons
+                          name={showPassword ? "eye" : "eye-off"}
+                          size={40}
+                          color={Colors.color.placeholder}
+                        />
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                  <View style={styles.input}>
+                    <CustomText variant="bold" style={styles.labelText}>
+                      Confirm Password
+                    </CustomText>
+                    <View style={styles.inputContainer}>
+                      <MaterialCommunityIcons
+                        name="lock-outline"
+                        size={40}
+                        color={Colors.color.placeholder}
+                      />
+                      <TextInput
+                        placeholder="Confirm your password"
+                        placeholderTextColor={Colors.color.placeholder}
+                        value={confirmPassword}
+                        secureTextEntry={!showConfirmPassword}
+                        onChangeText={(value) => setConfirmPassword(value)}
+                        style={styles.textInput}
+                      />
+                      <TouchableOpacity
+                        style={styles.eyeIcon}
+                        onPress={() =>
+                          setShowConfirmPassword(!showConfirmPassword)
+                        }
+                      >
+                        <MaterialCommunityIcons
+                          name={showConfirmPassword ? "eye" : "eye-off"}
+                          size={40}
+                          color={Colors.color.placeholder}
+                        />
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                  <TouchableOpacity
+                    style={styles.registerButton}
+                    onPress={handleRegister}
+                    disabled={loading}
+                  >
+                    {loading ? (
+                      <ActivityIndicator color={Colors.color.white} />
+                    ) : (
+                      <CustomText style={styles.registerButtonText}>
+                        REGISTER
+                      </CustomText>
+                    )}
+                  </TouchableOpacity>
+                  <View style={styles.footer}>
+                    <CustomText style={styles.footerText}>
+                      Already have an account?
+                    </CustomText>
+                    <TouchableOpacity
+                      onPress={() => router.replace("/LoginScreen")}
+                    >
+                      <CustomText style={styles.backButtonText}>
+                        Login
+                      </CustomText>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              </View>
+            </TouchableWithoutFeedback>
+          </ScrollView>
+        </KeyboardAvoidingView>
       </SafeAreaView>
     </>
   );

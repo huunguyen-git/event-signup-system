@@ -37,7 +37,9 @@ export default function AddQuestion() {
   return (
     <View style={styles.dynamicQuestionBox}>
       <View style={styles.questionHeader}>
-        <CustomText variant="bold" style={styles.label}>Nhập câu hỏi</CustomText>
+        <CustomText variant="bold" style={styles.label}>
+          Nhập câu hỏi
+        </CustomText>
       </View>
       <View style={styles.inputWrapper}>
         <TextInput

@@ -10,6 +10,8 @@ import {
   Image,
   Alert,
   ActivityIndicator,
+  TouchableWithoutFeedback,
+  Keyboard,
 } from "react-native";
 import { CustomText } from "@/components/CustomText";
 import { Ionicons } from "@expo/vector-icons";
@@ -28,7 +30,7 @@ export default function EditEventScreen() {
   const [showStartPicker, setShowStartPicker] = useState(false);
   const [showEndPicker, setShowEndPicker] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const router =useRouter();
+  const router = useRouter();
   useEffect(() => {
     const fetchData = async () => {
       const data = await EventService.getEvent(id);
@@ -81,250 +83,314 @@ export default function EditEventScreen() {
       behavior={Platform.OS === "ios" ? "padding" : "height"}
       style={styles.mainContainer}
     >
-      <View style={styles.header}>
-        <TouchableOpacity onPress={handleCancel} style={styles.headerActionBtn}>
-          <Ionicons name="close-outline" size={24} color="#BBB" />
-        </TouchableOpacity>
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+        <View style={{ flex: 1 }}>
+          <View style={styles.header}>
+            <TouchableOpacity
+              onPress={handleCancel}
+              style={styles.headerActionBtn}
+            >
+              <Ionicons name="close-outline" size={24} color="#BBB" />
+            </TouchableOpacity>
 
-        <View style={styles.headerTitleContainer}>
-          <CustomText variant="bold" style={styles.headerSubtitle}>Editing Event</CustomText>
-          <CustomText variant="bold" style={styles.headerMainTitle} numberOfLines={1}>
-            {event.title}
-          </CustomText>
-        </View>
-
-        <TouchableOpacity
-          onPress={handleSaveChanges}
-          style={styles.headerSaveBtn}
-        >
-          {isLoading ? (<ActivityIndicator size="small" color="#ffffff" />) : (<CustomText variant="bold" style={styles.saveBtnText}>Save</CustomText>)}
-          
-        </TouchableOpacity>
-      </View>
-
-      <ScrollView
-        style={styles.scrollView}
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
-        {/*  EVENT STATUS */}
-        <View style={styles.card}>
-          <CustomText variant="bold" style={styles.cardSectionTitle}>EVENT STATUS</CustomText>
-
-          {/* DROPDOWN TRIGGER */}
-          <TouchableOpacity
-            style={styles.statusSelectorRow}
-            onPress={() => setIsStatusOpen(!isStatusOpen)}
-          >
-            <View style={{ flexDirection: "row", alignItems: "center" }}>
-              <View
-                style={[
-                  styles.statusDot,
-                  {
-                    backgroundColor: statusOptions.find(
-                      (o) => o.label === status,
-                    )?.color,
-                  },
-                ]}
-              />
-              <CustomText variant="medium" style={styles.selectorMainText}>{status}</CustomText>
+            <View style={styles.headerTitleContainer}>
+              <CustomText variant="bold" style={styles.headerSubtitle}>
+                Editing Event
+              </CustomText>
+              <CustomText
+                variant="bold"
+                style={styles.headerMainTitle}
+                numberOfLines={1}
+              >
+                {event.title}
+              </CustomText>
             </View>
-            <Ionicons
-              name={isStatusOpen ? "chevron-up" : "chevron-down"}
-              size={20}
-              color="#666"
-            />
-          </TouchableOpacity>
 
-          {/* THE DROPDOWN MENU */}
-          {isStatusOpen && (
-            <View style={styles.dropdownMenu}>
-              {statusOptions.map((opt) => (
-                <TouchableOpacity
-                  key={opt.label}
-                  style={styles.dropdownItem}
-                  onPress={() => selectStatus(opt.label)}
-                >
+            <TouchableOpacity
+              onPress={handleSaveChanges}
+              style={styles.headerSaveBtn}
+            >
+              {isLoading ? (
+                <ActivityIndicator size="small" color="#ffffff" />
+              ) : (
+                <CustomText variant="bold" style={styles.saveBtnText}>
+                  Save
+                </CustomText>
+              )}
+            </TouchableOpacity>
+          </View>
+
+          <ScrollView
+            style={styles.scrollView}
+            contentContainerStyle={styles.scrollContent}
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
+          >
+            {/*  EVENT STATUS */}
+            <View style={styles.card}>
+              <CustomText variant="bold" style={styles.cardSectionTitle}>
+                EVENT STATUS
+              </CustomText>
+
+              {/* DROPDOWN TRIGGER */}
+              <TouchableOpacity
+                style={styles.statusSelectorRow}
+                onPress={() => setIsStatusOpen(!isStatusOpen)}
+              >
+                <View style={{ flexDirection: "row", alignItems: "center" }}>
                   <View
-                    style={[styles.statusDot, { backgroundColor: opt.color }]}
-                  />
-                  <CustomText
-                    variant={status === opt.label ? "bold" : "regular"}
                     style={[
-                      styles.dropdownItemText,
-                      status === opt.label && {
-                        color: "#1a2a44",
+                      styles.statusDot,
+                      {
+                        backgroundColor: statusOptions.find(
+                          (o) => o.label === status,
+                        )?.color,
                       },
                     ]}
-                  >
-                    {opt.label}
+                  />
+                  <CustomText variant="medium" style={styles.selectorMainText}>
+                    {status}
                   </CustomText>
-                  {status === opt.label && (
-                    <Ionicons name="checkmark" size={18} color="#1a2a44" />
-                  )}
-                </TouchableOpacity>
-              ))}
-            </View>
-          )}
-        </View>
-
-        {/* EVENT INFORMATION */}
-        <View style={styles.card}>
-          <CustomText variant="bold" style={styles.cardSectionTitle}>EVENT INFORMATION</CustomText>
-
-          <CustomText variant="medium" style={styles.label}>Event Title</CustomText>
-          <View style={styles.inputWrapper}>
-            <TextInput
-              style={styles.wrapperInput}
-              value={event.title}
-              onChangeText={(val) => setEvent({ ...event, title: val })}
-            />
-          </View>
-
-          <CustomText variant="medium" style={styles.label}>Event Image (6:9)</CustomText>
-          <TouchableOpacity
-            style={[
-              styles.imageContainer,
-              event.banner_url && styles.imageActive,
-            ]}
-            onPress={pickImage}
-          >
-            {event.banner_url ? (
-              <Image
-                source={{ uri: event.banner_url }}
-                style={styles.previewImage}
-              />
-            ) : (
-              <View style={styles.uploadPlaceholder}>
-                <View style={styles.cameraCircle}>
-                  <Ionicons name="camera-outline" size={24} color="#FFF" />
                 </View>
-                <CustomText variant="medium" style={styles.uploadMainText}>Tap to add</CustomText>
-                <CustomText style={styles.uploadSubText}>Recommended (6:9)</CustomText>
+                <Ionicons
+                  name={isStatusOpen ? "chevron-up" : "chevron-down"}
+                  size={20}
+                  color="#666"
+                />
+              </TouchableOpacity>
+
+              {/* THE DROPDOWN MENU */}
+              {isStatusOpen && (
+                <View style={styles.dropdownMenu}>
+                  {statusOptions.map((opt) => (
+                    <TouchableOpacity
+                      key={opt.label}
+                      style={styles.dropdownItem}
+                      onPress={() => selectStatus(opt.label)}
+                    >
+                      <View
+                        style={[
+                          styles.statusDot,
+                          { backgroundColor: opt.color },
+                        ]}
+                      />
+                      <CustomText
+                        variant={status === opt.label ? "bold" : "regular"}
+                        style={[
+                          styles.dropdownItemText,
+                          status === opt.label && {
+                            color: "#1a2a44",
+                          },
+                        ]}
+                      >
+                        {opt.label}
+                      </CustomText>
+                      {status === opt.label && (
+                        <Ionicons name="checkmark" size={18} color="#1a2a44" />
+                      )}
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              )}
+            </View>
+
+            {/* EVENT INFORMATION */}
+            <View style={styles.card}>
+              <CustomText variant="bold" style={styles.cardSectionTitle}>
+                EVENT INFORMATION
+              </CustomText>
+
+              <CustomText variant="medium" style={styles.label}>
+                Event Title
+              </CustomText>
+              <View style={styles.inputWrapper}>
+                <TextInput
+                  style={styles.wrapperInput}
+                  value={event.title}
+                  onChangeText={(val) => setEvent({ ...event, title: val })}
+                />
               </View>
-            )}
-          </TouchableOpacity>
 
-          {/* DESCRIPTION */}
-          <CustomText variant="medium" style={styles.label}>Description</CustomText>
-          <View
-            style={[
-              styles.inputWrapper,
-              { height: 120, alignItems: "flex-start", paddingVertical: 10 },
-            ]}
-          >
-            <TextInput
-              style={[styles.wrapperInput, styles.textAreaInput]}
-              multiline
-              numberOfLines={4}
-              value={event.description}
-              onChangeText={(val) => setEvent({ ...event, description: val })}
-            />
-          </View>
-        </View>
-
-        {/* DATE & VENUE */}
-        <View style={styles.card}>
-          <CustomText variant="bold" style={styles.cardSectionTitle}>DATE & VENUE</CustomText>
-          <View style={styles.selectorRow}>
-            <TouchableOpacity
-              style={styles.dateTimeSelector}
-              onPress={() => setShowStartPicker(true)}
-            >
-              <Ionicons
-                name="calendar-clear-outline"
-                size={18}
-                color="#1a2a44"
-              />
-              <CustomText variant="medium" style={styles.selectorMainText}>
-                {event.event_date ? new Date(event.event_date).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }) : "Start Date"}
+              <CustomText variant="medium" style={styles.label}>
+                Event Image (6:9)
               </CustomText>
-            </TouchableOpacity>
+              <TouchableOpacity
+                style={[
+                  styles.imageContainer,
+                  event.banner_url && styles.imageActive,
+                ]}
+                onPress={pickImage}
+              >
+                {event.banner_url ? (
+                  <Image
+                    source={{ uri: event.banner_url }}
+                    style={styles.previewImage}
+                  />
+                ) : (
+                  <View style={styles.uploadPlaceholder}>
+                    <View style={styles.cameraCircle}>
+                      <Ionicons name="camera-outline" size={24} color="#FFF" />
+                    </View>
+                    <CustomText variant="medium" style={styles.uploadMainText}>
+                      Tap to add
+                    </CustomText>
+                    <CustomText style={styles.uploadSubText}>
+                      Recommended (6:9)
+                    </CustomText>
+                  </View>
+                )}
+              </TouchableOpacity>
 
-            {/* Nút chọn End Date */}
-            <TouchableOpacity
-              style={styles.dateTimeSelector}
-              onPress={() => setShowEndPicker(true)}
-            >
-              <Ionicons name="time-outline" size={18} color="#1a2a44" />
-              <CustomText variant="medium" style={styles.selectorMainText}>
-                {event.end_date ? new Date(event.end_date).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }) : "End Date"}
+              {/* DESCRIPTION */}
+              <CustomText variant="medium" style={styles.label}>
+                Description
               </CustomText>
-            </TouchableOpacity>
-            {showStartPicker && (
-              <DateTimePicker
-                value={new Date()}
-                mode="date"
-                display="calendar"
-                onChange={(date, selectedDate) => {
-                  setShowStartPicker(false);
-                  if (selectedDate) {
-                    setEvent({
-                      ...event,
-                      event_date: selectedDate.toISOString(),
-                    });
+              <View
+                style={[
+                  styles.inputWrapper,
+                  {
+                    height: 120,
+                    alignItems: "flex-start",
+                    paddingVertical: 10,
+                  },
+                ]}
+              >
+                <TextInput
+                  style={[styles.wrapperInput, styles.textAreaInput]}
+                  multiline
+                  numberOfLines={4}
+                  value={event.description}
+                  onChangeText={(val) =>
+                    setEvent({ ...event, description: val })
                   }
-                }}
-              />
-            )}
+                />
+              </View>
+            </View>
 
-            {showEndPicker && (
-              <DateTimePicker
-                value={new Date()}
-                mode="date"
-                display="calendar"
-                onChange={(date, selectedDate) => {
-                  setShowEndPicker(false);
-                  if (selectedDate) {
-                    setEvent({
-                      ...event,
-                      end_date: selectedDate.toISOString(),
-                    });
-                  }
-                }}
-              />
-            )}
-          </View>
-        </View>
+            {/* DATE & VENUE */}
+            <View style={styles.card}>
+              <CustomText variant="bold" style={styles.cardSectionTitle}>
+                DATE & VENUE
+              </CustomText>
+              <View style={styles.selectorRow}>
+                <TouchableOpacity
+                  style={styles.dateTimeSelector}
+                  onPress={() => setShowStartPicker(true)}
+                >
+                  <Ionicons
+                    name="calendar-clear-outline"
+                    size={18}
+                    color="#1a2a44"
+                  />
+                  <CustomText variant="medium" style={styles.selectorMainText}>
+                    {event.event_date
+                      ? new Date(event.event_date).toLocaleDateString("en-GB", {
+                          day: "2-digit",
+                          month: "2-digit",
+                          year: "numeric",
+                        })
+                      : "Start Date"}
+                  </CustomText>
+                </TouchableOpacity>
 
-        <View style={styles.inputWrapper}>
-          <TextInput
-            style={styles.wrapperInput}
-            value={event.location_url}
-            onChangeText={(val) => setEvent({ ...event, location_url: val })}
-          />
-        </View>
+                {/* Nút chọn End Date */}
+                <TouchableOpacity
+                  style={styles.dateTimeSelector}
+                  onPress={() => setShowEndPicker(true)}
+                >
+                  <Ionicons name="time-outline" size={18} color="#1a2a44" />
+                  <CustomText variant="medium" style={styles.selectorMainText}>
+                    {event.end_date
+                      ? new Date(event.end_date).toLocaleDateString("en-GB", {
+                          day: "2-digit",
+                          month: "2-digit",
+                          year: "numeric",
+                        })
+                      : "End Date"}
+                  </CustomText>
+                </TouchableOpacity>
+                {showStartPicker && (
+                  <DateTimePicker
+                    value={new Date()}
+                    mode="date"
+                    display="calendar"
+                    onChange={(date, selectedDate) => {
+                      setShowStartPicker(false);
+                      if (selectedDate) {
+                        setEvent({
+                          ...event,
+                          event_date: selectedDate.toISOString(),
+                        });
+                      }
+                    }}
+                  />
+                )}
 
-        {/* CAPACITY & PRICE */}
-        <View style={styles.card}>
-          <CustomText variant="bold" style={styles.cardSectionTitle}>CAPACITY & TICKETING</CustomText>
-          <View style={styles.ticketRow}>
-            <View style={[styles.inputWrapper, { flex: 1, marginRight: 10 }]}>
+                {showEndPicker && (
+                  <DateTimePicker
+                    value={new Date()}
+                    mode="date"
+                    display="calendar"
+                    onChange={(date, selectedDate) => {
+                      setShowEndPicker(false);
+                      if (selectedDate) {
+                        setEvent({
+                          ...event,
+                          end_date: selectedDate.toISOString(),
+                        });
+                      }
+                    }}
+                  />
+                )}
+              </View>
+            </View>
+
+            <View style={styles.inputWrapper}>
               <TextInput
                 style={styles.wrapperInput}
-                keyboardType="numeric"
-                value={String(event.max_attendees)}
+                value={event.location_url}
                 onChangeText={(val) =>
-                  setEvent({ ...event, max_attendees: Number(val) })
+                  setEvent({ ...event, location_url: val })
                 }
               />
             </View>
-            <View style={[styles.inputWrapper, { flex: 1 }]}>
-              <CustomText
-                variant="bold"
-                style={{ fontSize: 16, color: "#1a2a44" }}
-              >
-                $
+
+            {/* CAPACITY & PRICE */}
+            <View style={styles.card}>
+              <CustomText variant="bold" style={styles.cardSectionTitle}>
+                CAPACITY & TICKETING
               </CustomText>
-              <TextInput
-                style={[styles.wrapperInput, { marginLeft: 5 }]}
-                keyboardType="numeric"
-                value="20"
-              />
+              <View style={styles.ticketRow}>
+                <View
+                  style={[styles.inputWrapper, { flex: 1, marginRight: 10 }]}
+                >
+                  <TextInput
+                    style={styles.wrapperInput}
+                    keyboardType="numeric"
+                    value={String(event.max_attendees)}
+                    onChangeText={(val) =>
+                      setEvent({ ...event, max_attendees: Number(val) })
+                    }
+                  />
+                </View>
+                <View style={[styles.inputWrapper, { flex: 1 }]}>
+                  <CustomText
+                    variant="bold"
+                    style={{ fontSize: 16, color: "#1a2a44" }}
+                  >
+                    $
+                  </CustomText>
+                  <TextInput
+                    style={[styles.wrapperInput, { marginLeft: 5 }]}
+                    keyboardType="numeric"
+                    value="20"
+                  />
+                </View>
+              </View>
             </View>
-          </View>
+          </ScrollView>
         </View>
-      </ScrollView>
+      </TouchableWithoutFeedback>
     </KeyboardAvoidingView>
   );
 }

@@ -22,7 +22,10 @@ const SavedScreen = () => {
           />
           <CustomText style={styles.connect}>
             {" "}
-            <CustomText variant="bold" style={styles.event}>EVENT </CustomText>CONNECT
+            <CustomText variant="bold" style={styles.event}>
+              EVENT{" "}
+            </CustomText>
+            CONNECT
           </CustomText>
           <View style={styles.Icon}>
             <MaterialCommunityIcons
@@ -39,8 +42,12 @@ const SavedScreen = () => {
           </View>
         </View>
         <View style={styles.body}>
-          <CustomText variant="bold" style={styles.saveEvent}>Saved Events</CustomText>
-          <CustomText variant="bold" style={styles.eventCount}>Total Event: {SavedData.length}</CustomText>
+          <CustomText variant="bold" style={styles.saveEvent}>
+            Saved Events
+          </CustomText>
+          <CustomText variant="bold" style={styles.eventCount}>
+            Total Event: {SavedData.length}
+          </CustomText>
           <FlatList
             data={SavedData}
             renderItem={({ item }) => (

@@ -6,6 +6,11 @@ import {
   TouchableOpacity,
   Alert,
   ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
+  TouchableWithoutFeedback,
+  Keyboard,
+  ScrollView,
 } from "react-native";
 import { CustomText } from "@/components/CustomText";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
@@ -15,10 +20,10 @@ import HeaderText from "@/components/HeaderText";
 import { useRouter } from "expo-router";
 import { AuthService } from "../../axios/authService";
 import { saveToken, saveUserId, getToken } from "@/services/storage";
-import * as Notifications from 'expo-notifications';
-import * as Device from 'expo-device';
+import * as Notifications from "expo-notifications";
+import * as Device from "expo-device";
 import { NotificationService } from "@/axios/notificationService";
-import Constants from 'expo-constants';
+import Constants from "expo-constants";
 
 const LoginScreen = () => {
   const [email, setEmail] = useState("");
@@ -39,27 +44,28 @@ const LoginScreen = () => {
       await saveToken(data.access_token);
       await saveUserId(data.user.id);
       if (Device.isDevice) {
-        const { status: existingStatus } = await Notifications.getPermissionsAsync();
+        const { status: existingStatus } =
+          await Notifications.getPermissionsAsync();
         let finalStatus = existingStatus;
-        
-        if (existingStatus !== 'granted') {
+
+        if (existingStatus !== "granted") {
           const { status } = await Notifications.requestPermissionsAsync();
           finalStatus = status;
         }
-        
-        if (finalStatus === 'granted') {
+
+        if (finalStatus === "granted") {
           Notifications.setNotificationHandler({
-          handleNotification: async () => ({
-            shouldShowAlert: true,
-            shouldPlaySound: true,
-            shouldSetBadge: false,
-            shouldShowBanner: true,
-            shouldShowList: true,
-          }),
-        });
+            handleNotification: async () => ({
+              shouldShowAlert: true,
+              shouldPlaySound: true,
+              shouldSetBadge: false,
+              shouldShowBanner: true,
+              shouldShowList: true,
+            }),
+          });
           const token = await getToken();
-          const tok = {token: token};
-          await NotificationService.SaveToken(data.user.id, tok); 
+          const tok = { token: token };
+          await NotificationService.SaveToken(data.user.id, tok);
         }
       }
       router.replace("/HomeScreen");
@@ -72,91 +78,116 @@ const LoginScreen = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <MaterialCommunityIcons
-          name="domain"
-          size={70}
-          color={Colors.color.placeholder}
-        />
-        <HeaderText />
-      </View>
-      <View style={styles.body}>
-        <CustomText variant="bold" style={styles.welcomeText}>Welcome Back</CustomText>
-        <CustomText style={styles.eventText}>
-          Please log in to manage or attend events.
-        </CustomText>
-        <View style={styles.input}>
-          <View style={styles.inputContainer}>
-            <MaterialCommunityIcons
-              name="account-outline"
-              size={40}
-              color={Colors.color.placeholder}
-            />
-            <TextInput
-              placeholder="Email"
-              placeholderTextColor={Colors.color.placeholder}
-              value={email}
-              onChangeText={(value) => setEmail(value)}
-              style={styles.textInput}
-            />
-          </View>
-        </View>
-        <View style={styles.input}>
-          <View style={styles.inputContainer}>
-            <MaterialCommunityIcons
-              name="lock-outline"
-              size={40}
-              color={Colors.color.placeholder}
-            />
-            <TextInput
-              placeholder="Password"
-              placeholderTextColor={Colors.color.placeholder}
-              secureTextEntry={!showPassword}
-              value={password}
-              onChangeText={(value) => setPassword(value)}
-              style={styles.textInput}
-            />
-            <TouchableOpacity
-              style={styles.eyeIcon}
-              onPress={() => setShowPassword(!showPassword)}
-            >
-              <MaterialCommunityIcons
-                name={showPassword ? "eye" : "eye-off"}
-                size={30}
-                color={Colors.color.placeholder}
-              />
-            </TouchableOpacity>
-          </View>
-        </View>
-        <TouchableOpacity
-          style={styles.loginButton}
-          onPress={handleLogin}
-          disabled={loading}
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+      >
+        <ScrollView
+          contentContainerStyle={{ flexGrow: 1 }}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
         >
-          {loading ? (
-            <ActivityIndicator color={Colors.color.white} />
-          ) : (
-            <CustomText variant='bold'style={styles.loginButtonText}>LOGIN</CustomText>
-          )}
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.forgotButton}
-          onPress={() => router.push("/ForgotPasswordScreen")}
-        >
-          <CustomText style={styles.forgotButtonText}>Forget password?</CustomText>
-        </TouchableOpacity>
-      </View>
-      <View style={styles.footer}>
-        <TouchableOpacity
-          style={styles.registerButton}
-          onPress={() => router.push("/CreateAccount")}
-        >
-          <CustomText style={styles.registerButtonText}>Register for an account</CustomText>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.recoverButton}>
-          <CustomText style={styles.recoverButtonText}>Recover Password</CustomText>
-        </TouchableOpacity>
-      </View>
+          <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+            <View style={{ flex: 1 }}>
+              <View style={styles.header}>
+                <MaterialCommunityIcons
+                  name="domain"
+                  size={70}
+                  color={Colors.color.placeholder}
+                />
+                <HeaderText />
+              </View>
+              <View style={styles.body}>
+                <CustomText variant="bold" style={styles.welcomeText}>
+                  Welcome Back
+                </CustomText>
+                <CustomText style={styles.eventText}>
+                  Please log in to manage or attend events.
+                </CustomText>
+                <View style={styles.input}>
+                  <View style={styles.inputContainer}>
+                    <MaterialCommunityIcons
+                      name="account-outline"
+                      size={40}
+                      color={Colors.color.placeholder}
+                    />
+                    <TextInput
+                      placeholder="Email"
+                      placeholderTextColor={Colors.color.placeholder}
+                      value={email}
+                      onChangeText={(value) => setEmail(value)}
+                      style={styles.textInput}
+                    />
+                  </View>
+                </View>
+                <View style={styles.input}>
+                  <View style={styles.inputContainer}>
+                    <MaterialCommunityIcons
+                      name="lock-outline"
+                      size={40}
+                      color={Colors.color.placeholder}
+                    />
+                    <TextInput
+                      placeholder="Password"
+                      placeholderTextColor={Colors.color.placeholder}
+                      secureTextEntry={!showPassword}
+                      value={password}
+                      onChangeText={(value) => setPassword(value)}
+                      style={styles.textInput}
+                    />
+                    <TouchableOpacity
+                      style={styles.eyeIcon}
+                      onPress={() => setShowPassword(!showPassword)}
+                    >
+                      <MaterialCommunityIcons
+                        name={showPassword ? "eye" : "eye-off"}
+                        size={30}
+                        color={Colors.color.placeholder}
+                      />
+                    </TouchableOpacity>
+                  </View>
+                </View>
+                <TouchableOpacity
+                  style={styles.loginButton}
+                  onPress={handleLogin}
+                  disabled={loading}
+                >
+                  {loading ? (
+                    <ActivityIndicator color={Colors.color.white} />
+                  ) : (
+                    <CustomText variant="bold" style={styles.loginButtonText}>
+                      LOGIN
+                    </CustomText>
+                  )}
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.forgotButton}
+                  onPress={() => router.push("/ForgotPasswordScreen")}
+                >
+                  <CustomText style={styles.forgotButtonText}>
+                    Forget password?
+                  </CustomText>
+                </TouchableOpacity>
+              </View>
+              <View style={styles.footer}>
+                <TouchableOpacity
+                  style={styles.registerButton}
+                  onPress={() => router.push("/CreateAccount")}
+                >
+                  <CustomText style={styles.registerButtonText}>
+                    Register for an account
+                  </CustomText>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.recoverButton}>
+                  <CustomText style={styles.recoverButtonText}>
+                    Recover Password
+                  </CustomText>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </TouchableWithoutFeedback>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 };
@@ -179,7 +210,7 @@ const styles = StyleSheet.create({
     width: 70,
   },
   body: {
-    flex: 1,
+    flexGrow: 1,
     padding: 10,
     alignItems: "center",
     borderBottomColor: Colors.color.placeholder,

@@ -17,7 +17,7 @@ import { ICreateEvent } from "@/axios/dto/eventModel";
 import { EventService } from "@/axios/eventService";
 import { useRouter } from "expo-router";
 import Header from "@/components/Header";
-import { getUserId } from '@/services/storage';
+import { getUserId } from "@/services/storage";
 
 export default function HostDashboardScreen() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -25,7 +25,7 @@ export default function HostDashboardScreen() {
   useEffect(() => {
     const fetchData = async () => {
       const events = await EventService.getEvents();
-      const userId = await getUserId() ?? "";
+      const userId = (await getUserId()) ?? "";
       setData(events.filter((item: ICreateEvent) => item.host_id === userId));
     };
     fetchData();
@@ -35,18 +35,20 @@ export default function HostDashboardScreen() {
   const renderHeader = () => {
     return (
       <View style={styles.listHeader}>
-        <CustomText variant="bold" style={styles.sectionTitle}>HOST DASHBOARD</CustomText>
+        <CustomText variant="bold" style={styles.sectionTitle}>
+          HOST DASHBOARD
+        </CustomText>
       </View>
     );
   };
   const filterData = useMemo(() => {
-      if(!searchQuery) return data;
-      const formatQuery = searchQuery.toLowerCase(); 
-  
-      return data.filter(item => 
-        item.title.toLowerCase().includes(formatQuery)
-      );
-    },[searchQuery, data]);
+    if (!searchQuery) return data;
+    const formatQuery = searchQuery.toLowerCase();
+
+    return data.filter((item) =>
+      item.title.toLowerCase().includes(formatQuery),
+    );
+  }, [searchQuery, data]);
   return (
     <SafeAreaView style={styles.safeArea}>
       <StatusBar barStyle="light-content" />
@@ -80,7 +82,9 @@ export default function HostDashboardScreen() {
         onPress={() => router.push("/CreateEventScreen")}
       >
         <Ionicons name="add" color="white" size={28} />
-        <CustomText variant="bold" style={styles.createButtonText}>Create new event</CustomText>
+        <CustomText variant="bold" style={styles.createButtonText}>
+          Create new event
+        </CustomText>
       </TouchableOpacity>
     </SafeAreaView>
   );

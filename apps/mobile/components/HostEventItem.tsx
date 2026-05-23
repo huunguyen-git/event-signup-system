@@ -33,31 +33,41 @@ const HostEventItem = (event: HostItem) => {
             },
           ]}
         >
-          <CustomText variant="bold" style={styles.statusText}>{event.event.status}</CustomText>
+          <CustomText variant="bold" style={styles.statusText}>
+            {event.event.status}
+          </CustomText>
         </View>
       </View>
 
       {/* Details Row: Icons and Stats */}
       <View style={styles.detailsRow}>
-        <CustomText variant="medium" style={styles.detailsLabel}>Details</CustomText>
+        <CustomText variant="medium" style={styles.detailsLabel}>
+          Details
+        </CustomText>
 
         {event.event.status && (
           <View style={styles.stat}>
             <TrendingUp size={14} color="#666" />
-            <CustomText style={styles.statValue}>{event.event.status}</CustomText>
+            <CustomText style={styles.statValue}>
+              {event.event.status}
+            </CustomText>
           </View>
         )}
 
         {event.event.max_attendees && (
           <View style={styles.stat}>
             <MessageSquare size={14} color="#666" />
-            <CustomText style={styles.statValue}>{event.event.max_attendees}</CustomText>
+            <CustomText style={styles.statValue}>
+              {event.event.max_attendees}
+            </CustomText>
           </View>
         )}
 
         <View style={styles.stat}>
           <Users size={14} color="#666" />
-          <CustomText style={styles.statValue}>{event.event.max_attendees}</CustomText>
+          <CustomText style={styles.statValue}>
+            {event.event.max_attendees}
+          </CustomText>
         </View>
       </View>
 
@@ -72,17 +82,21 @@ const HostEventItem = (event: HostItem) => {
             })
           }
         >
-          <CustomText variant="medium" style={styles.secondaryButtonText}>Edit</CustomText>
+          <CustomText variant="medium" style={styles.secondaryButtonText}>
+            Edit
+          </CustomText>
         </TouchableOpacity>
 
-        <TouchableOpacity 
+        <TouchableOpacity
           style={styles.primaryButton}
-          onPress={()=>{router.push('/ViewAttendeesScreen')}}>
+          onPress={() => {
+            router.push("/ViewAttendeesScreen");
+          }}
+        >
           <CustomText variant="medium" style={styles.primaryButtonText}>
             {event.event.status === "Draft" ? "View Vendors" : "View Attendees"}
           </CustomText>
         </TouchableOpacity>
-
       </View>
     </View>
   );

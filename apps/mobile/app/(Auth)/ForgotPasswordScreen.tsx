@@ -4,6 +4,11 @@ import {
   StyleSheet,
   TextInput,
   TouchableOpacity,
+  KeyboardAvoidingView,
+  TouchableWithoutFeedback,
+  Keyboard,
+  ScrollView,
+  Platform,
 } from "react-native";
 import { CustomText } from "@/components/CustomText";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
@@ -19,45 +24,69 @@ const ForgotPasswordScreen = () => {
     <>
       <Stack.Screen options={{ headerShown: false }} />
       <SafeAreaView style={styles.container}>
-        <View style={styles.header}>
-          <MaterialCommunityIcons
-            name="domain"
-            size={70}
-            color={Colors.color.placeholder}
-          />
-          <HeaderText />
-        </View>
-        <View style={styles.body}>
-          <CustomText variant="bold" style={styles.welcomeText}>Forgot Password</CustomText>
-          <CustomText style={styles.eventText}>
-            Enter your registered email address to receive a password reset
-            instructions.{" "}
-          </CustomText>
-          <View style={styles.input}>
-            <View style={styles.inputContainer}>
-              <MaterialCommunityIcons
-                name="email-outline"
-                size={40}
-                color={Colors.color.placeholder}
-              />
-              <TextInput
-                placeholder="Registered Email"
-                placeholderTextColor={Colors.color.placeholder}
-                value={RegisterEmail}
-                onChangeText={(value) => setRegisterEmail(value)}
-                style={styles.textInput}
-              />
-            </View>
-          </View>
-          <TouchableOpacity style={styles.sendButton}>
-            <CustomText style={styles.sendButtonText}>SEND INSTRUCTIONS</CustomText>
-          </TouchableOpacity>
-          <TouchableOpacity 
-            style={styles.backButton}
-            onPress={()=>{router.replace('/LoginScreen')}}>
-            <CustomText style={styles.backButtonText}>Back to Login</CustomText>
-          </TouchableOpacity>
-        </View>
+        <KeyboardAvoidingView
+          style={{ flex: 1 }}
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+        >
+          <ScrollView
+            contentContainerStyle={{ flexGrow: 1 }}
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
+          >
+            <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+              <View style={{ flex: 1 }}>
+                <View style={styles.header}>
+                  <MaterialCommunityIcons
+                    name="domain"
+                    size={70}
+                    color={Colors.color.placeholder}
+                  />
+                  <HeaderText />
+                </View>
+                <View style={styles.body}>
+                  <CustomText variant="bold" style={styles.welcomeText}>
+                    Forgot Password
+                  </CustomText>
+                  <CustomText style={styles.eventText}>
+                    Enter your registered email address to receive a password
+                    reset instructions.{" "}
+                  </CustomText>
+                  <View style={styles.input}>
+                    <View style={styles.inputContainer}>
+                      <MaterialCommunityIcons
+                        name="email-outline"
+                        size={40}
+                        color={Colors.color.placeholder}
+                      />
+                      <TextInput
+                        placeholder="Registered Email"
+                        placeholderTextColor={Colors.color.placeholder}
+                        value={RegisterEmail}
+                        onChangeText={(value) => setRegisterEmail(value)}
+                        style={styles.textInput}
+                      />
+                    </View>
+                  </View>
+                  <TouchableOpacity style={styles.sendButton}>
+                    <CustomText style={styles.sendButtonText}>
+                      SEND INSTRUCTIONS
+                    </CustomText>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.backButton}
+                    onPress={() => {
+                      router.replace("/LoginScreen");
+                    }}
+                  >
+                    <CustomText style={styles.backButtonText}>
+                      Back to Login
+                    </CustomText>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </TouchableWithoutFeedback>
+          </ScrollView>
+        </KeyboardAvoidingView>
       </SafeAreaView>
     </>
   );

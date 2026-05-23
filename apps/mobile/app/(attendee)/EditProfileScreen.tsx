@@ -9,6 +9,9 @@ import {
   ScrollView,
   Platform,
   Image,
+  KeyboardAvoidingView,
+  TouchableWithoutFeedback,
+  Keyboard,
 } from "react-native";
 import { CustomText } from "@/components/CustomText";
 import { MaterialCommunityIcons, Ionicons } from "@expo/vector-icons";
@@ -31,17 +34,17 @@ const EditProfileScreen = () => {
   const router = useRouter();
 
   const pickImage = async () => {
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,       
-        allowsEditing: true,
-        aspect: [1,1],
-        quality: 1,
-      });
-  
-      if (!result.canceled) {
-        setAvatarUrl(result.assets[0].uri);
-      }
-    };
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 1,
+    });
+
+    if (!result.canceled) {
+      setAvatarUrl(result.assets[0].uri);
+    }
+  };
 
   // Load current values on mount
   useEffect(() => {
@@ -109,129 +112,169 @@ const EditProfileScreen = () => {
     <>
       <Stack.Screen options={{ headerShown: false }} />
       <SafeAreaView style={styles.container}>
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()}>
-            <MaterialCommunityIcons
-              name="arrow-left"
-              size={28}
-              color={Colors.color.white}
-            />
-          </TouchableOpacity>
-          <CustomText variant="bold" style={styles.headerTitle}>Edit Profile</CustomText>
-        </View>
-
-        <ScrollView
-          style={styles.body}
-          contentContainerStyle={styles.bodyContent}
+        <KeyboardAvoidingView
+          style={{ flex: 1 }}
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
         >
-          <View style={styles.field}>
-            <CustomText variant="medium" style={styles.label}>Full Name</CustomText>
-            <View style={styles.inputContainer}>
-              <MaterialCommunityIcons
-                name="account-outline"
-                size={22}
-                color={Colors.color.placeholder}
-              />
-              <TextInput
-                style={styles.input}
-                value={fullName}
-                onChangeText={setFullName}
-                placeholder="Enter your full name"
-                placeholderTextColor={Colors.color.placeholder}
-              />
-            </View>
-          </View>
-
-          <View style={styles.field}>
-            <CustomText variant="medium" style={styles.label}>Phone Number</CustomText>
-            <View style={styles.inputContainer}>
-              <MaterialCommunityIcons
-                name="phone-outline"
-                size={22}
-                color={Colors.color.placeholder}
-              />
-              <TextInput
-                style={styles.input}
-                value={phoneNumber}
-                onChangeText={setPhoneNumber}
-                placeholder="Enter your phone number"
-                placeholderTextColor={Colors.color.placeholder}
-                keyboardType="phone-pad"
-              />
-            </View>
-          </View>
-
-          <View style={styles.field}>
-            <CustomText variant="medium" style={styles.label}>Birthdate</CustomText>
-            <TouchableOpacity
-              style={styles.inputContainer}
-              onPress={() => setShowDatePicker(true)}
-            >
-              <MaterialCommunityIcons
-                name="calendar-outline"
-                size={22}
-                color={Colors.color.placeholder}
-              />
-              <CustomText
-                style={[
-                  styles.input,
-                  {
-                    color: birthdate
-                      ? Colors.color.text
-                      : Colors.color.placeholder,
-                  },
-                ]}
-              >
-                {birthdate
-                  ? birthdate.toLocaleDateString()
-                  : "Select your birthdate"}
-              </CustomText>
-            </TouchableOpacity>
-            {showDatePicker && (
-              <DateTimePicker
-                value={birthdate || new Date(2000, 0, 1)}
-                mode="date"
-                maximumDate={new Date()}
-                onChange={(_, date) => {
-                  setShowDatePicker(Platform.OS === "ios");
-                  if (date) setBirthdate(date);
-                }}
-              />
-            )}
-          </View>
-
-          <View style={styles.field}>
-            <CustomText variant="medium" style={styles.label}>Avatar URL</CustomText>
-            <TouchableOpacity
-            style={[styles.imageContainer, avatarUrl && styles.imageActive]}
-            onPress={pickImage}
-          >
-            {avatarUrl ? (
-              <Image source={{ uri: avatarUrl }} style={styles.previewImage} />
-            ) : (
-              <View style={styles.uploadPlaceholder}>
-                <View style={styles.cameraCircle}>
-                  <Ionicons name="camera-outline" size={24} color="#FFF" />
-                </View>
-                <CustomText variant="medium" style={styles.uploadMainText}>Tap to add</CustomText>
-                <CustomText style={styles.uploadSubText}>Recommended (1:1)</CustomText>
+          <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+            <View style={{ flex: 1 }}>
+              <View style={styles.header}>
+                <TouchableOpacity onPress={() => router.back()}>
+                  <MaterialCommunityIcons
+                    name="arrow-left"
+                    size={28}
+                    color={Colors.color.white}
+                  />
+                </TouchableOpacity>
+                <CustomText variant="bold" style={styles.headerTitle}>
+                  Edit Profile
+                </CustomText>
               </View>
-            )}
-          </TouchableOpacity>
-          </View>
 
-          <TouchableOpacity
-            style={styles.saveButton}
-            onPress={handleSave}
-            disabled={saving}
-          >
-            {saving ? (
-              <ActivityIndicator color={Colors.color.white} />
-            ) : (
-              <CustomText variant="medium" style={styles.saveButtonText}>Save Changes</CustomText>
-            )}
-          </TouchableOpacity>
-        </ScrollView>
+              <ScrollView
+                style={styles.body}
+                contentContainerStyle={[styles.bodyContent, { flexGrow: 1 }]}
+                keyboardShouldPersistTaps="handled"
+                showsVerticalScrollIndicator={false}
+              >
+                <View style={styles.field}>
+                  <CustomText variant="medium" style={styles.label}>
+                    Full Name
+                  </CustomText>
+                  <View style={styles.inputContainer}>
+                    <MaterialCommunityIcons
+                      name="account-outline"
+                      size={22}
+                      color={Colors.color.placeholder}
+                    />
+                    <TextInput
+                      style={styles.input}
+                      value={fullName}
+                      onChangeText={setFullName}
+                      placeholder="Enter your full name"
+                      placeholderTextColor={Colors.color.placeholder}
+                    />
+                  </View>
+                </View>
+
+                <View style={styles.field}>
+                  <CustomText variant="medium" style={styles.label}>
+                    Phone Number
+                  </CustomText>
+                  <View style={styles.inputContainer}>
+                    <MaterialCommunityIcons
+                      name="phone-outline"
+                      size={22}
+                      color={Colors.color.placeholder}
+                    />
+                    <TextInput
+                      style={styles.input}
+                      value={phoneNumber}
+                      onChangeText={setPhoneNumber}
+                      placeholder="Enter your phone number"
+                      placeholderTextColor={Colors.color.placeholder}
+                      keyboardType="phone-pad"
+                    />
+                  </View>
+                </View>
+
+                <View style={styles.field}>
+                  <CustomText variant="medium" style={styles.label}>
+                    Birthdate
+                  </CustomText>
+                  <TouchableOpacity
+                    style={styles.inputContainer}
+                    onPress={() => setShowDatePicker(true)}
+                  >
+                    <MaterialCommunityIcons
+                      name="calendar-outline"
+                      size={22}
+                      color={Colors.color.placeholder}
+                    />
+                    <CustomText
+                      style={[
+                        styles.input,
+                        {
+                          color: birthdate
+                            ? Colors.color.text
+                            : Colors.color.placeholder,
+                        },
+                      ]}
+                    >
+                      {birthdate
+                        ? birthdate.toLocaleDateString()
+                        : "Select your birthdate"}
+                    </CustomText>
+                  </TouchableOpacity>
+                  {showDatePicker && (
+                    <DateTimePicker
+                      value={birthdate || new Date(2000, 0, 1)}
+                      mode="date"
+                      maximumDate={new Date()}
+                      onChange={(_, date) => {
+                        setShowDatePicker(Platform.OS === "ios");
+                        if (date) setBirthdate(date);
+                      }}
+                    />
+                  )}
+                </View>
+
+                <View style={styles.field}>
+                  <CustomText variant="medium" style={styles.label}>
+                    Avatar URL
+                  </CustomText>
+                  <TouchableOpacity
+                    style={[
+                      styles.imageContainer,
+                      avatarUrl && styles.imageActive,
+                    ]}
+                    onPress={pickImage}
+                  >
+                    {avatarUrl ? (
+                      <Image
+                        source={{ uri: avatarUrl }}
+                        style={styles.previewImage}
+                      />
+                    ) : (
+                      <View style={styles.uploadPlaceholder}>
+                        <View style={styles.cameraCircle}>
+                          <Ionicons
+                            name="camera-outline"
+                            size={24}
+                            color="#FFF"
+                          />
+                        </View>
+                        <CustomText
+                          variant="medium"
+                          style={styles.uploadMainText}
+                        >
+                          Tap to add
+                        </CustomText>
+                        <CustomText style={styles.uploadSubText}>
+                          Recommended (1:1)
+                        </CustomText>
+                      </View>
+                    )}
+                  </TouchableOpacity>
+                </View>
+
+                <TouchableOpacity
+                  style={styles.saveButton}
+                  onPress={handleSave}
+                  disabled={saving}
+                >
+                  {saving ? (
+                    <ActivityIndicator color={Colors.color.white} />
+                  ) : (
+                    <CustomText variant="medium" style={styles.saveButtonText}>
+                      Save Changes
+                    </CustomText>
+                  )}
+                </TouchableOpacity>
+              </ScrollView>
+            </View>
+          </TouchableWithoutFeedback>
+        </KeyboardAvoidingView>
       </SafeAreaView>
     </>
   );
@@ -313,46 +356,46 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   imageContainer: {
-      height: 120,
-      borderWidth: 1,
-      borderColor: "#cccccccb",
-      borderStyle: "dashed",
-      borderRadius: 12,
-      justifyContent: "center",
-      alignItems: "center",
-      marginBottom: 20,
-      overflow: "hidden",
-      backgroundColor: "#FFF",
-    },
-    imageActive: {
-      borderStyle: "solid",
-      borderColor: "#1a2a44",
-    },
-    uploadPlaceholder: {
-      alignItems: "center",
-      justifyContent: "center",
-    },
-    cameraCircle: {
-      width: 46,
-      height: 46,
-      borderRadius: 23,
-      backgroundColor: "#1a2a44",
-      justifyContent: "center",
-      alignItems: "center",
-      marginBottom: 8,
-    },
-    uploadMainText: {
-      fontSize: 14,
-      color: "#333",
-    },
-    uploadSubText: {
-      fontSize: 12,
-      color: "#888",
-      marginTop: 2,
-    },
-    previewImage: {
-      width: "100%",
-      height: "100%",
-      resizeMode: "cover",
-    },
+    height: 120,
+    borderWidth: 1,
+    borderColor: "#cccccccb",
+    borderStyle: "dashed",
+    borderRadius: 12,
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 20,
+    overflow: "hidden",
+    backgroundColor: "#FFF",
+  },
+  imageActive: {
+    borderStyle: "solid",
+    borderColor: "#1a2a44",
+  },
+  uploadPlaceholder: {
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  cameraCircle: {
+    width: 46,
+    height: 46,
+    borderRadius: 23,
+    backgroundColor: "#1a2a44",
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 8,
+  },
+  uploadMainText: {
+    fontSize: 14,
+    color: "#333",
+  },
+  uploadSubText: {
+    fontSize: 12,
+    color: "#888",
+    marginTop: 2,
+  },
+  previewImage: {
+    width: "100%",
+    height: "100%",
+    resizeMode: "cover",
+  },
 });

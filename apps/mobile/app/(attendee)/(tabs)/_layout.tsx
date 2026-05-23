@@ -26,7 +26,11 @@ export default function TabLayout() {
         options={{
           title: "Dashboard",
           tabBarIcon: ({ color }) => (
-            <MaterialIcons name="admin-panel-settings" size={30} color={color} />
+            <MaterialIcons
+              name="admin-panel-settings"
+              size={30}
+              color={color}
+            />
           ),
         }}
       />

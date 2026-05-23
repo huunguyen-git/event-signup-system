@@ -17,33 +17,33 @@ export const UserService = {
   updateMe: async (token, userData) => {
     try {
       console.log(userData);
-    const formData = new FormData();
-    Object.keys(userData).forEach((key) => {
-      if (key === "avatar_url") return;
+      const formData = new FormData();
+      Object.keys(userData).forEach((key) => {
+        if (key === "avatar_url") return;
 
-      let value = userData[key];
-      if (value !== null && value !== undefined) {
-        formData.append(key, value);
+        let value = userData[key];
+        if (value !== null && value !== undefined) {
+          formData.append(key, value);
+        }
+      });
+
+      console.log("bien event avatar_url:", userData.avatar_url);
+      if (userData.avatar_url) {
+        const uri = userData.avatar_url;
+
+        if (uri.startsWith("file://")) {
+          const fileName = uri.split("/").pop();
+          const fileType = fileName.split(".").pop();
+
+          formData.append("avatar_url", {
+            uri: uri,
+            name: fileName,
+            type: `image/${fileType === "jpg" ? "jpeg" : fileType}`,
+          });
+        } else if (uri.startsWith("http")) {
+          formData.append("avatar_url", uri);
+        }
       }
-    });
-
-    console.log("bien event avatar_url:", userData.avatar_url);
-    if (userData.avatar_url) {
-      const uri = userData.avatar_url;
-
-      if (uri.startsWith("file://")) {
-        const fileName = uri.split("/").pop();
-        const fileType = fileName.split(".").pop();
-
-        formData.append("avatar_url", {
-          uri: uri,
-          name: fileName,
-          type: `image/${fileType === "jpg" ? "jpeg" : fileType}`,
-        });
-      } else if (uri.startsWith("http")) {
-        formData.append("avatar_url", uri);
-      }
-    }
       const response = await apiClient.patch("/users/me", formData, {
         headers: {
           Authorization: `Bearer ${token}`,

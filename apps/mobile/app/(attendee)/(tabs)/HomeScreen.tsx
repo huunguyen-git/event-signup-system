@@ -1,9 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
-import {
-  View,
-  StyleSheet,
-  TextInput,
-} from "react-native";
+import { View, StyleSheet, TextInput } from "react-native";
 import { CustomText } from "@/components/CustomText";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { Colors } from "../../../constants/theme";
@@ -21,8 +17,15 @@ const HomeScreen = () => {
     const fetchData = async () => {
       try {
         const data = await EventService.getEvents();
-        setData(data.filter((item: ICreateEvent) => item.status === "PUBLISHED")
-                    .sort((a: ICreateEvent, b: ICreateEvent) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()));
+        setData(
+          data
+            .filter((item: ICreateEvent) => item.status === "PUBLISHED")
+            .sort(
+              (a: ICreateEvent, b: ICreateEvent) =>
+                new Date(b.created_at).getTime() -
+                new Date(a.created_at).getTime(),
+            ),
+        );
       } catch (error) {
         console.error("Error fetching data:", error);
       }
@@ -30,15 +33,14 @@ const HomeScreen = () => {
     fetchData();
   }, []);
   const filterData = useMemo(() => {
-    if(!searchText) return data;
-    const formatQuery = searchText.toLowerCase(); 
+    if (!searchText) return data;
+    const formatQuery = searchText.toLowerCase();
 
-    return data.filter(item => 
-      item.title.toLowerCase().includes(formatQuery)
+    return data.filter((item) =>
+      item.title.toLowerCase().includes(formatQuery),
     );
-  },[searchText, data]);
-  
-  
+  }, [searchText, data]);
+
   return (
     <>
       <Stack.Screen options={{ headerShown: false }} />
@@ -57,17 +59,23 @@ const HomeScreen = () => {
               placeholderTextColor={Colors.color.placeholder}
               scrollEnabled={false}
               value={searchText}
-              onChangeText={(text)=>{setSearchText(text)}}
+              onChangeText={(text) => {
+                setSearchText(text);
+              }}
               clearButtonMode="while-editing"
             />
           </View>
-          <CustomText variant="bold" style={styles.upcomingEvent}>Upcoming Event</CustomText>
+          <CustomText variant="bold" style={styles.upcomingEvent}>
+            Upcoming Event
+          </CustomText>
           <FlatList
             data={filterData}
             renderItem={({ item }) => <EventItem event={item} />}
             keyExtractor={(item) => item.id}
             ListEmptyComponent={
-              <CustomText style={styles.emptyText}>Không có sự kiện nào</CustomText>
+              <CustomText style={styles.emptyText}>
+                Không có sự kiện nào
+              </CustomText>
             }
           />
         </View>
@@ -116,9 +124,9 @@ const styles = StyleSheet.create({
     marginRight: "auto",
   },
   emptyText: {
-    textAlign: 'center',
+    textAlign: "center",
     marginTop: 20,
-    color: '#888',
+    color: "#888",
     fontSize: 16,
-  }
+  },
 });

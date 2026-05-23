@@ -43,7 +43,9 @@ const EventItem = ({ event }: EventItemProps) => {
         style={styles.eventImage}
       />
       <View style={styles.event}>
-        <CustomText variant="bold" style={styles.eventName}>{event.title}</CustomText>
+        <CustomText variant="bold" style={styles.eventName}>
+          {event.title}
+        </CustomText>
         <CustomText style={styles.eventDate}>
           {datePart} - {timePart}
         </CustomText>
@@ -51,7 +53,9 @@ const EventItem = ({ event }: EventItemProps) => {
           style={styles.detailButton}
           onPress={handleEventDetails}
         >
-          <CustomText variant="bold" style={styles.detailButtonText}>View Details</CustomText>
+          <CustomText variant="bold" style={styles.detailButtonText}>
+            View Details
+          </CustomText>
         </TouchableOpacity>
       </View>
     </View>
