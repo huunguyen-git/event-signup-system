@@ -1,10 +1,10 @@
 import {
   View,
-  FlatList,
   StyleSheet,
   TouchableOpacity,
   ActivityIndicator,
 } from "react-native";
+import { FlatList } from "react-native-gesture-handler";
 import { CustomText } from "@/components/CustomText";
 import { MaterialIcons } from "@expo/vector-icons";
 import { Colors } from "../../constants/theme";
@@ -86,11 +86,13 @@ export default function NotificationsScreen({ isOpen }: { isOpen?: boolean }) {
         </View>
       ) : (
         <FlatList
+          style={styles.flatList}
           data={notifications}
           keyExtractor={(item) => item.id}
           renderItem={renderItem}
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
+          nestedScrollEnabled={true}
           ListEmptyComponent={
             <View style={styles.centerContainer}>
               <CustomText style={styles.emptyText}>
@@ -106,9 +108,11 @@ export default function NotificationsScreen({ isOpen }: { isOpen?: boolean }) {
 
 const styles = StyleSheet.create({
   container: {
-    minHeight: 150,
-    maxHeight: 350,
+    flex: 1,
     backgroundColor: "#FFFFFF",
+  },
+  flatList: {
+    flex: 1,
   },
   listContent: {
     padding: 12,

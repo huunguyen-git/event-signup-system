@@ -10,6 +10,9 @@ import {
   View,
   Modal,
   ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
+  TouchableWithoutFeedback,
 } from "react-native";
 import { CustomText } from "@/components/CustomText";
 import { Colors } from "../constants/theme";
@@ -238,7 +241,10 @@ export default function RegistrationFormScreen() {
   );
 
   return (
-    <View style={styles.overlayContainer}>
+    <KeyboardAvoidingView
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      style={styles.overlayContainer}
+    >
       <TouchableOpacity
         style={styles.dismissArea}
         activeOpacity={1}
@@ -306,144 +312,158 @@ export default function RegistrationFormScreen() {
           </View>
         </View>
       </Modal>
-      <View style={styles.modalCard}>
-        <CustomText style={styles.eventSmallTitle}>
-          International Tech Summit 2024
-        </CustomText>
-        <CustomText
-          variant="bold"
-          style={[styles.mainTitle, { color: themeColor }]}
+      <ScrollView
+        contentContainerStyle={styles.scrollContainer}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+      >
+        <TouchableOpacity
+          style={styles.scrollDismissArea}
+          activeOpacity={1}
+          onPress={() => router.back()}
         >
-          CONFIRM REGISTRATION
-        </CustomText>
-
-        {!IsCreate && (
-          <View style={styles.ticketSummary}>
-            <View>
-              <CustomText variant="bold" style={styles.ticketLabel}>
-                REGISTERING AS:
+          <TouchableWithoutFeedback onPress={() => {}}>
+            <View style={styles.modalCard}>
+              <CustomText style={styles.eventSmallTitle}>
+                International Tech Summit 2024
               </CustomText>
-              <CustomText variant="bold" style={styles.ticketType}>
-                {ticketType}
-              </CustomText>
-            </View>
-            <TouchableOpacity onPress={() => setShowTicketPicker(true)}>
               <CustomText
                 variant="bold"
-                style={[styles.changeLink, { color: themeColor }]}
+                style={[styles.mainTitle, { color: themeColor }]}
               >
-                Change
+                CONFIRM REGISTRATION
               </CustomText>
-            </TouchableOpacity>
-          </View>
-        )}
 
-        <ScrollView
-          showsVerticalScrollIndicator={false}
-          style={{ maxHeight: 300 }}
-        >
-          <View style={styles.row}>
-            <InputField
-              label="First Name"
-              placeholder="A"
-              isShort
-              value={firstName}
-              onChangeText={setFirstName}
-            />
-            <View style={{ width: 10 }} />
-            <InputField
-              label="Last Name"
-              placeholder="Nguyễn Văn"
-              isShort
-              value={lastName}
-              onChangeText={setLastName}
-            />
-          </View>
-          <InputField
-            label="Company Email"
-            placeholder="nguyenvana@gm.uit.edu.vn"
-            value={email}
-            onChangeText={setEmail}
-          />
-          <InputField
-            label="Job Title"
-            placeholder="Software Engineer"
-            value={jobTitle}
-            onChangeText={setJobTitle}
-          />
-          {customQuestions.map((q) => (
-            <InputField
-              key={q.id}
-              label={q.question}
-              placeholder="Your answer here..."
-            />
-          ))}
+              {!IsCreate && (
+                <View style={styles.ticketSummary}>
+                  <View>
+                    <CustomText variant="bold" style={styles.ticketLabel}>
+                      REGISTERING AS:
+                    </CustomText>
+                    <CustomText variant="bold" style={styles.ticketType}>
+                      {ticketType}
+                    </CustomText>
+                  </View>
+                  <TouchableOpacity onPress={() => setShowTicketPicker(true)}>
+                    <CustomText
+                      variant="bold"
+                      style={[styles.changeLink, { color: themeColor }]}
+                    >
+                      Change
+                    </CustomText>
+                  </TouchableOpacity>
+                </View>
+              )}
 
-          {!IsCreate && (
-            <View style={styles.checkboxRow}>
-              <TouchableOpacity onPress={() => setAgreed(!agreed)}>
-                <MaterialCommunityIcons
-                  name={agreed ? "checkbox-marked" : "checkbox-blank-outline"}
-                  size={24}
-                  color={themeColor}
+              <ScrollView
+                showsVerticalScrollIndicator={false}
+                style={{ maxHeight: 300 }}
+              >
+                <View style={styles.row}>
+                  <InputField
+                    label="First Name"
+                    placeholder="A"
+                    isShort
+                    value={firstName}
+                    onChangeText={setFirstName}
+                  />
+                  <View style={{ width: 10 }} />
+                  <InputField
+                    label="Last Name"
+                    placeholder="Nguyễn Văn"
+                    isShort
+                    value={lastName}
+                    onChangeText={setLastName}
+                  />
+                </View>
+                <InputField
+                  label="Company Email"
+                  placeholder="nguyenvana@gm.uit.edu.vn"
+                  value={email}
+                  onChangeText={setEmail}
                 />
-              </TouchableOpacity>
-              <CustomText style={styles.checkboxText}>
-                I agree to the{" "}
-                <CustomText
-                  variant="bold"
-                  style={styles.boldLink}
-                  onPress={() => setShowTerms(true)}
-                >
-                  Terms of Service
-                </CustomText>{" "}
-                and{" "}
-                <CustomText
-                  variant="bold"
-                  style={styles.boldLink}
-                  onPress={() => setShowPrivacy(true)}
-                >
-                  Privacy Policy
-                </CustomText>
-                .
-              </CustomText>
-            </View>
-          )}
-        </ScrollView>
+                <InputField
+                  label="Job Title"
+                  placeholder="Software Engineer"
+                  value={jobTitle}
+                  onChangeText={setJobTitle}
+                />
+                {customQuestions.map((q) => (
+                  <InputField
+                    key={q.id}
+                    label={q.question}
+                    placeholder="Your answer here..."
+                  />
+                ))}
 
-        <View style={styles.footerRow}>
-          <TouchableOpacity
-            style={styles.cancelBtn}
-            onPress={() => router.back()}
-          >
-            <CustomText
-              variant="bold"
-              style={[styles.cancelBtnText, { color: themeColor }]}
-            >
-              CANCEL
-            </CustomText>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[
-              styles.completeBtn,
-              {
-                backgroundColor: themeColor,
-                opacity: isCreate ? 1 : agreed ? 1 : 0.5,
-              },
-            ]}
-            disabled={IsCreate ? false : !agreed}
-            onPress={IsCreate ? handleCreateEvent : handleRegisterEvent}
-          >
-            {isLoading ? (
-              <ActivityIndicator size="small" color="#ffffff" />
-            ) : (
-              <CustomText variant="bold" style={styles.completeBtnText}>
-                {IsCreate ? "SAVE" : "COMPLETE REGISTRATION"}
-              </CustomText>
-            )}
-          </TouchableOpacity>
-        </View>
-      </View>
+                {!IsCreate && (
+                  <View style={styles.checkboxRow}>
+                    <TouchableOpacity onPress={() => setAgreed(!agreed)}>
+                      <MaterialCommunityIcons
+                        name={agreed ? "checkbox-marked" : "checkbox-blank-outline"}
+                        size={24}
+                        color={themeColor}
+                      />
+                    </TouchableOpacity>
+                    <CustomText style={styles.checkboxText}>
+                      I agree to the{" "}
+                      <CustomText
+                        variant="bold"
+                        style={styles.boldLink}
+                        onPress={() => setShowTerms(true)}
+                      >
+                        Terms of Service
+                      </CustomText>{" "}
+                      and{" "}
+                      <CustomText
+                        variant="bold"
+                        style={styles.boldLink}
+                        onPress={() => setShowPrivacy(true)}
+                      >
+                        Privacy Policy
+                      </CustomText>
+                      .
+                    </CustomText>
+                  </View>
+                )}
+              </ScrollView>
+
+              <View style={styles.footerRow}>
+                <TouchableOpacity
+                  style={styles.cancelBtn}
+                  onPress={() => router.back()}
+                >
+                  <CustomText
+                    variant="bold"
+                    style={[styles.cancelBtnText, { color: themeColor }]}
+                  >
+                    CANCEL
+                  </CustomText>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[
+                    styles.completeBtn,
+                    {
+                      backgroundColor: themeColor,
+                      opacity: isCreate ? 1 : agreed ? 1 : 0.5,
+                    },
+                  ]}
+                  disabled={IsCreate ? false : !agreed}
+                  onPress={IsCreate ? handleCreateEvent : handleRegisterEvent}
+                >
+                  {isLoading ? (
+                    <ActivityIndicator size="small" color="#ffffff" />
+                  ) : (
+                    <CustomText variant="bold" style={styles.completeBtnText}>
+                      {IsCreate ? "SAVE" : "COMPLETE REGISTRATION"}
+                    </CustomText>
+                  )}
+                </TouchableOpacity>
+              </View>
+            </View>
+          </TouchableWithoutFeedback>
+        </TouchableOpacity>
+      </ScrollView>
 
       <Modal visible={showTicketPicker} transparent animationType="slide">
         <View style={styles.pickerOverlay}>
@@ -508,7 +528,7 @@ export default function RegistrationFormScreen() {
         content="Nội dung chính sách bảo mật chi tiết ở đây..."
         onClose={() => setShowPrivacy(false)}
       />
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 
@@ -591,8 +611,15 @@ const styles = StyleSheet.create({
   overlayContainer: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.6)",
+  },
+  scrollContainer: {
+    flexGrow: 1,
     justifyContent: "center",
     padding: 20,
+  },
+  scrollDismissArea: {
+    flex: 1,
+    justifyContent: "center",
   },
   dismissArea: { ...StyleSheet.absoluteFillObject },
   floatingAddBtn: {

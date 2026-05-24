@@ -71,6 +71,7 @@ const LoginScreen = () => {
       router.replace("/HomeScreen");
     } catch (error: any) {
       Alert.alert("Login Failed", "Invalid email or password");
+      console.log(error);
     } finally {
       setLoading(false);
     }

@@ -11,6 +11,7 @@ import { useRouter } from "expo-router";
 import { useState } from "react";
 import NotificationsScreen from "@/app/(attendee)/NotificationScreen";
 import { CustomText } from "@/components/CustomText";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 const Header = () => {
   const router = useRouter();
   const [notifications, setNotifications] = useState(false);
@@ -51,12 +52,13 @@ const Header = () => {
         animationType="fade"
         transparent={true}
       >
-        <TouchableOpacity
-          style={styles.modalOverlay}
-          activeOpacity={1}
-          onPressOut={() => setNotifications(false)}
-        >
-          <TouchableWithoutFeedback>
+        <GestureHandlerRootView style={{ flex: 1 }}>
+          <View style={styles.modalContainer}>
+            <TouchableOpacity
+              style={styles.modalOverlay}
+              activeOpacity={1}
+              onPress={() => setNotifications(false)}
+            />
             <View style={styles.notificationBox}>
               <View style={styles.notificationHeader}>
                 <CustomText variant="bold" style={styles.notificationTitle}>
@@ -65,8 +67,8 @@ const Header = () => {
               </View>
               <NotificationsScreen isOpen={notifications} />
             </View>
-          </TouchableWithoutFeedback>
-        </TouchableOpacity>
+          </View>
+        </GestureHandlerRootView>
       </Modal>
     </View>
   );
@@ -96,16 +98,25 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginLeft: "auto",
   },
-  modalOverlay: {
+  modalContainer: {
     flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.4)",
     justifyContent: "flex-start",
     alignItems: "flex-end",
   },
+  modalOverlay: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: "rgba(0, 0, 0, 0.4)",
+  },
   notificationBox: {
-    marginTop: 65,
-    marginRight: 10,
+    position: "absolute",
+    top: 65,
+    right: 10,
     width: 280,
+    height: 480,
     backgroundColor: "white",
     borderRadius: 16,
     padding: 15,
@@ -114,6 +125,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 15,
     elevation: 5,
+    zIndex: 10,
   },
   notificationHeader: {
     borderBottomWidth: 1,
