@@ -53,7 +53,7 @@ const DashBoardScreen = () => {
             />
             <TextInput
               style={styles.searchText}
-              placeholder="Search by event name, date or location..."
+              placeholder="Search by event name..."
               placeholderTextColor={Colors.color.placeholder}
               value={searchText}
               onChangeText={(text) => setSearchText(text)}

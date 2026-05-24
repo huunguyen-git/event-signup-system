@@ -58,7 +58,7 @@ export default function HostDashboardScreen() {
       <View style={styles.searchContainer}>
         <Search size={18} color="#8E8E93" />
         <TextInput
-          placeholder="Search events or stats..."
+          placeholder="Search by event name..."
           placeholderTextColor={Colors.color.placeholder}
           style={styles.searchInput}
           value={searchQuery}
@@ -83,7 +83,7 @@ export default function HostDashboardScreen() {
       >
         <Ionicons name="add" color="white" size={28} />
         <CustomText variant="bold" style={styles.createButtonText}>
-          Create new event
+          Create a new event
         </CustomText>
       </TouchableOpacity>
     </SafeAreaView>

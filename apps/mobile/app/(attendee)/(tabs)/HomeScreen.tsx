@@ -55,7 +55,7 @@ const HomeScreen = () => {
             />
             <TextInput
               style={styles.searchText}
-              placeholder="Search by event name, date or location..."
+              placeholder="Search by event name..."
               placeholderTextColor={Colors.color.placeholder}
               scrollEnabled={false}
               value={searchText}
@@ -66,7 +66,7 @@ const HomeScreen = () => {
             />
           </View>
           <CustomText variant="bold" style={styles.upcomingEvent}>
-            Upcoming Event
+            Upcoming Events
           </CustomText>
           <FlatList
             data={filterData}
