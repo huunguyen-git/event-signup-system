@@ -1,113 +1,172 @@
-import React,{ useState } from "react";
-import {View,StyleSheet,TextInput,Text,TouchableOpacity} from "react-native"
-import {MaterialCommunityIcons} from "@expo/vector-icons"
-import {Colors} from "../../constants/theme"
-import { SafeAreaView } from 'react-native-safe-area-context';
+import React, { useState } from "react";
+import {
+  View,
+  StyleSheet,
+  TextInput,
+  TouchableOpacity,
+  KeyboardAvoidingView,
+  TouchableWithoutFeedback,
+  Keyboard,
+  ScrollView,
+  Platform,
+} from "react-native";
+import { CustomText } from "@/components/CustomText";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { Colors } from "../../constants/theme";
+import { SafeAreaView } from "react-native-safe-area-context";
 import HeaderText from "@/components/HeaderText";
 import { Stack, useRouter } from "expo-router";
 
-const ForgotPasswordScreen = () =>{
-    const [RegisterEmail, setRegisterEmail] = useState("");
-    return <>
-    <Stack.Screen options={{ headerShown: false }} />
-    <SafeAreaView style={styles.container}>
-            <View style={styles.header}>
-                <MaterialCommunityIcons name="domain" size={70} color={Colors.color.placeholder}/>
-                <HeaderText/>
-            </View>
-            <View style={styles.body}>
-                <Text style ={styles.welcomeText}>Forgot Password</Text>
-                <Text style = {styles.eventText}>Enter your registered email address to receive a password reset instructions.  </Text>
-                <View style={styles.input}>
-                    <View style={styles.inputContainer}>
-                        <MaterialCommunityIcons name="email-outline" size={40} color={Colors.color.placeholder}/>
-                        <TextInput 
-                            placeholder="Registered Email"
-                            placeholderTextColor={Colors.color.placeholder}
-                            value={RegisterEmail}
-                            onChangeText={(value) => setRegisterEmail(value)}
-                            style={styles.textInput}/>
-                    </View>
+const ForgotPasswordScreen = () => {
+  const [RegisterEmail, setRegisterEmail] = useState("");
+  const router = useRouter();
+  return (
+    <>
+      <Stack.Screen options={{ headerShown: false }} />
+      <SafeAreaView style={styles.container}>
+        <KeyboardAvoidingView
+          style={{ flex: 1 }}
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+        >
+          <ScrollView
+            contentContainerStyle={{ flexGrow: 1 }}
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
+          >
+            <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+              <View style={{ flex: 1 }}>
+                <View style={styles.header}>
+                  <MaterialCommunityIcons
+                    name="domain"
+                    size={70}
+                    color={Colors.color.placeholder}
+                  />
+                  <HeaderText />
                 </View>
-                <TouchableOpacity style={styles.sendButton}>
-                    <Text style={styles.sendButtonText}>SEND INSTRUCTIONS</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.backButton}>
-                    <Text style={styles.backButtonText}>Back to Login</Text>
-                </TouchableOpacity>
-            </View>
-            
-        </SafeAreaView>
-        </>
+                <View style={styles.body}>
+                  <CustomText variant="bold" style={styles.welcomeText}>
+                    Forgot Password
+                  </CustomText>
+                  <CustomText style={styles.eventText}>
+                    Enter your registered email address to receive a password
+                    reset instructions.{" "}
+                  </CustomText>
+                  <View style={styles.input}>
+                    <View style={styles.inputContainer}>
+                      <MaterialCommunityIcons
+                        name="email-outline"
+                        size={40}
+                        color={Colors.color.placeholder}
+                      />
+                      <TextInput
+                        placeholder="Registered Email"
+                        placeholderTextColor={Colors.color.placeholder}
+                        value={RegisterEmail}
+                        onChangeText={(value) => setRegisterEmail(value)}
+                        style={styles.textInput}
+                      />
+                    </View>
+                  </View>
+                  <TouchableOpacity style={styles.sendButton}>
+                    <CustomText style={styles.sendButtonText}>
+                      SEND INSTRUCTIONS
+                    </CustomText>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.backButton}
+                    onPress={() => {
+                      router.replace("/LoginScreen");
+                    }}
+                  >
+                    <CustomText style={styles.backButtonText}>
+                      Back to Login
+                    </CustomText>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </TouchableWithoutFeedback>
+          </ScrollView>
+        </KeyboardAvoidingView>
+      </SafeAreaView>
+    </>
+  );
 };
 export default ForgotPasswordScreen;
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: Colors.color.white,
-    },
-    header:{
-        height:170,
-        justifyContent: "center",
-        backgroundColor: Colors.color.primary,
-        alignItems: "center",
-        padding:10,
-    },
-    body:{
-        flex: 1,
-        padding:10,
-        alignItems: "center",
-        borderBottomColor: Colors.color.placeholder,
-        borderBottomWidth: 1,
-    },
-    welcomeText:{
-        fontSize: 32,
-        fontWeight: "bold",
-        marginBottom: 10,
-    },
-    eventText:{
-        fontSize: 16,
-        color: Colors.color.text,
-        marginBottom: 40,
-        textAlign: "center",
-    },
-    input:{
-        width:"90%",
-        marginBottom:10,
-    },
-    inputContainer:{
-        flexDirection: 'row',
-        alignItems: 'center',
-        borderBottomWidth: 1,
-        borderBottomColor: Colors.color.placeholder,
-        marginBottom: 10,
-    },
-    textInput:{
-        flex: 1,
-        fontSize: 16,
-        marginLeft: 10,
-    },
-    sendButton:{
-        width: "90%",
-        height: 50,
-        alignItems: "center",
-        justifyContent: "center",
-        backgroundColor: Colors.color.primary,
-        borderRadius: 30,
-        marginBottom: 10,
-    },
-    sendButtonText:{
-        color: Colors.color.white,
-        fontSize: 16,
-    },
-    backButton:{
-        width: "90%",
-        height: 50,
-        alignItems: "center",
-        justifyContent: "center",
-    },
-    backButtonText:{
-        color: Colors.color.primary,
-        fontSize: 16,
-    },
-})
+  container: {
+    flex: 1,
+    backgroundColor: Colors.color.white,
+  },
+  header: {
+    height: 170,
+    justifyContent: "center",
+    backgroundColor: Colors.color.primary,
+    alignItems: "center",
+    padding: 10,
+  },
+  body: {
+    flex: 1,
+    padding: 10,
+    alignItems: "center",
+    borderBottomColor: Colors.color.placeholder,
+    borderBottomWidth: 1,
+  },
+  welcomeText: {
+    fontSize: 32,
+    marginBottom: 10,
+  },
+  eventText: {
+    fontSize: 16,
+    color: Colors.color.text,
+    marginBottom: 40,
+    textAlign: "center",
+  },
+  input: {
+    width: "90%",
+    marginBottom: 10,
+  },
+  inputContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#f4f6f9",
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 4,
+    marginBottom: 16,
+  },
+  textInput: {
+    flex: 1,
+    fontSize: 16,
+    marginLeft: 10,
+    height: 45,
+  },
+  sendButton: {
+    width: "90%",
+    height: 54,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: Colors.color.primary,
+    borderRadius: 27,
+    marginBottom: 10,
+    marginTop: 10,
+    shadowColor: Colors.color.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+    elevation: 4,
+  },
+  sendButtonText: {
+    color: Colors.color.white,
+    fontSize: 16,
+  },
+  backButton: {
+    width: "90%",
+    height: 50,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  backButtonText: {
+    color: Colors.color.primary,
+    fontSize: 16,
+  },
+});

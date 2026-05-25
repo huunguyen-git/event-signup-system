@@ -16,9 +16,14 @@ export class ApplicationsService {
     if (!event || !user) throw new BadRequestException('Sự kiện hoặc Người dùng không tồn tại!');
 
     if (event.allowed_domain) {
-      const emailDomain = user.email.split('@')[1];
-      if (emailDomain !== event.allowed_domain) {
-        throw new ForbiddenException(`Chỉ dành cho sinh viên có email @${event.allowed_domain}`);
+      const targetDomain = event.allowed_domain.startsWith('@')
+        ? event.allowed_domain.slice(1)
+        : event.allowed_domain;
+      if (targetDomain.toLowerCase() !== 'all') {
+        const emailDomain = user.email.split('@')[1];
+        if (emailDomain !== targetDomain) {
+          throw new ForbiddenException(`Chỉ dành cho sinh viên có email domain ${event.allowed_domain}`);
+        }
       }
     }
 
@@ -50,8 +55,29 @@ export class ApplicationsService {
   async getByEvent(event_id: string) {
     return this.prisma.application.findMany({
       where: { event_id },
-      include: { user: { select: { full_name: true, email: true } } },
+      include: { user: { select: { full_name: true, email: true, avatar_url: true } } },
       orderBy: { applied_at: 'desc' },
+    });
+  }
+
+  async getByUser(userId: string) {
+    return this.prisma.application.findMany({
+      where: { user_id: userId },
+      include: {
+        event: true,
+      },
+      orderBy: { applied_at: 'desc' },
+    });
+  }
+
+  async bulkUpdateStatus(ids: string[], status: string) {
+    return this.prisma.application.updateMany({
+      where: {
+        id: { in: ids },
+      },
+      data: {
+        status: status as ApplicationStatus,
+      },
     });
   }
 }
