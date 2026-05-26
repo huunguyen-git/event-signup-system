@@ -6,7 +6,7 @@ export const CommentService = {
       const response = await apiClient.get(`/comments/event/${eventId}`);
       return response.data;
     } catch (error) {
-      console.error("Lỗi lấy danh sách bình luận:", error);
+      console.log("Lỗi lấy danh sách bình luận:", error);
       throw error;
     }
   },
@@ -28,7 +28,7 @@ export const CommentService = {
       );
       return response.data;
     } catch (error) {
-      console.error("Lỗi đăng bình luận:", error);
+      console.log("Lỗi đăng bình luận:", error);
       throw error;
     }
   },
@@ -46,7 +46,7 @@ export const CommentService = {
       );
       return response.data;
     } catch (error) {
-      console.error("Lỗi ghim bình luận:", error);
+      console.log("Lỗi ghim bình luận:", error);
       throw error;
     }
   },

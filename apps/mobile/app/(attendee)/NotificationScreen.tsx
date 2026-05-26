@@ -26,7 +26,7 @@ export default function NotificationsScreen({ isOpen }: { isOpen?: boolean }) {
         const data = await NotificationService.getUserNotifications(userId);
         setNotifications(data);
       } catch (error) {
-        console.error("Error fetching notifications:", error);
+        console.log("Error fetching notifications:", error);
       } finally {
         setIsLoading(false);
       }

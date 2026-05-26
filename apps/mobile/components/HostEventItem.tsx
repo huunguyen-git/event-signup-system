@@ -1,40 +1,61 @@
 import React from "react";
-import { View, StyleSheet, TouchableOpacity } from "react-native";
+import { View, StyleSheet, TouchableOpacity, Alert } from "react-native";
 import { Colors } from "../constants/theme";
-import { Users, MessageSquare, TrendingUp } from "lucide-react-native";
+import { Users, MessageSquare, TrendingUp, Trash2 } from "lucide-react-native";
 import { ICreateEvent } from "@/axios/dto/eventModel";
 import { useRouter } from "expo-router";
 import { CustomText } from "@/components/CustomText";
+import { EventService } from "@/axios/eventService";
 
 interface HostItem {
   event: ICreateEvent;
 }
-const HostEventItem = (event: HostItem) => {
+const HostEventItem = ({ event }: HostItem) => {
   const statusColors = {
-    LIVE: "#28a745",
+    PUBLISHED: "#28a745",
     DRAFT: "#ffc107",
     COMPLETED: "#6c757d",
   };
   const router = useRouter();
+
+  const handleDelete = async () => {
+    Alert.alert(
+      "Xác nhận xoá",
+      `Bạn có chắc chắn muốn xoá sự kiện "${event.title}" không? Hành động này không thể hoàn tác.`,
+      [
+        {
+          text: "Huỷ",
+          style: "cancel",
+        },
+        {
+          text: "Xoá",
+          style: "destructive",
+          onPress: async () => {
+            await EventService.deleteEvent(event.id);
+          },
+        },
+      ]
+    );
+  };
 
   return (
     <View style={styles.card}>
       {/* Top Row: Title and Status */}
       <View style={styles.headerRow}>
         <CustomText variant="bold" style={styles.title} numberOfLines={1}>
-          {event.event.title}
+          {event.title}
         </CustomText>
         <View
           style={[
             styles.statusBadge,
             {
               backgroundColor:
-                statusColors[event.event.status as keyof typeof statusColors],
+                statusColors[event.status as keyof typeof statusColors],
             },
           ]}
         >
           <CustomText variant="bold" style={styles.statusText}>
-            {event.event.status}
+            {event.status}
           </CustomText>
         </View>
       </View>
@@ -45,20 +66,18 @@ const HostEventItem = (event: HostItem) => {
           Details
         </CustomText>
 
-        {event.event.status && (
+        {event.status && (
           <View style={styles.stat}>
             <TrendingUp size={14} color="#666" />
-            <CustomText style={styles.statValue}>
-              {event.event.status}
-            </CustomText>
+            <CustomText style={styles.statValue}>{event.status}</CustomText>
           </View>
         )}
 
-        {event.event.max_attendees && (
+        {event.max_attendees && (
           <View style={styles.stat}>
             <MessageSquare size={14} color="#666" />
             <CustomText style={styles.statValue}>
-              {event.event.max_attendees}
+              {event.max_attendees}
             </CustomText>
           </View>
         )}
@@ -66,7 +85,7 @@ const HostEventItem = (event: HostItem) => {
         <View style={styles.stat}>
           <Users size={14} color="#666" />
           <CustomText style={styles.statValue}>
-            {event.event.max_attendees}
+            {event.max_attendees}
           </CustomText>
         </View>
       </View>
@@ -75,10 +94,11 @@ const HostEventItem = (event: HostItem) => {
       <View style={styles.buttonRow}>
         <TouchableOpacity
           style={styles.secondaryButton}
+          disabled={event.status === "COMPLETED"}
           onPress={() =>
             router.push({
               pathname: "/EditEventScreen",
-              params: { id: event.event.id },
+              params: { id: event.id },
             })
           }
         >
@@ -91,14 +111,17 @@ const HostEventItem = (event: HostItem) => {
           style={styles.primaryButton}
           onPress={() => {
             router.push({
-                          pathname: "/ViewAttendeesScreen",
-                          params: { id: event.event.id }
-                        });
+              pathname: "/ViewAttendeesScreen",
+              params: { id: event.id },
+            });
           }}
         >
           <CustomText variant="medium" style={styles.primaryButtonText}>
-            {event.event.status === "Draft" ? "View Vendors" : "View Attendees"}
+            {event.status === "Draft" ? "View Vendors" : "View Attendees"}
           </CustomText>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.deleteButton} onPress={handleDelete}>
+          <Trash2 size={18} color="#dc3545" />
         </TouchableOpacity>
       </View>
     </View>
@@ -132,7 +155,7 @@ const styles = StyleSheet.create({
   statusBadge: {
     paddingHorizontal: 8,
     paddingVertical: 2,
-    borderRadius: 10,
+    borderRadius: 20,
   },
   statusText: {
     color: "white",
@@ -162,9 +185,10 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     marginTop: 15,
     gap: 10,
+    alignItems: "center",
   },
   secondaryButton: {
-    flex: 1,
+    flex: 1.5,
     paddingVertical: 8,
     borderRadius: 20,
     backgroundColor: "#EBF2FF",
@@ -179,11 +203,23 @@ const styles = StyleSheet.create({
     flex: 2,
     paddingVertical: 8,
     borderRadius: 20,
-    backgroundColor: "#E1E9F4",
+    backgroundColor: "#EBF2FF",
+    borderWidth: 1,
+    borderColor: "#ADC8FF",
     alignItems: "center",
   },
   primaryButtonText: {
     color: "#1B2B52",
+  },
+  deleteButton: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: "#f8d7da",
+    justifyContent: "center",
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#f5c6cb",
   },
 });
 

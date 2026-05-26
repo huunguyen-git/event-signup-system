@@ -9,7 +9,7 @@ export const NotificationService = {
       );
       return response.data;
     } catch (error) {
-      console.error("Error saving token:", error);
+      console.log("Error saving token:", error);
       throw error;
     }
   },
@@ -18,7 +18,7 @@ export const NotificationService = {
       const response = await apiClient.get(`/notifications/${userId}`);
       return response.data;
     } catch (error) {
-      console.error("Error fetching notifications:", error);
+      console.log("Error fetching notifications:", error);
       throw error;
     }
   },
@@ -34,7 +34,7 @@ export const NotificationService = {
         console.log("🔴 Bị lỗi 404 khi gọi đến URL:", error.config.url);
         console.log("🔴 Data gửi đi lúc đó là:", error.config.data);
       } else {
-        console.error("Lỗi:", error);
+        console.log("Lỗi:", error);
       }
       throw error;
     }
@@ -44,7 +44,7 @@ export const NotificationService = {
       const response = await apiClient.put(`/notifications/${notificationId}`);
       return response.data;
     } catch (error) {
-      console.error("Error mark is read notification:", error);
+      console.log("Error mark is read notification:", error);
       throw error;
     }
   },

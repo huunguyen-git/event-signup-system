@@ -230,7 +230,7 @@ export default function CreateEventScreen() {
                 </CustomText>
                 <CustomText style={{ color: "red" }}>Bắt buộc</CustomText>
               </View>
-              <View style={styles.selectorRow}>
+              <View style={[styles.inputWrapper, {paddingHorizontal: 0}]}>
                 <TouchableOpacity
                   style={styles.dateTimeSelector}
                   onPress={() => setShowStartPicker(true)}
@@ -246,10 +246,14 @@ export default function CreateEventScreen() {
                           day: "2-digit",
                           month: "2-digit",
                           year: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit",
                         })
                       : "Start Date"}
                   </CustomText>
                 </TouchableOpacity>
+                </View>
+                <View style={[styles.inputWrapper, {paddingHorizontal: 0}]}>
 
                 {/* Nút chọn End Date */}
                 <TouchableOpacity
@@ -263,6 +267,8 @@ export default function CreateEventScreen() {
                           day: "2-digit",
                           month: "2-digit",
                           year: "numeric",
+                          hour: "2-digit",
+                          minute:"2-digit",
                         })
                       : "End Date"}
                   </CustomText>
@@ -329,15 +335,15 @@ export default function CreateEventScreen() {
                 }}
               >
                 <CustomText variant="bold" style={styles.cardSectionTitle}>
-                  CAPACITY & TICKETING
+                  CAPACITY
                 </CustomText>
-                <CustomText style={{ color: "red", fontStyle: "italic" }}>
+                <CustomText style={{ color: "red" }}>
                   Bắt buộc
                 </CustomText>
               </View>
               <View style={styles.ticketRow}>
                 <View
-                  style={[styles.inputWrapper, { flex: 1, marginRight: 10 }]}
+                  style={[styles.inputWrapper, { flex: 1 }]}
                 >
                   <TextInput
                     style={styles.wrapperInput}
@@ -347,20 +353,6 @@ export default function CreateEventScreen() {
                     onChangeText={(val) =>
                       setForm({ ...form, max_attendees: Number(val) })
                     }
-                  />
-                </View>
-                <View style={[styles.inputWrapper, { flex: 1 }]}>
-                  <CustomText
-                    variant="bold"
-                    style={{ fontSize: 16, color: "#1a2a44" }}
-                  >
-                    $
-                  </CustomText>
-                  <TextInput
-                    style={[styles.wrapperInput, { marginLeft: 5 }]}
-                    placeholder="Price"
-                    placeholderTextColor="#BBB"
-                    keyboardType="numeric"
                   />
                 </View>
               </View>
@@ -518,15 +510,14 @@ function createStyles() {
 
     // DATE
     selectorRow: {
-      flexDirection: "row",
-      justifyContent: "space-between",
+      alignItems: "flex-start",
       marginBottom: 15,
     },
     dateTimeSelector: {
-      flex: 0.48,
+      flex: 1,
       flexDirection: "row",
       alignItems: "center",
-      justifyContent: "center",
+      justifyContent: "flex-start",
       backgroundColor: "#F5F7FA",
       padding: 14,
       borderRadius: 10,
@@ -540,7 +531,6 @@ function createStyles() {
     // TICKETING
     ticketRow: {
       flexDirection: "row",
-      justifyContent: "space-between",
       alignItems: "center",
     },
 

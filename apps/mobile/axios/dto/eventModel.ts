@@ -20,4 +20,5 @@ export class ICreateEvent {
   form_config: any;
   created_at!: string;
   imageUri?: string;
+  applications?: any[];
 }

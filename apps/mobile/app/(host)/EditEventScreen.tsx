@@ -21,6 +21,9 @@ import { ICreateEvent } from "../../axios/dto/eventModel";
 import { EventService } from "../../axios/eventService";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import DateTimePicker from "@react-native-community/datetimepicker";
+import { getUserId } from "@/services/storage";
+import { NotificationService } from "@/axios/notificationService";
+import * as Notifications from "expo-notifications";
 
 export default function EditEventScreen() {
   const [isStatusOpen, setIsStatusOpen] = useState(false);
@@ -35,6 +38,7 @@ export default function EditEventScreen() {
     const fetchData = async () => {
       const data = await EventService.getEvent(id);
       setEvent(data);
+      setStatus(data.status);
     };
     fetchData();
   }, [id]);
@@ -63,11 +67,34 @@ export default function EditEventScreen() {
   };
 
   const handleSaveChanges = async () => {
-    setIsLoading(true);
-    await EventService.updateEvent(event.id, event);
-    Alert.alert("Đăng kí sự kiên thành công");
-    router.push("/HostDashBoardScreen");
-    setIsLoading(false);
+    try {
+      setIsLoading(true);
+      await EventService.updateEvent(event.id, event);
+      
+      const notification = {
+        userId: await getUserId(),
+        title: "Cập nhật sự kiện",
+        body: "Bạn vừa cập nhật sự kiện " + event.title,
+      };
+
+      await NotificationService.sendAndSaveNotification(notification);
+
+      await Notifications.scheduleNotificationAsync({
+        content: {
+          title: notification.title,
+          body: notification.body,
+          data: { eventId: event.id },
+        },
+        trigger: null,
+      });
+
+      Alert.alert("Thành công", "Cập nhật sự kiện thành công");
+      router.push("/HostDashBoardScreen");
+      setIsLoading(false);
+    } catch (error) {
+      console.log("Error updating event:", error);
+      setIsLoading(false);
+    }
   };
 
   const handleCancel = () => {
@@ -272,7 +299,7 @@ export default function EditEventScreen() {
               <CustomText variant="bold" style={styles.cardSectionTitle}>
                 DATE & VENUE
               </CustomText>
-              <View style={styles.selectorRow}>
+              <View style={[styles.inputWrapper, {paddingHorizontal: 0}]}>
                 <TouchableOpacity
                   style={styles.dateTimeSelector}
                   onPress={() => setShowStartPicker(true)}
@@ -288,11 +315,14 @@ export default function EditEventScreen() {
                           day: "2-digit",
                           month: "2-digit",
                           year: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit"
                         })
                       : "Start Date"}
                   </CustomText>
                 </TouchableOpacity>
-
+                </View>
+                <View style={[styles.inputWrapper, {paddingHorizontal: 0}]}>
                 {/* Nút chọn End Date */}
                 <TouchableOpacity
                   style={styles.dateTimeSelector}
@@ -305,6 +335,8 @@ export default function EditEventScreen() {
                           day: "2-digit",
                           month: "2-digit",
                           year: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit",
                         })
                       : "End Date"}
                   </CustomText>
@@ -343,9 +375,8 @@ export default function EditEventScreen() {
                   />
                 )}
               </View>
-            </View>
-
             <View style={styles.inputWrapper}>
+              
               <TextInput
                 style={styles.wrapperInput}
                 value={event.location_url}
@@ -354,16 +385,17 @@ export default function EditEventScreen() {
                 }
               />
             </View>
+            </View>
+
 
             {/* CAPACITY & PRICE */}
             <View style={styles.card}>
               <CustomText variant="bold" style={styles.cardSectionTitle}>
-                CAPACITY & TICKETING
+                CAPACITY
               </CustomText>
               <View style={styles.ticketRow}>
                 <View
-                  style={[styles.inputWrapper, { flex: 1, marginRight: 10 }]}
-                >
+                  style={[styles.inputWrapper, { flex: 1}]}>
                   <TextInput
                     style={styles.wrapperInput}
                     keyboardType="numeric"
@@ -371,19 +403,6 @@ export default function EditEventScreen() {
                     onChangeText={(val) =>
                       setEvent({ ...event, max_attendees: Number(val) })
                     }
-                  />
-                </View>
-                <View style={[styles.inputWrapper, { flex: 1 }]}>
-                  <CustomText
-                    variant="bold"
-                    style={{ fontSize: 16, color: "#1a2a44" }}
-                  >
-                    $
-                  </CustomText>
-                  <TextInput
-                    style={[styles.wrapperInput, { marginLeft: 5 }]}
-                    keyboardType="numeric"
-                    value="20"
                   />
                 </View>
               </View>
@@ -547,8 +566,6 @@ function createStyles() {
       borderRadius: 10,
     },
     ticketRow: {
-      flexDirection: "row",
-      justifyContent: "space-between",
       alignItems: "center",
     },
     statusSelectorRow: {

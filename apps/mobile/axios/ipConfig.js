@@ -15,5 +15,4 @@ const getBaseUrl = () => {
 };
 
 export const BASE_URL = getBaseUrl();
-console.log(BASE_URL);
-// export const BASE_URL = "https://api-eventconnect-dqbea8hndqfffbc3.southeastasia-01.azurewebsites.net";
+//export const BASE_URL = "https://api-eventconnect-dqbea8hndqfffbc3.southeastasia-01.azurewebsites.net";

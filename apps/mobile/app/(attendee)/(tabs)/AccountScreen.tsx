@@ -14,7 +14,6 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { Colors } from "../../../constants/theme";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Stack, useRouter } from "expo-router";
-// import { userApi, authApi } from "@/services/api";
 import { getToken, removeToken } from "@/services/storage";
 import { UserService } from "../../../axios/userService";
 import { AuthService } from "../../../axios/authService";
@@ -25,6 +24,7 @@ type User = {
   full_name: string;
   email: string;
   phone_number: string | null;
+  description: string | null;
   birthdate: string;
   avatar_url: string | null;
   created_at: string;
@@ -144,6 +144,11 @@ const AccountScreen = () => {
                   icon="clock-outline"
                   label="Member since"
                   value={user?.created_at ? formatDate(user.created_at) : "-"}
+                />
+                <InfoRow
+                  icon="text"
+                  label="Description"
+                  value={user?.description ?? ""}
                 />
               </View>
 

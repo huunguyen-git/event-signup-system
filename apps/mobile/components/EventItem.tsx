@@ -1,18 +1,37 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { View, StyleSheet, Image, TouchableOpacity } from "react-native";
 import { Colors } from "../constants/theme";
 import { useRouter } from "expo-router";
 import { ICreateEvent } from "@/axios/dto/eventModel";
 import { CustomText } from "@/components/CustomText";
+import { Ionicons } from "@expo/vector-icons";
+import { ApplicationService } from "@/axios/applicationService";
 
 interface EventItemProps {
   event: ICreateEvent;
 }
 const EventItem = ({ event }: EventItemProps) => {
   const router = useRouter();
+  const [registeredCount, setRegisteredCount] = useState(0);
+
+  useEffect(() => {
+    const fetchRegisteredCount = async () => {
+      try {
+        const apps = await ApplicationService.getEventApplications(event.id);
+        if (apps && Array.isArray(apps)) {
+          const approvedOrPending = apps.filter(
+            (app: any) => app.status === "APPROVED" || app.status === "PENDING"
+          );
+          setRegisteredCount(approvedOrPending.length);
+        }
+      } catch (error) {
+        console.log("Error fetching event applications:", error);
+      }
+    };
+    fetchRegisteredCount();
+  }, [event.id]);
 
   const handleEventDetails = () => {
-    console.log(event.id);
     router.push({
       pathname: "/EventDetailsScreen",
       params: { id: event.id },
@@ -58,6 +77,12 @@ const EventItem = ({ event }: EventItemProps) => {
           </CustomText>
         </TouchableOpacity>
       </View>
+      <View style={styles.registeredCountBadge}>
+        <Ionicons name="people" size={14} color="#0B2D4F" style={{ marginRight: 4 }} />
+        <CustomText variant="bold" style={styles.registeredCountText}>
+          {registeredCount}/{event.max_attendees || 0}
+        </CustomText>
+      </View>
     </View>
   );
 };
@@ -75,6 +100,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.08,
     shadowRadius: 12,
     elevation: 5,
+    position: "relative",
   },
   eventImage: {
     width: 100,
@@ -113,5 +139,20 @@ const styles = StyleSheet.create({
     color: Colors.color.white,
     textAlign: "center",
     fontSize: 14,
+  },
+  registeredCountBadge: {
+    position: "absolute",
+    top: 10,
+    right: 15,
+    backgroundColor: "#E6F0FA",
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  registeredCountText: {
+    fontSize: 12,
+    color: "#0B2D4F",
   },
 });

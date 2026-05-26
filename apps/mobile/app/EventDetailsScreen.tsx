@@ -18,6 +18,9 @@ import {
   TextInput,
   ActivityIndicator,
   Modal,
+  KeyboardAvoidingView,
+  Keyboard,
+  TouchableWithoutFeedback,
 } from "react-native";
 import { CustomText } from "@/components/CustomText";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -25,6 +28,9 @@ import { Colors } from "../constants/theme";
 import { EventService } from "@/axios/eventService";
 import { CommentService } from "@/axios/commentService";
 import { getToken, getUserId } from "@/services/storage";
+
+import NotificationsScreen from "@/app/(attendee)/NotificationScreen";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 import Header from "@/components/Header";
 
 interface IUser {
@@ -310,6 +316,7 @@ const CommentItem = ({
 export default function EventDetailsScreen() {
   const router = useRouter();
   const themeColor = Colors.light.tint;
+  const [notifications, setNotifications] = useState(false);
   const EVENT_LOCATION_DEFAULT = "Hồ Chí Minh";
 
   const { id } = useLocalSearchParams();
@@ -370,7 +377,7 @@ export default function EventDetailsScreen() {
           await fetchComments();
           setLoadingComments(false);
         } catch (error) {
-          console.error("Error fetching event details:", error);
+          console.log("Error fetching event details:", error);
           setLoadingComments(false);
         }
       };
@@ -484,7 +491,7 @@ export default function EventDetailsScreen() {
       );
       await fetchComments();
     } catch (error) {
-      console.error("Lỗi gửi bình luận:", error);
+      console.log("Lỗi gửi bình luận:", error);
     }
   };
 
@@ -503,7 +510,7 @@ export default function EventDetailsScreen() {
       await CommentService.pinComment(token, comment.id);
       await fetchComments();
     } catch (apiError: any) {
-      console.error("Lỗi ghim:", apiError);
+      console.log("Lỗi ghim:", apiError);
     }
   };
 
@@ -516,12 +523,74 @@ export default function EventDetailsScreen() {
   return (
     <View style={styles.container}>
       <SafeAreaView style={{ backgroundColor: "white" }} edges={["top"]} />
-      <Header />
-
-      <ScrollView
-        contentContainerStyle={styles.scrollBody}
-        showsVerticalScrollIndicator={false}
+      <View style={styles.header}>
+      <MaterialCommunityIcons
+        name="domain"
+        size={40}
+        color={Colors.color.white}
+      />
+      <CustomText style={styles.connect}>
+        {" "}
+        <CustomText variant="bold" style={{ color: "#FFFFFF" }}>
+          EVENT{" "}
+        </CustomText>
+        CONNECT
+      </CustomText>
+      <View style={styles.Icon}>
+        <TouchableOpacity onPress={() => setNotifications(true)}>
+          <MaterialCommunityIcons
+            name="bell-outline"
+            size={40}
+            color={Colors.color.white}
+          />
+        </TouchableOpacity>
+        <TouchableOpacity onPress={handleShare}>
+          <MaterialCommunityIcons
+            name="share-variant"
+            size={30}
+            color={Colors.color.white}
+            style={styles.accountIcon}
+          />
+        </TouchableOpacity>
+      </View>
+      <Modal
+        visible={notifications}
+        onRequestClose={() => setNotifications(false)}
+        animationType="fade"
+        transparent={true}
       >
+        <GestureHandlerRootView style={{ flex: 1 }}>
+          <View style={styles.modalContainer1}>
+            <TouchableOpacity
+              style={styles.modalOverlay}
+              activeOpacity={1}
+              onPress={() => setNotifications(false)}
+            />
+            <View style={styles.notificationBox}>
+              <View style={styles.notificationHeader}>
+                <CustomText variant="bold" style={styles.notificationTitle}>
+                  Thông báo
+                </CustomText>
+              </View>
+              <NotificationsScreen isOpen={notifications} />
+            </View>
+          </View>
+        </GestureHandlerRootView>
+      </Modal>
+    </View>
+
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 0}
+    >
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+        <View style={{ flex: 1 }}>
+          <ScrollView
+            contentContainerStyle={styles.scrollBody}
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
+          >
         <Image
           source={
             eventData?.banner_url
@@ -767,7 +836,14 @@ export default function EventDetailsScreen() {
         }}
       >
         <SafeAreaView style={styles.modalContainer}>
-          <View style={styles.modalHeader}>
+          <KeyboardAvoidingView
+            style={{ flex: 1 }}
+            behavior={Platform.OS === "ios" ? "padding" : "height"}
+            keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 0}
+          >
+            <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+              <View style={{ flex: 1 }}>
+                <View style={styles.modalHeader}>
             <View style={{ width: 30 }} />
             <CustomText variant="bold" style={styles.modalTitle}>
               Comments ({comments.length})
@@ -857,8 +933,11 @@ export default function EventDetailsScreen() {
               </TouchableOpacity>
             </View>
           </View>
-        </SafeAreaView>
-      </Modal>
+        </View>
+      </TouchableWithoutFeedback>
+    </KeyboardAvoidingView>
+  </SafeAreaView>
+</Modal>
 
       <View style={styles.footer}>
         <TouchableOpacity
@@ -870,6 +949,9 @@ export default function EventDetailsScreen() {
           </CustomText>
         </TouchableOpacity>
       </View>
+          </View>
+        </TouchableWithoutFeedback>
+      </KeyboardAvoidingView>
     </View>
   );
 }
@@ -1084,4 +1166,71 @@ const styles = StyleSheet.create({
   },
   modalTitle: { fontSize: 16, color: "#111" },
   modalCloseBtn: { padding: 4 },
+  header: {
+    height: 60,
+    alignItems: "center",
+    backgroundColor: Colors.color.primary,
+    flexDirection: "row",
+    gap: 10,
+    paddingHorizontal: 10,
+  },
+  connect: {
+    fontSize: 18,
+    color: Colors.color.white,
+  },
+  accountIcon: {
+    borderRadius: 20,
+  },
+  Icon: {
+    flexDirection: "row",
+    gap: 10,
+    alignItems: "center",
+    marginLeft: "auto",
+  },
+  modalContainer1: {
+    flex: 1,
+    justifyContent: "flex-start",
+    alignItems: "flex-end",
+  },
+  modalOverlay: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: "rgba(0, 0, 0, 0.4)",
+  },
+  notificationBox: {
+    position: "absolute",
+    top: 65,
+    right: 10,
+    width: 280,
+    height: 480,
+    backgroundColor: "white",
+    borderRadius: 16,
+    padding: 15,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.1,
+    shadowRadius: 15,
+    elevation: 5,
+    zIndex: 10,
+  },
+  notificationHeader: {
+    borderBottomWidth: 1,
+    borderBottomColor: "#eee",
+    paddingBottom: 10,
+    marginBottom: 10,
+  },
+  notificationTitle: {
+    fontSize: 16,
+    color: "#333",
+  },
+  notificationItem: {
+    paddingVertical: 5,
+  },
+  notificationText: {
+    color: "#666",
+    fontSize: 14,
+  },
 });

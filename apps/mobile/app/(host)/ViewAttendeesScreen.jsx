@@ -39,7 +39,7 @@ export default function ViewAttendeesScreen() {
       });
       setAttendees(response.data || []);
     } catch (error) {
-      console.error("Lỗi fetch attendees:", error);
+      console.log("Lỗi fetch attendees:", error);
       Alert.alert("Lỗi", "Không thể lấy danh sách người đăng ký.");
     } finally {
       setLoading(false);
@@ -89,7 +89,7 @@ export default function ViewAttendeesScreen() {
       setSelectedIds([]);
       fetchAttendees();
     } catch (error) {
-      console.error("Lỗi update status:", error);
+      console.log("Lỗi update status:", error);
       Alert.alert("Lỗi", "Cập nhật thất bại.");
     }
   };

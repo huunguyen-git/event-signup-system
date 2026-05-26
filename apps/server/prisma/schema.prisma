@@ -39,6 +39,7 @@ model User {
   phone_number String?
   avatar_url   String?  
   created_at   DateTime @default(now())
+  description  String?
   token        String?
 
   // Relations
@@ -54,7 +55,7 @@ model Event {
   id              String      @id @default(uuid()) @db.Uuid
   host_id         String      @db.Uuid
   title           String
-  description     String      @db.Text
+  description     String?      @db.Text
   event_date      DateTime
   end_date        DateTime?
   banner_url      String?

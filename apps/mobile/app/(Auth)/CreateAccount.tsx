@@ -159,6 +159,7 @@ const CreateAccountScreen = () => {
                             color: birthdate
                               ? Colors.color.text
                               : Colors.color.placeholder,
+                            textAlignVertical: "center"
                           },
                         ]}
                       >
@@ -312,10 +313,10 @@ const styles = StyleSheet.create({
   },
   input: {
     width: "90%",
-    marginBottom: 10,
+    marginBottom: 8,
   },
   labelText: {
-    marginStart: 53,
+    marginStart: 10,
     fontSize: 16,
     color: Colors.color.text,
   },

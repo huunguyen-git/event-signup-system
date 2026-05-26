@@ -13,6 +13,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   TouchableWithoutFeedback,
+  Alert,
 } from "react-native";
 import { CustomText } from "@/components/CustomText";
 import { Colors } from "../constants/theme";
@@ -21,6 +22,7 @@ import { EventService } from "@/axios/eventService";
 import * as Notifications from "expo-notifications";
 import { NotificationService } from "@/axios/notificationService";
 import { SchedulableTriggerInputTypes } from "expo-notifications";
+import { ApplicationService } from "@/axios/applicationService";
 
 export default function RegistrationFormScreen() {
   const router = useRouter();
@@ -78,7 +80,6 @@ export default function RegistrationFormScreen() {
         });
       } else {
         const event = await EventService.getEvent(id);
-        console.log("event duoc lay ve:", event);
         setData(event);
         const formConfig = event.form_config
           ? JSON.parse(event.form_config)
@@ -131,7 +132,8 @@ export default function RegistrationFormScreen() {
       router.push("/HostDashBoardScreen");
       setIsLoading(false);
     } catch (error) {
-      console.error("Error creating event:", error);
+      console.log("Error creating event:", error);
+      setIsLoading(false);
     }
   };
   const handleRegisterEvent = async () => {
@@ -152,11 +154,7 @@ export default function RegistrationFormScreen() {
           ticketType: ticketType,
         },
       };
-      console.log(
-        "Đang gửi đơn đăng ký sự kiện lên server...",
-        applicationData,
-      );
-      await EventService.registerForEvent(applicationData);
+      await ApplicationService.registerForEvent(applicationData);
       router.replace({
         pathname: "/SuccessScreen",
         params: { ticketType: ticketType },
@@ -164,9 +162,30 @@ export default function RegistrationFormScreen() {
       scheduleEventReminder(data.title, data.event_date);
       setIsLoading(false);
     } catch (error: any) {
-      console.error("Error creating event application:", error);
+      console.log("Error creating event application:", error);
       const errorMsg =
         error.response?.data?.message || "Không thể kết nối đến Server!";
+      setIsLoading(false);
+      if (
+        typeof errorMsg === "string" &&
+        (errorMsg.includes("đã đăng ký") || errorMsg.includes("đã đăng kí"))
+      ) {
+        Alert.alert(
+          "Thông báo",
+          "Bạn đã đăng ký sự kiện này rồi!",
+          [
+            {
+              text: "OK",
+              onPress: () => {
+                router.replace("/HomeScreen");
+              },
+            },
+          ],
+          { cancelable: false }
+        );
+      } else {
+        Alert.alert("Thông báo", errorMsg);
+      }
     }
   };
 
@@ -206,7 +225,7 @@ export default function RegistrationFormScreen() {
       </CustomText>
       <View style={styles.inputWrapper}>
         <TextInput
-          style={[styles.input, isCreate && { opacity: 0.5 }]}
+          style={[styles.input, IsCreate && { opacity: 0.5 }]}
           placeholder={placeholder}
           placeholderTextColor="#bbb"
           value={value}
@@ -445,7 +464,7 @@ export default function RegistrationFormScreen() {
                     styles.completeBtn,
                     {
                       backgroundColor: themeColor,
-                      opacity: isCreate ? 1 : agreed ? 1 : 0.5,
+                      opacity: IsCreate ? 1 : agreed ? 1 : 0.5,
                     },
                   ]}
                   disabled={IsCreate ? false : !agreed}

@@ -6,7 +6,7 @@ export const EventService = {
       const response = await apiClient.get(`/events/${id}`);
       return response.data;
     } catch (error) {
-      console.error(error.message);
+      console.log(error.message);
       throw error;
     }
   },
@@ -19,26 +19,7 @@ export const EventService = {
       const response = await apiClient.get(`/events/user/${userId}`);
       return response.data;
     } catch (error) {
-      console.error(error.message);
-      throw error;
-    }
-  },
-  registerForEvent: async (applicationData) => {
-    try {
-      const response = await apiClient.post("/applications", applicationData);
-      return response.data;
-    } catch (error) {
-      console.error(error);
-      throw error;
-    }
-  },
-  getMyRegisteredEvents: async (userId) => {
-    try {
-      const response = await apiClient.get(`/applications/user/${userId}`);
-      console.log(response.data);
-      return response.data;
-    } catch (error) {
-      console.error(error);
+      console.log(error.message);
       throw error;
     }
   },
@@ -56,7 +37,6 @@ export const EventService = {
           formData.append(key, value);
         }
       });
-      console.log("bien event", eventData.banner_url);
       if (eventData.banner_url) {
         const uri = eventData.banner_url;
         const fileName = uri.split("/").pop();
@@ -69,7 +49,7 @@ export const EventService = {
         });
       }
 
-      console.log("Đang gửi dữ liệu lên server...", formData);
+
 
       const response = await apiClient.post("/events", formData, {
         headers: {
@@ -77,10 +57,9 @@ export const EventService = {
         },
       });
 
-      console.log("Kết quả từ server:", response.data);
       return response.data;
     } catch (error) {
-      console.error(
+      console.log(
         "Lỗi chi tiết từ Server:",
         error.response?.data || error.message,
       );
@@ -104,7 +83,6 @@ export const EventService = {
         }
       });
 
-      console.log("bien event banner_url:", eventData.banner_url);
       if (eventData.banner_url) {
         const uri = eventData.banner_url;
 

@@ -24,7 +24,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="DashBoardScreen"
         options={{
-          title: "Dashboard",
+          title: "Registered",
           tabBarIcon: ({ color }) => (
             <MaterialIcons
               name="admin-panel-settings"

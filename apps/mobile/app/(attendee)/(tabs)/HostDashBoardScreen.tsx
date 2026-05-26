@@ -22,6 +22,8 @@ import { getUserId } from "@/services/storage";
 export default function HostDashboardScreen() {
   const [searchQuery, setSearchQuery] = useState("");
   const [data, setData] = useState<ICreateEvent[]>([]);
+  const STATUS_TABS = ["ALL", "PUBLISHED", "DRAFT", "COMPLETE"];
+  const [activeTab, setActiveTab] = useState("ALL");
   useEffect(() => {
     const fetchData = async () => {
       const events = await EventService.getEvents();
@@ -32,23 +34,16 @@ export default function HostDashboardScreen() {
   });
   const styles = createStyles();
   const router = useRouter();
-  const renderHeader = () => {
-    return (
-      <View style={styles.listHeader}>
-        <CustomText variant="bold" style={styles.sectionTitle}>
-          HOST DASHBOARD
-        </CustomText>
-      </View>
-    );
-  };
-  const filterData = useMemo(() => {
-    if (!searchQuery) return data;
-    const formatQuery = searchQuery.toLowerCase();
+  
+  const filterData = useMemo(() => {;
 
-    return data.filter((item) =>
-      item.title.toLowerCase().includes(formatQuery),
+    return data.filter((item) =>{
+      const matchStatus = activeTab === "ALL" || item.status === activeTab;
+      const matchSearch = !searchQuery || item.title.toLowerCase().includes(searchQuery.toLowerCase());
+      return matchStatus && matchSearch;
+    }
     );
-  }, [searchQuery, data]);
+  }, [searchQuery, data, activeTab]);
   return (
     <SafeAreaView style={styles.safeArea}>
       <StatusBar barStyle="light-content" />
@@ -65,16 +60,45 @@ export default function HostDashboardScreen() {
           onChangeText={setSearchQuery}
         />
       </View>
-
+      <View style={styles.listHeader}>
+        <CustomText variant="bold" style={styles.sectionTitle}>
+          HOST DASHBOARD
+        </CustomText>
+      </View>
+      
+      <View>
+      <FlatList
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          data={STATUS_TABS}
+          keyExtractor={(item) => item}
+          contentContainerStyle={{ paddingHorizontal: 15, paddingBottom: 10 }}
+          renderItem={({ item }) => (
+            <TouchableOpacity
+            style={[styles.tabBtn, activeTab === item && styles.tabBtnActive]}
+            onPress={() => {
+              setActiveTab(item);
+            }}
+            >
+              <CustomText variant={activeTab === item ? "bold" : "medium"} style={[styles.tabText, activeTab === item && styles.tabTextActive]}>
+                {item}
+              </CustomText>
+            </TouchableOpacity>
+          )}/>
+          </View>
       <FlatList
         data={filterData}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => {
           return <HostEventItem event={item} />;
         }}
-        ListHeaderComponent={renderHeader}
         contentContainerStyle={styles.scrollPadding}
         showsVerticalScrollIndicator={false}
+        ListEmptyComponent={
+          <CustomText style={{ textAlign: 'center', marginTop: 50, color: '#999' }}>
+              No events found.
+            </CustomText>
+        }
       />
 
       <TouchableOpacity
@@ -112,6 +136,7 @@ function createStyles() {
       alignItems: "center",
     },
     logoContainer: {
+      flex: 1,
       flexDirection: "row",
       alignItems: "center",
     },
@@ -140,7 +165,7 @@ function createStyles() {
       alignItems: "center",
       paddingHorizontal: 15,
       height: 45,
-      marginVertical: 15,
+      marginVertical: 10,
       marginHorizontal: 20,
       shadowColor: "#000",
       shadowOffset: { width: 0, height: 4 },
@@ -159,8 +184,8 @@ function createStyles() {
     },
     sectionTitle: {
       fontSize: 26,
+      
       color: "#1B2B52",
-      marginBottom: 15,
     },
     statsGrid: {
       flexDirection: "row",
@@ -192,6 +217,23 @@ function createStyles() {
     scrollPadding: {
       paddingBottom: 100,
       paddingHorizontal: 20,
+    },
+    tabBtn: {
+      paddingHorizontal: 16,
+      paddingVertical: 8,
+      borderRadius: 20,
+      backgroundColor: "#EEE",
+      marginRight: 10,
+    },
+    tabBtnActive: { 
+      backgroundColor: Colors.color.primary 
+    },
+    tabText: { 
+      fontSize: 13, 
+      color: "#666" 
+    },
+    tabTextActive: { 
+      color: "white" 
     },
   });
 }

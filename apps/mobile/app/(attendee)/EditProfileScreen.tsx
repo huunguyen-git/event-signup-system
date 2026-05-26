@@ -19,7 +19,7 @@ import { Colors } from "../../constants/theme";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Stack, useRouter } from "expo-router";
 import DateTimePicker from "@react-native-community/datetimepicker";
-import * as ImagePicker from "expo-image-picker";
+import ImageCropPicker from 'react-native-image-crop-picker';
 import { getToken } from "@/services/storage";
 import { UserService } from "../../axios/userService";
 
@@ -28,21 +28,25 @@ const EditProfileScreen = () => {
   const [phoneNumber, setPhoneNumber] = useState("");
   const [avatarUrl, setAvatarUrl] = useState("");
   const [birthdate, setBirthdate] = useState<Date | null>(null);
+  const [description, setDescription] = useState("");
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const router = useRouter();
 
   const pickImage = async () => {
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 1,
+    const result = await await ImageCropPicker.openPicker({
+      width: 400,
+      height: 400,
+      cropping: true,               
+      cropperCircleOverlay: true,   
+      mediaType: 'photo',           
+      compressImageQuality: 0.8,    
+      forceJpg: true,               
     });
 
-    if (!result.canceled) {
-      setAvatarUrl(result.assets[0].uri);
+    if (result && result.path) {
+      setAvatarUrl(result.path);
     }
   };
 
@@ -59,6 +63,7 @@ const EditProfileScreen = () => {
         setFullName(data.full_name ?? "");
         setPhoneNumber(data.phone_number ?? "");
         setAvatarUrl(data.avatar_url ?? "");
+        setDescription(data.description ?? "");
         if (data.birthdate) setBirthdate(new Date(data.birthdate));
       } catch (e) {
         Alert.alert("Error", "Failed to load profile");
@@ -85,6 +90,7 @@ const EditProfileScreen = () => {
         birthdate: birthdate
           ? birthdate.toISOString().split("T")[0]
           : undefined,
+        description: description || undefined,
       });
       Alert.alert("Success", "Profile updated", [
         { text: "OK", onPress: () => router.back() },
@@ -156,7 +162,44 @@ const EditProfileScreen = () => {
                     />
                   </View>
                 </View>
-
+                <View style={styles.field}>
+                  <CustomText variant="medium" style={styles.label}>
+                    Avatar URL
+                  </CustomText>
+                  <TouchableOpacity
+                    style={[
+                      styles.imageContainer,
+                      avatarUrl && styles.imageActive,
+                    ]}
+                    onPress={pickImage}
+                  >
+                    {avatarUrl ? (
+                      <Image
+                        source={{ uri: avatarUrl }}
+                        style={styles.previewImage}
+                      />
+                    ) : (
+                      <View style={styles.uploadPlaceholder}>
+                        <View style={styles.cameraCircle}>
+                          <Ionicons
+                            name="camera-outline"
+                            size={24}
+                            color="#FFF"
+                          />
+                        </View>
+                        <CustomText
+                          variant="medium"
+                          style={styles.uploadMainText}
+                        >
+                          Tap to add
+                        </CustomText>
+                        <CustomText style={styles.uploadSubText}>
+                          Recommended (1:1)
+                        </CustomText>
+                      </View>
+                    )}
+                  </TouchableOpacity>
+                </View>
                 <View style={styles.field}>
                   <CustomText variant="medium" style={styles.label}>
                     Phone Number
@@ -219,45 +262,27 @@ const EditProfileScreen = () => {
                   )}
                 </View>
 
+                
                 <View style={styles.field}>
                   <CustomText variant="medium" style={styles.label}>
-                    Avatar URL
+                    Description
                   </CustomText>
-                  <TouchableOpacity
-                    style={[
-                      styles.imageContainer,
-                      avatarUrl && styles.imageActive,
-                    ]}
-                    onPress={pickImage}
-                  >
-                    {avatarUrl ? (
-                      <Image
-                        source={{ uri: avatarUrl }}
-                        style={styles.previewImage}
-                      />
-                    ) : (
-                      <View style={styles.uploadPlaceholder}>
-                        <View style={styles.cameraCircle}>
-                          <Ionicons
-                            name="camera-outline"
-                            size={24}
-                            color="#FFF"
-                          />
-                        </View>
-                        <CustomText
-                          variant="medium"
-                          style={styles.uploadMainText}
-                        >
-                          Tap to add
-                        </CustomText>
-                        <CustomText style={styles.uploadSubText}>
-                          Recommended (1:1)
-                        </CustomText>
-                      </View>
-                    )}
-                  </TouchableOpacity>
+                  <View style={styles.inputContainer}>
+                    <MaterialCommunityIcons
+                      name="text"
+                      size={22}
+                      color={Colors.color.placeholder}
+                    />
+                    <TextInput
+                      style={styles.input}
+                      value={description}
+                      onChangeText={setDescription}
+                      placeholder="Enter your description"
+                      placeholderTextColor={Colors.color.placeholder}
+                      multiline={true}
+                    />
+                  </View>
                 </View>
-
                 <TouchableOpacity
                   style={styles.saveButton}
                   onPress={handleSave}
@@ -397,5 +422,6 @@ const styles = StyleSheet.create({
     width: "100%",
     height: "100%",
     resizeMode: "cover",
+    borderRadius: "50%",
   },
 });
