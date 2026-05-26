@@ -97,8 +97,8 @@ export default function CreateEventScreen() {
       !form.title ||
       !form.end_date ||
       !form.event_date ||
-      form.max_attendees ||
-      form.location_url
+      !form.max_attendees ||
+      !form.location_url
     ) {
       Alert.alert("Vui lòng nhập đầy đủ thông tin bắt buộc");
       setIsLoading(false);
@@ -127,21 +127,22 @@ export default function CreateEventScreen() {
       behavior={Platform.OS === "ios" ? "padding" : "height"}
       style={styles.mainContainer}
     >
-      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-        <View style={{ flex: 1 }}>
-          {/* HEADER */}
-          <View style={styles.header}>
-            <CustomText variant="bold" style={styles.headerText}>
-              CREATE NEW EVENT
-            </CustomText>
-          </View>
+      <View style={{ flex: 1 }}>
+        {/* HEADER */}
+        <View style={styles.header}>
+          <CustomText variant="bold" style={styles.headerText}>
+            CREATE NEW EVENT
+          </CustomText>
+        </View>
 
-          <ScrollView
-            style={styles.scrollView}
-            contentContainerStyle={styles.scrollContent}
-            showsVerticalScrollIndicator={false}
-            keyboardShouldPersistTaps="handled"
-          >
+        <ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+        >
+          <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+            <View>
             {/* EVENT INFORMATION CARD */}
             <View style={styles.card}>
               <CustomText variant="bold" style={styles.cardSectionTitle}>
@@ -385,10 +386,11 @@ export default function CreateEventScreen() {
                 )}
               </TouchableOpacity>
             </View>
-          </ScrollView>
-        </View>
-      </TouchableWithoutFeedback>
-    </KeyboardAvoidingView>
+          </View>
+        </TouchableWithoutFeedback>
+      </ScrollView>
+    </View>
+  </KeyboardAvoidingView>
   );
 }
 

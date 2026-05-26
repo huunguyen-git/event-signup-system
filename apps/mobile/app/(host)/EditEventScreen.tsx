@@ -45,11 +45,12 @@ export default function EditEventScreen() {
   const statusOptions = [
     { label: "PUBLISHED", color: "#4CAF50" },
     { label: "DRAFT", color: "#FFC107" },
-    { label: "COMPLETE", color: "#2196F3" },
+    { label: "COMPLETED", color: "#2196F3" },
   ];
 
   const selectStatus = (val: string) => {
     setStatus(val);
+    setEvent((prev) => ({ ...prev, status: val }));
     setIsStatusOpen(false);
   };
 
@@ -110,49 +111,50 @@ export default function EditEventScreen() {
       behavior={Platform.OS === "ios" ? "padding" : "height"}
       style={styles.mainContainer}
     >
-      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-        <View style={{ flex: 1 }}>
-          <View style={styles.header}>
-            <TouchableOpacity
-              onPress={handleCancel}
-              style={styles.headerActionBtn}
-            >
-              <Ionicons name="close-outline" size={24} color="#BBB" />
-            </TouchableOpacity>
+      <View style={{ flex: 1 }}>
+        <View style={styles.header}>
+          <TouchableOpacity
+            onPress={handleCancel}
+            style={styles.headerActionBtn}
+          >
+            <Ionicons name="close-outline" size={24} color="#BBB" />
+          </TouchableOpacity>
 
-            <View style={styles.headerTitleContainer}>
-              <CustomText variant="bold" style={styles.headerSubtitle}>
-                Editing Event
-              </CustomText>
-              <CustomText
-                variant="bold"
-                style={styles.headerMainTitle}
-                numberOfLines={1}
-              >
-                {event.title}
-              </CustomText>
-            </View>
-
-            <TouchableOpacity
-              onPress={handleSaveChanges}
-              style={styles.headerSaveBtn}
+          <View style={styles.headerTitleContainer}>
+            <CustomText variant="bold" style={styles.headerSubtitle}>
+              Editing Event
+            </CustomText>
+            <CustomText
+              variant="bold"
+              style={styles.headerMainTitle}
+              numberOfLines={1}
             >
-              {isLoading ? (
-                <ActivityIndicator size="small" color="#ffffff" />
-              ) : (
-                <CustomText variant="bold" style={styles.saveBtnText}>
-                  Save
-                </CustomText>
-              )}
-            </TouchableOpacity>
+              {event.title}
+            </CustomText>
           </View>
 
-          <ScrollView
-            style={styles.scrollView}
-            contentContainerStyle={styles.scrollContent}
-            showsVerticalScrollIndicator={false}
-            keyboardShouldPersistTaps="handled"
+          <TouchableOpacity
+            onPress={handleSaveChanges}
+            style={styles.headerSaveBtn}
           >
+            {isLoading ? (
+              <ActivityIndicator size="small" color="#ffffff" />
+            ) : (
+              <CustomText variant="bold" style={styles.saveBtnText}>
+                Save
+              </CustomText>
+            )}
+          </TouchableOpacity>
+        </View>
+
+        <ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+        >
+          <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+            <View>
             {/*  EVENT STATUS */}
             <View style={styles.card}>
               <CustomText variant="bold" style={styles.cardSectionTitle}>
@@ -407,10 +409,11 @@ export default function EditEventScreen() {
                 </View>
               </View>
             </View>
-          </ScrollView>
-        </View>
-      </TouchableWithoutFeedback>
-    </KeyboardAvoidingView>
+          </View>
+        </TouchableWithoutFeedback>
+      </ScrollView>
+    </View>
+  </KeyboardAvoidingView>
   );
 }
 

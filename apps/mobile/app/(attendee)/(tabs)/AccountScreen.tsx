@@ -146,9 +146,10 @@ const AccountScreen = () => {
                   value={user?.created_at ? formatDate(user.created_at) : "-"}
                 />
                 <InfoRow
-                  icon="text"
+                  icon="card-text-outline"
                   label="Description"
                   value={user?.description ?? ""}
+                  alignTop={true}
                 />
               </View>
 
@@ -193,16 +194,19 @@ const InfoRow = ({
   icon,
   label,
   value,
+  alignTop = false,
 }: {
   icon: any;
   label: string;
   value: string;
+  alignTop?: boolean;
 }) => (
-  <View style={styles.infoRow}>
+  <View style={[styles.infoRow, alignTop && { alignItems: "flex-start" }]}>
     <MaterialCommunityIcons
       name={icon}
       size={22}
       color={Colors.color.primary}
+      style={alignTop ? { marginTop: 2 } : null}
     />
     <View style={styles.infoTextContainer}>
       <CustomText style={styles.infoLabel}>{label}</CustomText>

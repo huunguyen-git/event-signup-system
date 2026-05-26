@@ -29,9 +29,8 @@ import { EventService } from "@/axios/eventService";
 import { CommentService } from "@/axios/commentService";
 import { getToken, getUserId } from "@/services/storage";
 
-import NotificationsScreen from "@/app/(attendee)/NotificationScreen";
-import { GestureHandlerRootView } from "react-native-gesture-handler";
 import Header from "@/components/Header";
+import NotificationBell from "@/components/NotificationBell";
 
 interface IUser {
   id: string;
@@ -316,10 +315,10 @@ const CommentItem = ({
 export default function EventDetailsScreen() {
   const router = useRouter();
   const themeColor = Colors.light.tint;
-  const [notifications, setNotifications] = useState(false);
   const EVENT_LOCATION_DEFAULT = "Hồ Chí Minh";
 
-  const { id } = useLocalSearchParams();
+  const { id, isRegistered } = useLocalSearchParams();
+  const registered = isRegistered === "true";
   const [eventData, setEventData] = useState<any | null>(null);
   const [datePart, setDatePart] = useState("");
   const [timePart, setTimePart] = useState("");
@@ -537,13 +536,7 @@ export default function EventDetailsScreen() {
         CONNECT
       </CustomText>
       <View style={styles.Icon}>
-        <TouchableOpacity onPress={() => setNotifications(true)}>
-          <MaterialCommunityIcons
-            name="bell-outline"
-            size={40}
-            color={Colors.color.white}
-          />
-        </TouchableOpacity>
+        <NotificationBell />
         <TouchableOpacity onPress={handleShare}>
           <MaterialCommunityIcons
             name="share-variant"
@@ -553,30 +546,6 @@ export default function EventDetailsScreen() {
           />
         </TouchableOpacity>
       </View>
-      <Modal
-        visible={notifications}
-        onRequestClose={() => setNotifications(false)}
-        animationType="fade"
-        transparent={true}
-      >
-        <GestureHandlerRootView style={{ flex: 1 }}>
-          <View style={styles.modalContainer1}>
-            <TouchableOpacity
-              style={styles.modalOverlay}
-              activeOpacity={1}
-              onPress={() => setNotifications(false)}
-            />
-            <View style={styles.notificationBox}>
-              <View style={styles.notificationHeader}>
-                <CustomText variant="bold" style={styles.notificationTitle}>
-                  Thông báo
-                </CustomText>
-              </View>
-              <NotificationsScreen isOpen={notifications} />
-            </View>
-          </View>
-        </GestureHandlerRootView>
-      </Modal>
     </View>
 
     <KeyboardAvoidingView
@@ -584,13 +553,14 @@ export default function EventDetailsScreen() {
       behavior={Platform.OS === "ios" ? "padding" : "height"}
       keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 0}
     >
-      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-        <View style={{ flex: 1 }}>
-          <ScrollView
-            contentContainerStyle={styles.scrollBody}
-            showsVerticalScrollIndicator={false}
-            keyboardShouldPersistTaps="handled"
-          >
+      <View style={{ flex: 1 }}>
+        <ScrollView
+          contentContainerStyle={styles.scrollBody}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+        >
+          <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+            <View>
         <Image
           source={
             eventData?.banner_url
@@ -804,6 +774,7 @@ export default function EventDetailsScreen() {
                   ref={commentInputRef}
                   style={styles.commentInput}
                   placeholder="Add a public comment..."
+                  placeholderTextColor={Colors.color.placeholder}
                   value={newComment}
                   onChangeText={setNewComment}
                   multiline
@@ -824,7 +795,9 @@ export default function EventDetailsScreen() {
             </View>
           </View>
         </View>
-      </ScrollView>
+            </View>
+          </TouchableWithoutFeedback>
+        </ScrollView>
 
       <Modal
         visible={showAllCommentsModal}
@@ -841,30 +814,31 @@ export default function EventDetailsScreen() {
             behavior={Platform.OS === "ios" ? "padding" : "height"}
             keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 0}
           >
-            <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-              <View style={{ flex: 1 }}>
-                <View style={styles.modalHeader}>
-            <View style={{ width: 30 }} />
-            <CustomText variant="bold" style={styles.modalTitle}>
-              Comments ({comments.length})
-            </CustomText>
-            <TouchableOpacity
-              style={styles.modalCloseBtn}
-              onPress={() => {
-                setShowAllCommentsModal(false);
-                setReplyingTo(null);
-              }}
-            >
-              <Ionicons name="close" size={26} color="#333" />
-            </TouchableOpacity>
-          </View>
+            <View style={{ flex: 1 }}>
+              <View style={styles.modalHeader}>
+                <View style={{ width: 30 }} />
+                <CustomText variant="bold" style={styles.modalTitle}>
+                  Comments ({comments.length})
+                </CustomText>
+                <TouchableOpacity
+                  style={styles.modalCloseBtn}
+                  onPress={() => {
+                    setShowAllCommentsModal(false);
+                    setReplyingTo(null);
+                  }}
+                >
+                  <Ionicons name="close" size={26} color="#333" />
+                </TouchableOpacity>
+              </View>
 
-          <ScrollView
-            style={{ flex: 1, paddingHorizontal: 20, paddingTop: 10 }}
-            showsVerticalScrollIndicator={false}
-            keyboardShouldPersistTaps="handled"
-          >
-            {organizedComments.roots.map((comment) => (
+              <ScrollView
+                style={{ flex: 1, paddingHorizontal: 20, paddingTop: 10 }}
+                showsVerticalScrollIndicator={false}
+                keyboardShouldPersistTaps="handled"
+              >
+                <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+                  <View style={{ flex: 1 }}>
+                    {organizedComments.roots.map((comment) => (
               <CommentItem
                 key={comment.id}
                 comment={comment}
@@ -882,7 +856,9 @@ export default function EventDetailsScreen() {
               />
             ))}
             <View style={{ height: 40 }} />
-          </ScrollView>
+                  </View>
+                </TouchableWithoutFeedback>
+              </ScrollView>
 
           <View
             style={[
@@ -917,6 +893,7 @@ export default function EventDetailsScreen() {
                 ref={modalInputRef}
                 style={styles.commentInput}
                 placeholder="Add a public comment..."
+                placeholderTextColor={Colors.color.placeholder}
                 value={newComment}
                 onChangeText={setNewComment}
                 multiline
@@ -934,23 +911,25 @@ export default function EventDetailsScreen() {
             </View>
           </View>
         </View>
-      </TouchableWithoutFeedback>
-    </KeyboardAvoidingView>
-  </SafeAreaView>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
 </Modal>
 
       <View style={styles.footer}>
         <TouchableOpacity
-          style={[styles.regBtn, { backgroundColor: themeColor }]}
+          style={[
+            styles.regBtn,
+            { backgroundColor: registered ? "#ccc" : themeColor }
+          ]}
+          disabled={registered}
           onPress={handleRegister}
         >
           <CustomText variant="bold" style={styles.regBtnText}>
-            REGISTER NOW
+            {registered ? "REGISTERED" : "REGISTER NOW"}
           </CustomText>
         </TouchableOpacity>
       </View>
           </View>
-        </TouchableWithoutFeedback>
       </KeyboardAvoidingView>
     </View>
   );
@@ -1086,13 +1065,15 @@ const styles = StyleSheet.create({
   commentInputRow: { flexDirection: "row", alignItems: "flex-start" },
   commentInput: {
     flex: 1,
-    backgroundColor: "#f0f2f5",
+    backgroundColor: "white",
     borderRadius: 20,
     paddingHorizontal: 15,
     paddingVertical: Platform.OS === "ios" ? 10 : 8,
     fontSize: 13,
     maxHeight: 100,
     marginRight: 10,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
   },
   postCommentBtn: {
     width: 36,

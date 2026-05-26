@@ -23,6 +23,24 @@ export const EventService = {
       throw error;
     }
   },
+  registerForEvent: async (applicationData) => {
+    try {
+      const response = await apiClient.post("/applications", applicationData);
+      return response.data;
+    } catch (error) {
+      const errorMessage = error.response?.data?.message || "Đã xảy ra lỗi kết nối!";
+      throw new Error(errorMessage);
+    }
+  },
+  getMyRegisteredEvents: async (userId) => {
+    try {
+      const response = await apiClient.get(`/applications/user/${userId}`);
+      return response.data;
+    } catch (error) {
+      console.log(error);
+      throw error;
+    }
+  },
   createEvent: async (eventData) => {
     try {
       const formData = new FormData();

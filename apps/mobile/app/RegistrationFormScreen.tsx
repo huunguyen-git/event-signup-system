@@ -12,8 +12,8 @@ import {
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
-  TouchableWithoutFeedback,
   Alert,
+  TouchableWithoutFeedback,
 } from "react-native";
 import { CustomText } from "@/components/CustomText";
 import { Colors } from "../constants/theme";
@@ -117,8 +117,8 @@ export default function RegistrationFormScreen() {
       await EventService.createEvent(data);
       const notification = {
         userId: await getUserId(),
-        title: data.title,
-        body: "Bạn vừa đăng kí sự kiện " + data.title,
+        title: "Tạo sự kiện thành công",
+        body: "Bạn vừa tạo sự kiện " + data.title,
       };
       await Notifications.scheduleNotificationAsync({
         content: {
@@ -154,17 +154,40 @@ export default function RegistrationFormScreen() {
           ticketType: ticketType,
         },
       };
-      await ApplicationService.registerForEvent(applicationData);
-      router.replace({
-        pathname: "/SuccessScreen",
-        params: { ticketType: ticketType },
-      });
+      const result = await ApplicationService.registerForEvent(applicationData);
+      if (result.status === "WAITLISTED") {
+        Alert.alert(
+          "Sự kiện đã đầy!",
+          "Bạn đã được đưa vào danh sách chờ. Chúng tôi sẽ thông báo nếu có người hủy vé."
+        );
+        router.back();
+      } else {
+        const notification = {
+          userId: currentUserId,
+          title: "Đăng ký sự kiện thành công",
+          body: "Bạn vừa đăng ký tham gia sự kiện " + data.title,
+        };
+        await Notifications.scheduleNotificationAsync({
+          content: {
+            title: notification.title,
+            body: notification.body,
+            data: { eventId: data.id },
+          },
+          trigger: null,
+        });
+        await NotificationService.sendAndSaveNotification(notification);
+
+        router.replace({
+          pathname: "/SuccessScreen",
+          params: { ticketType: ticketType },
+        });
+      }
       scheduleEventReminder(data.title, data.event_date);
       setIsLoading(false);
     } catch (error: any) {
       console.log("Error creating event application:", error);
       const errorMsg =
-        error.response?.data?.message || "Không thể kết nối đến Server!";
+        error.response?.data?.message || error.message || "Không thể kết nối đến Server!";
       setIsLoading(false);
       if (
         typeof errorMsg === "string" &&
@@ -184,7 +207,7 @@ export default function RegistrationFormScreen() {
           { cancelable: false }
         );
       } else {
-        Alert.alert("Thông báo", errorMsg);
+        Alert.alert("Đăng ký thất bại", errorMsg);
       }
     }
   };
@@ -193,19 +216,33 @@ export default function RegistrationFormScreen() {
     eventTitle: string,
     eventStartStr: string,
   ) {
-    const eventTime = new Date(data.event_date).getTime();
-    const triggerDate = new Date(eventTime - 30 * 60 * 1000);
-    await Notifications.scheduleNotificationAsync({
-      content: {
-        title: `⏰ Sắp diễn ra: ${eventTitle}`,
-        body: "Sự kiện của bạn sẽ bắt đầu sau 30 phút nữa. Hãy chuẩn bị nhé!",
-        sound: true,
-      },
-      trigger: {
-        type: SchedulableTriggerInputTypes.DATE,
-        date: triggerDate,
-      },
-    });
+    try {
+      const dateStr = eventStartStr || data.event_date;
+      if (!dateStr) return;
+      const eventTime = new Date(dateStr).getTime();
+      if (isNaN(eventTime)) return;
+
+      const triggerDate = new Date(eventTime - 30 * 60 * 1000);
+      
+      // Only schedule if the trigger time is in the future
+      if (triggerDate.getTime() > Date.now()) {
+        await Notifications.scheduleNotificationAsync({
+          content: {
+            title: `⏰ Sắp diễn ra: ${eventTitle}`,
+            body: "Sự kiện của bạn sẽ bắt đầu sau 30 phút nữa. Hãy chuẩn bị nhé!",
+            sound: true,
+          },
+          trigger: {
+            type: SchedulableTriggerInputTypes.DATE,
+            date: triggerDate,
+          },
+        });
+      } else {
+        console.log("Reminder not scheduled: trigger date is in the past.");
+      }
+    } catch (err) {
+      console.log("Error scheduling event reminder:", err);
+    }
   }
   const ticketOptions = [
     { id: "1", name: "Standard Pass" },
@@ -374,10 +411,7 @@ export default function RegistrationFormScreen() {
                 </View>
               )}
 
-              <ScrollView
-                showsVerticalScrollIndicator={false}
-                style={{ maxHeight: 300 }}
-              >
+              <View>
                 <View style={styles.row}>
                   <InputField
                     label="First Name"
@@ -445,7 +479,7 @@ export default function RegistrationFormScreen() {
                     </CustomText>
                   </View>
                 )}
-              </ScrollView>
+              </View>
 
               <View style={styles.footerRow}>
                 <TouchableOpacity
