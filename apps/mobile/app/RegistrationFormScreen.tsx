@@ -12,6 +12,7 @@ import {
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
+  Alert,
   TouchableWithoutFeedback,
 } from "react-native";
 import { CustomText } from "@/components/CustomText";
@@ -156,17 +157,24 @@ export default function RegistrationFormScreen() {
         "Đang gửi đơn đăng ký sự kiện lên server...",
         applicationData,
       );
-      await EventService.registerForEvent(applicationData);
-      router.replace({
-        pathname: "/SuccessScreen",
-        params: { ticketType: ticketType },
-      });
+      const result = await EventService.registerForEvent(applicationData);
+      if (result.status === "WAITLISTED") {
+          Alert.alert(
+              "Sự kiện đã đầy!",
+              "Bạn đã được đưa vào danh sách chờ. Chúng tôi sẽ thông báo nếu có người hủy vé."
+          );
+          router.back();
+      } else {
+          router.replace({
+              pathname: "/SuccessScreen",
+              params: { ticketType: ticketType },
+          });
+      }
       scheduleEventReminder(data.title, data.event_date);
       setIsLoading(false);
     } catch (error: any) {
-      console.error("Error creating event application:", error);
-      const errorMsg =
-        error.response?.data?.message || "Không thể kết nối đến Server!";
+      setIsLoading(false);
+      Alert.alert("Đăng ký thất bại", error.message);
     }
   };
 

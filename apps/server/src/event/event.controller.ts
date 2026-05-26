@@ -3,6 +3,7 @@ import {
   Get,
   Post,
   Put,
+  Patch,
   Param,
   NotFoundException,
   Body,
@@ -18,6 +19,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 @Controller('events')
 export class EventController {
   constructor(private readonly eventService: EventService) {}
+  
   @Get(':id')
   async getEventByID(@Param('id') id: string): Promise<Event> {
     try {
@@ -30,6 +32,7 @@ export class EventController {
       throw new NotFoundException(`Not Found Event ID ${id}`);
     }
   }
+  
   @Get('user/:user_id')
   async getEventByUserID(
     @Param('user_id') user_id: string,
@@ -44,10 +47,12 @@ export class EventController {
       throw new NotFoundException(`Not Found Event of UserID ${user_id}`);
     }
   }
+  
   @Get()
   async getAllEvent(): Promise<Event[]> {
     return await this.eventService.getEvents();
   }
+  
   @Post()
   @UseInterceptors(FileInterceptor('banner_url'))
   async upLoadImage(
@@ -56,6 +61,7 @@ export class EventController {
   ) {
     return this.eventService.createEvent(data, file);
   }
+  
   @Put(':id')
   @UseInterceptors(FileInterceptor('banner_url'))
   async updateEvent(
@@ -65,8 +71,17 @@ export class EventController {
   ): Promise<Event> {
     return this.eventService.updateEvent({ where: { id }, data, file });
   }
+  
   @Delete(':id')
   async deleteEvent(@Param('id') id: string): Promise<Event> {
     return this.eventService.deleteEvent({ id });
+  }
+
+  @Patch(':id/cancel')
+  async cancelEvent(
+    @Param('id') id: string,
+    @Body('reason') reason: string,
+  ): Promise<Event> {
+    return this.eventService.cancelEvent(id, reason);
   }
 }

@@ -3,11 +3,16 @@ import { PrismaService } from '../prisma.service.js';
 import { CreateEventDto } from './event.dto.js';
 import { Event, Prisma } from '../generated/prisma/client.js';
 import { createClient } from '@supabase/supabase-js';
+import { NotificationService } from '../notification/notification.service.js';
 
 @Injectable()
 export class EventService {
   private supabase: ReturnType<typeof createClient>;
-  constructor(private prisma: PrismaService) {
+  
+  constructor(
+    private prisma: PrismaService,
+    private notificationService: NotificationService
+  ) {
     this.supabase = createClient(
       process.env.SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!,
@@ -19,6 +24,9 @@ export class EventService {
       where,
       include: {
         host: true,
+        _count: {
+          select: { applications: true, comments: true },
+        },
       },
     });
   }
@@ -27,6 +35,9 @@ export class EventService {
     return this.prisma.event.findMany({
       include: {
         host: true,
+        _count: {
+          select: { applications: true, comments: true },
+        },
       },
     });
   }
@@ -38,6 +49,9 @@ export class EventService {
       },
       include: {
         host: true,
+        _count: {
+          select: { applications: true, comments: true },
+        },
       },
       orderBy: {
         event_date: 'desc',
@@ -117,5 +131,27 @@ export class EventService {
 
   async deleteEvent(where: Prisma.EventWhereUniqueInput): Promise<Event> {
     return this.prisma.event.delete({ where });
+  }
+
+  async cancelEvent(eventId: string, reason: string): Promise<Event> {
+    const updatedEvent = await this.prisma.event.update({
+      where: { id: eventId },
+      data: { status: 'CANCELLED' as any }, 
+    });
+
+    const applications = await this.prisma.application.findMany({
+      where: { event_id: eventId },
+      select: { user_id: true }
+    });
+
+    for (const app of applications) {
+      await this.notificationService.sendAndSaveNotification({
+        userId: app.user_id,
+        title: `Sự kiện bị huỷ: ${updatedEvent.title}`,
+        body: `Lý do: ${reason}`,
+      });
+    }
+
+    return updatedEvent;
   }
 }

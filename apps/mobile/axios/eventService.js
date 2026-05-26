@@ -24,14 +24,14 @@ export const EventService = {
     }
   },
   registerForEvent: async (applicationData) => {
-    try {
-      const response = await apiClient.post("/applications", applicationData);
-      return response.data;
-    } catch (error) {
-      console.error(error);
-      throw error;
-    }
-  },
+      try {
+        const response = await apiClient.post("/applications", applicationData);
+        return response.data;
+      } catch (error) {
+        const errorMessage = error.response?.data?.message || "Đã xảy ra lỗi kết nối!";
+        throw new Error(errorMessage);
+      }
+    },
   getMyRegisteredEvents: async (userId) => {
     try {
       const response = await apiClient.get(`/applications/user/${userId}`);
