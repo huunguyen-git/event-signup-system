@@ -56,7 +56,6 @@ const LoginScreen = () => {
       if (finalStatus === "granted") {
         Notifications.setNotificationHandler({
           handleNotification: async () => ({
-            shouldShowAlert: true,
             shouldPlaySound: true,
             shouldSetBadge: false,
             shouldShowBanner: true,

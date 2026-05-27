@@ -71,8 +71,20 @@ const EditProfileScreen = () => {
         setAvatarUrl(data.avatar_url ?? "");
         setDescription(data.description ?? "");
         if (data.birthdate) setBirthdate(new Date(data.birthdate));
-      } catch (e) {
-        Alert.alert("Error", "Failed to load profile");
+      } catch (e: any) {
+        console.log("Error loading profile:", e);
+        if (e.response?.status === 401) {
+          Alert.alert("Phiên đăng nhập hết hạn", "Vui lòng đăng nhập lại.", [
+            {
+              text: "Đăng nhập",
+              onPress: async () => {
+                router.replace("/LoginScreen");
+              },
+            },
+          ]);
+        } else {
+          Alert.alert("Error", "Failed to load profile");
+        }
       } finally {
         setLoading(false);
       }

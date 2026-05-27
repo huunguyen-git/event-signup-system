@@ -29,6 +29,12 @@ export class UserService {
     return new ResponseUserDto(user);
   }
 
+  async findByEmail(email: string): Promise<ResponseUserDto | null> {
+    const user = await this.prisma.user.findUnique({ where: { email } });
+    if (!user) return null;
+    return new ResponseUserDto(user);
+  }
+
   async update(
     id: string,
     dto: UpdateProfileDto,

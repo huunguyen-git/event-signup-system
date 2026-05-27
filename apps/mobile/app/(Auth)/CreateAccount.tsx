@@ -35,15 +35,15 @@ const CreateAccountScreen = () => {
 
   const handleRegister = async () => {
     if (!fullName || !email || !password || !confirmPassword || !birthdate) {
-      Alert.alert("Error", "Please fill in all fields");
+      Alert.alert("Lỗi", "Vui lòng nhập đầy đủ các trường thông tin");
       return;
     }
     if (password !== confirmPassword) {
-      Alert.alert("Error", "Passwords do not match");
+      Alert.alert("Lỗi", "Mật khẩu xác nhận không khớp");
       return;
     }
     if (password.length < 8) {
-      Alert.alert("Error", "Password must be at least 8 characters");
+      Alert.alert("Lỗi", "Mật khẩu phải có tối thiểu 8 ký tự");
       return;
     }
 
@@ -55,12 +55,16 @@ const CreateAccountScreen = () => {
         full_name: fullName,
         birthdate: birthdate.toISOString().split("T")[0],
       });
-      Alert.alert("Success", "Account created! Please log in.");
-      router.replace("/LoginScreen");
-    } catch (err: any) {
       Alert.alert(
-        "Registration failed",
-        err?.message || "Something went wrong",
+        "Đăng ký thành công",
+        "Tài khoản đã được tạo thành công! Bạn bắt buộc phải kiểm tra hộp thư Gmail của bạn để kích hoạt tài khoản. Bạn phải xác nhận email này thì mới có thể đăng nhập được vào ứng dụng.",
+        [{ text: "Đã hiểu", onPress: () => router.replace("/LoginScreen") }]
+      );
+    } catch (err: any) {
+      const errMsg = err.response?.data?.message || err.message || "Đăng ký thất bại. Vui lòng thử lại.";
+      Alert.alert(
+        "Đăng ký thất bại",
+        errMsg
       );
     } finally {
       setLoading(false);

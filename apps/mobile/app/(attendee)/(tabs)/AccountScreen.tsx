@@ -46,8 +46,21 @@ const AccountScreen = () => {
           }
           const data = await UserService.getMe(token);
           setUser(data);
-        } catch (e) {
-          Alert.alert("Error", "Failed to load profile");
+        } catch (e: any) {
+          console.log("Error loading profile:", e);
+          if (e.response?.status === 401) {
+            Alert.alert("Phiên đăng nhập hết hạn", "Vui lòng đăng nhập lại.", [
+              {
+                text: "Đăng nhập",
+                onPress: async () => {
+                  await removeToken();
+                  router.replace("/LoginScreen");
+                },
+              },
+            ]);
+          } else {
+            Alert.alert("Error", "Failed to load profile");
+          }
         } finally {
           setLoading(false);
         }
@@ -165,6 +178,20 @@ const AccountScreen = () => {
                 />
                 <CustomText variant="medium" style={styles.editButtonText}>
                   Edit Profile
+                </CustomText>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.changePasswordButton}
+                onPress={() => router.push("/(attendee)/ChangePasswordScreen" as any)}
+              >
+                <MaterialCommunityIcons
+                  name="lock-reset"
+                  size={20}
+                  color={Colors.color.primary}
+                />
+                <CustomText variant="medium" style={styles.changePasswordButtonText}>
+                  Change Password
                 </CustomText>
               </TouchableOpacity>
 
@@ -348,6 +375,23 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   logoutButtonText: {
+    color: Colors.color.primary,
+    fontSize: 16,
+  },
+  changePasswordButton: {
+    width: "100%",
+    height: 54,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#F0F4F8",
+    borderWidth: 1,
+    borderColor: "#D0DCE7",
+    borderRadius: 27,
+    gap: 8,
+    marginBottom: 12,
+  },
+  changePasswordButtonText: {
     color: Colors.color.primary,
     fontSize: 16,
   },

@@ -12,6 +12,7 @@ import { ApplicationsModule } from './applications/applications.module.js';
 import { CommentsModule } from './comments/comments.module.js';
 import { NotificationController } from './notification/notification.controller.js';
 import { NotificationService } from './notification/notification.service.js';
+import { EmailModule } from './email/email.module.js';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { NotificationService } from './notification/notification.service.js';
     UserModule,
     ApplicationsModule,
     CommentsModule,
+    EmailModule,
   ],
   controllers: [EventController, AppController, NotificationController],
   providers: [EventService, PrismaService, AppService, NotificationService],
