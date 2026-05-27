@@ -249,53 +249,6 @@ export default function RegistrationFormScreen() {
     { id: "2", name: "Premium Pass" },
   ];
 
-  const InputField = ({
-    label,
-    placeholder,
-    isShort,
-    value,
-    onChangeText,
-  }: any) => (
-    <View style={[styles.inputGroup, isShort && { flex: 1 }]}>
-      <CustomText variant="bold" style={styles.label}>
-        {label}
-      </CustomText>
-      <View style={styles.inputWrapper}>
-        <TextInput
-          style={[styles.input, IsCreate && { opacity: 0.5 }]}
-          placeholder={placeholder}
-          placeholderTextColor="#bbb"
-          value={value}
-          onChangeText={onChangeText}
-          editable={!IsCreate}
-        />
-      </View>
-    </View>
-  );
-
-  const InfoModal = ({ visible, title, content, onClose }: any) => (
-    <Modal visible={visible} transparent animationType="fade">
-      <View style={styles.infoOverlay}>
-        <View style={styles.infoCard}>
-          <CustomText variant="bold" style={styles.infoTitle}>
-            {title}
-          </CustomText>
-          <ScrollView style={{ maxHeight: 250 }}>
-            <CustomText style={styles.infoBodyText}>{content}</CustomText>
-          </ScrollView>
-          <TouchableOpacity
-            style={[styles.infoCloseBtn, { backgroundColor: themeColor }]}
-            onPress={onClose}
-          >
-            <CustomText variant="bold" style={styles.infoCloseBtnText}>
-              ĐÓNG
-            </CustomText>
-          </TouchableOpacity>
-        </View>
-      </View>
-    </Modal>
-  );
-
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -306,15 +259,6 @@ export default function RegistrationFormScreen() {
         activeOpacity={1}
         onPressOut={() => router.back()}
       />
-      {IsCreate && (
-        <TouchableOpacity
-          activeOpacity={0.7}
-          style={styles.floatingAddBtn}
-          onPress={() => setShowCustomQuestionModal(true)}
-        >
-          <Ionicons name="add" size={28} color="white" />
-        </TouchableOpacity>
-      )}
 
       <Modal
         visible={showCustomQuestionModal}
@@ -373,13 +317,11 @@ export default function RegistrationFormScreen() {
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
-        <TouchableOpacity
-          style={styles.scrollDismissArea}
-          activeOpacity={1}
-          onPress={() => router.back()}
-        >
-          <TouchableWithoutFeedback onPress={() => {}}>
-            <View style={styles.modalCard}>
+        <TouchableWithoutFeedback onPress={() => router.back()}>
+          <View style={StyleSheet.absoluteFillObject} />
+        </TouchableWithoutFeedback>
+
+        <View style={styles.modalCard}>
               <CustomText style={styles.eventSmallTitle}>
                 International Tech Summit 2024
               </CustomText>
@@ -419,6 +361,7 @@ export default function RegistrationFormScreen() {
                     isShort
                     value={firstName}
                     onChangeText={setFirstName}
+                    editable={!IsCreate}
                   />
                   <View style={{ width: 10 }} />
                   <InputField
@@ -427,6 +370,7 @@ export default function RegistrationFormScreen() {
                     isShort
                     value={lastName}
                     onChangeText={setLastName}
+                    editable={!IsCreate}
                   />
                 </View>
                 <InputField
@@ -434,18 +378,21 @@ export default function RegistrationFormScreen() {
                   placeholder="nguyenvana@gm.uit.edu.vn"
                   value={email}
                   onChangeText={setEmail}
+                  editable={!IsCreate}
                 />
                 <InputField
                   label="Job Title"
                   placeholder="Software Engineer"
                   value={jobTitle}
                   onChangeText={setJobTitle}
+                  editable={!IsCreate}
                 />
                 {customQuestions.map((q) => (
                   <InputField
                     key={q.id}
                     label={q.question}
                     placeholder="Your answer here..."
+                    editable={!IsCreate}
                   />
                 ))}
 
@@ -514,8 +461,6 @@ export default function RegistrationFormScreen() {
                 </TouchableOpacity>
               </View>
             </View>
-          </TouchableWithoutFeedback>
-        </TouchableOpacity>
       </ScrollView>
 
       <Modal visible={showTicketPicker} transparent animationType="slide">
@@ -574,13 +519,25 @@ export default function RegistrationFormScreen() {
         title="Terms of Service"
         content="Nội dung điều khoản dịch vụ chi tiết ở đây..."
         onClose={() => setShowTerms(false)}
+        themeColor={themeColor}
       />
       <InfoModal
         visible={showPrivacy}
         title="Privacy Policy"
         content="Nội dung chính sách bảo mật chi tiết ở đây..."
         onClose={() => setShowPrivacy(false)}
+        themeColor={themeColor}
       />
+
+      {IsCreate && (
+        <TouchableOpacity
+          activeOpacity={0.7}
+          style={[styles.floatingAddBtn, { backgroundColor: themeColor }]}
+          onPress={() => setShowCustomQuestionModal(true)}
+        >
+          <Ionicons name="add" size={28} color="white" />
+        </TouchableOpacity>
+      )}
     </KeyboardAvoidingView>
   );
 }
@@ -685,6 +642,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     elevation: 5,
+    zIndex: 10,
   },
   modalCard: {
     backgroundColor: "white",
@@ -817,3 +775,52 @@ const styles = StyleSheet.create({
   },
   infoCloseBtnText: { color: "white" },
 });
+
+const InputField = ({
+  label,
+  placeholder,
+  isShort,
+  value,
+  onChangeText,
+  editable = true,
+}: any) => (
+  <View style={[styles.inputGroup, isShort && { flex: 1 }]}>
+    <CustomText variant="bold" style={styles.label}>
+      {label}
+    </CustomText>
+    <View style={styles.inputWrapper}>
+      <TextInput
+        style={[styles.input, !editable && { opacity: 0.5 }]}
+        placeholder={placeholder}
+        placeholderTextColor="#bbb"
+        value={value}
+        onChangeText={onChangeText}
+        editable={editable}
+      />
+    </View>
+  </View>
+);
+
+const InfoModal = ({ visible, title, content, onClose, themeColor }: any) => (
+  <Modal visible={visible} transparent animationType="fade">
+    <View style={styles.infoOverlay}>
+      <View style={styles.infoCard}>
+        <CustomText variant="bold" style={styles.infoTitle}>
+          {title}
+        </CustomText>
+        <ScrollView style={{ maxHeight: 250 }}>
+          <CustomText style={styles.infoBodyText}>{content}</CustomText>
+        </ScrollView>
+        <TouchableOpacity
+          style={[styles.infoCloseBtn, { backgroundColor: themeColor }]}
+          onPress={onClose}
+        >
+          <CustomText variant="bold" style={styles.infoCloseBtnText}>
+            ĐÓNG
+          </CustomText>
+        </TouchableOpacity>
+      </View>
+    </View>
+  </Modal>
+);
+

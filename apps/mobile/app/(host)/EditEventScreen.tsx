@@ -56,7 +56,7 @@ export default function EditEventScreen() {
 
   const pickImage = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      mediaTypes: 'images',
       allowsEditing: true,
       aspect: [6, 9],
       quality: 1,
@@ -278,16 +278,20 @@ export default function EditEventScreen() {
                 style={[
                   styles.inputWrapper,
                   {
-                    height: 120,
                     alignItems: "flex-start",
                     paddingVertical: 10,
                   },
                 ]}
               >
                 <TextInput
-                  style={[styles.wrapperInput, styles.textAreaInput]}
-                  multiline
-                  numberOfLines={4}
+                  style={[
+                    styles.wrapperInput,
+                    styles.textAreaInput,
+                    { minHeight: 80, height: "auto" },
+                  ]}
+                  placeholder="Provide a detailed description..."
+                  placeholderTextColor="#BBB"
+                  multiline={true}
                   value={event.description}
                   onChangeText={(val) =>
                     setEvent({ ...event, description: val })

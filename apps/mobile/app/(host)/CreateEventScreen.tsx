@@ -201,18 +201,21 @@ export default function CreateEventScreen() {
                 style={[
                   styles.inputWrapper,
                   {
-                    height: 100,
                     alignItems: "flex-start",
                     paddingVertical: 10,
                   },
                 ]}
               >
                 <TextInput
-                  style={[styles.wrapperInput, styles.textAreaInput]}
+                  style={[
+                    styles.wrapperInput,
+                    styles.textAreaInput,
+                    { minHeight: 80, height: "auto" },
+                  ]}
                   placeholder="Provide a detailed description..."
                   placeholderTextColor="#BBB"
-                  multiline
-                  numberOfLines={4}
+                  multiline={true}
+                  value={form.description}
                   onChangeText={(val) => setForm({ ...form, description: val })}
                 />
               </View>
