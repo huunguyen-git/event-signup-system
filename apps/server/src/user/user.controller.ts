@@ -30,7 +30,7 @@ export class UserController {
   updateMe(
     @Request() req,
     @Body() dto: UpdateProfileDto,
-    @UploadedFile() file: Express.Multer.File,
+    @UploadedFile() file?: Express.Multer.File,
   ) {
     return this.userService.update(req.user.id, dto, file);
   }

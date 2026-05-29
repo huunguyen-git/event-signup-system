@@ -13,7 +13,8 @@ export class ApplicationsService {
     const event = await this.prisma.event.findUnique({ where: { id: event_id } });
     const user = await this.prisma.user.findUnique({ where: { id: user_id } });
 
-    if (!event || !user) throw new BadRequestException('Sự kiện hoặc Người dùng không tồn tại!');
+    if (!event || !user)
+      throw new BadRequestException('Sự kiện hoặc Người dùng không tồn tại!');
 
     if (event.allowed_domain) {
       const targetDomain = event.allowed_domain.startsWith('@')
@@ -47,7 +48,7 @@ export class ApplicationsService {
 
   async checkIn(id: string) {
     return this.prisma.application.update({
-      where: { id },
+      where: { id: id },
       data: { checked_in: true },
     });
   }

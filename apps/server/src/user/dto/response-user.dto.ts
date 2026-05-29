@@ -20,6 +20,9 @@ export class ResponseUserDto {
   @Expose()
   avatar_url!: string | null;
 
+  @Expose()
+  description!: string | null;
+
   constructor(partial: Partial<ResponseUserDto>) {
     Object.assign(this, partial);
   }

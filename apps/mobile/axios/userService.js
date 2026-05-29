@@ -10,13 +10,12 @@ export const UserService = {
       });
       return response.data;
     } catch (error) {
-      console.error("Error fetching user data:", error);
+      console.log("Error fetching user data:", error);
       throw error;
     }
   },
   updateMe: async (token, userData) => {
     try {
-      console.log(userData);
       const formData = new FormData();
       Object.keys(userData).forEach((key) => {
         if (key === "avatar_url") return;
@@ -26,24 +25,28 @@ export const UserService = {
           formData.append(key, value);
         }
       });
-
-      console.log("bien event avatar_url:", userData.avatar_url);
+      
       if (userData.avatar_url) {
         const uri = userData.avatar_url;
-
-        if (uri.startsWith("file://")) {
-          const fileName = uri.split("/").pop();
-          const fileType = fileName.split(".").pop();
+        if (uri.startsWith("http://") || uri.startsWith("https://")) {
+          formData.append("avatar_url", uri);
+        } 
+        else {
+          const fileUri = uri.startsWith("file://") ? uri : `file://${uri}`;
+          const fileName = fileUri.split("/").pop() || "avatar.jpg";
+          const match = /\.(\w+)$/.exec(fileName);
+          const fileExtension = match ? match[1].toLowerCase() : "jpeg";
+          const mimeType = fileExtension === "jpg" ? "jpeg" : fileExtension;
 
           formData.append("avatar_url", {
-            uri: uri,
+            uri: fileUri,
             name: fileName,
-            type: `image/${fileType === "jpg" ? "jpeg" : fileType}`,
+            type: `image/${mimeType}`,
           });
-        } else if (uri.startsWith("http")) {
-          formData.append("avatar_url", uri);
         }
       }
+
+      // 3. Gửi Request
       const response = await apiClient.patch("/users/me", formData, {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -51,8 +54,12 @@ export const UserService = {
         },
       });
       return response.data;
+
     } catch (error) {
-      console.error("Error updating user data:", error.response);
+      console.log(
+        "Error updating user data:", 
+        error.response?.data || error.message
+      );
       throw error;
     }
   },
@@ -61,7 +68,7 @@ export const UserService = {
       const response = await apiClient.get(`/users/${id}`);
       return response.data;
     } catch (error) {
-      console.error("Error fetching user data:", error);
+      console.log("Error fetching user data:", error);
       throw error;
     }
   },

@@ -24,7 +24,6 @@ export class CreateEventDto {
   title!: string;
 
   @IsString()
-  @IsNotEmpty()
   @IsOptional()
   description!: string;
 

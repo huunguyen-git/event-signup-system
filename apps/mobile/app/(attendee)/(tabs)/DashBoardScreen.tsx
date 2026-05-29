@@ -7,7 +7,7 @@ import { FlatList } from "react-native-gesture-handler";
 import MyEventItem from "@/components/MyEventItem";
 import { Stack, useFocusEffect } from "expo-router";
 import React, { useState, useCallback, useMemo } from "react";
-import { EventService } from "../../../axios/eventService";
+import { ApplicationService } from "../../../axios/applicationService";
 import { getUserId } from "@/services/storage";
 import Header from "@/components/Header";
 
@@ -21,12 +21,11 @@ const DashBoardScreen = () => {
           const UserId = await getUserId();
           if (UserId) {
             const responseData =
-              await EventService.getMyRegisteredEvents(UserId);
+              await ApplicationService.getMyRegisteredEvents(UserId);
             setData(responseData);
-            console.log(responseData);
           }
         } catch (error) {
-          console.error("Error fetching data:", error);
+          console.log("Error fetching data:", error);
         }
       };
       fetchData();

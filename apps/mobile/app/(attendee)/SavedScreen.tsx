@@ -8,6 +8,7 @@ import { FlatList } from "react-native-gesture-handler";
 import SavedEventItem from "@/components/SavedEventItem";
 import { Stack } from "expo-router";
 import { SavedData } from "@/scripts/data";
+import NotificationBell from "@/components/NotificationBell";
 
 const SavedScreen = () => {
   return (
@@ -28,11 +29,7 @@ const SavedScreen = () => {
             CONNECT
           </CustomText>
           <View style={styles.Icon}>
-            <MaterialCommunityIcons
-              name="bell-outline"
-              size={40}
-              color={Colors.color.white}
-            />
+            <NotificationBell />
             <MaterialCommunityIcons
               name="account"
               size={40}

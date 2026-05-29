@@ -1,7 +1,7 @@
 import * as SecureStore from "expo-secure-store";
 
 export const saveToken = (token: string) => {
-  SecureStore.setItemAsync("access_token", token);
+  return SecureStore.setItemAsync("access_token", token);
 };
 
 export const getToken = () => {
@@ -9,11 +9,11 @@ export const getToken = () => {
 };
 
 export const removeToken = () => {
-  SecureStore.deleteItemAsync("access_token");
+  return SecureStore.deleteItemAsync("access_token");
 };
 
 export const saveUserId = (id: string) => {
-  SecureStore.setItemAsync("CurrentUserId", id);
+  return SecureStore.setItemAsync("CurrentUserId", id);
 };
 
 export const getUserId = () => {
@@ -21,5 +21,5 @@ export const getUserId = () => {
 };
 
 export const removeUserId = () => {
-  SecureStore.deleteItemAsync("CurrentUserId");
+  return SecureStore.deleteItemAsync("CurrentUserId");
 };

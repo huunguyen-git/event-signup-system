@@ -14,7 +14,6 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { Colors } from "../../../constants/theme";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Stack, useRouter } from "expo-router";
-// import { userApi, authApi } from "@/services/api";
 import { getToken, removeToken } from "@/services/storage";
 import { UserService } from "../../../axios/userService";
 import { AuthService } from "../../../axios/authService";
@@ -25,6 +24,7 @@ type User = {
   full_name: string;
   email: string;
   phone_number: string | null;
+  description: string | null;
   birthdate: string;
   avatar_url: string | null;
   created_at: string;
@@ -46,8 +46,21 @@ const AccountScreen = () => {
           }
           const data = await UserService.getMe(token);
           setUser(data);
-        } catch (e) {
-          Alert.alert("Error", "Failed to load profile");
+        } catch (e: any) {
+          console.log("Error loading profile:", e);
+          if (e.response?.status === 401) {
+            Alert.alert("Phiên đăng nhập hết hạn", "Vui lòng đăng nhập lại.", [
+              {
+                text: "Đăng nhập",
+                onPress: async () => {
+                  await removeToken();
+                  router.replace("/LoginScreen");
+                },
+              },
+            ]);
+          } else {
+            Alert.alert("Error", "Failed to load profile");
+          }
         } finally {
           setLoading(false);
         }
@@ -145,6 +158,12 @@ const AccountScreen = () => {
                   label="Member since"
                   value={user?.created_at ? formatDate(user.created_at) : "-"}
                 />
+                <InfoRow
+                  icon="card-text-outline"
+                  label="Description"
+                  value={user?.description ?? ""}
+                  alignTop={true}
+                />
               </View>
 
               {/* Buttons */}
@@ -159,6 +178,20 @@ const AccountScreen = () => {
                 />
                 <CustomText variant="medium" style={styles.editButtonText}>
                   Edit Profile
+                </CustomText>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.changePasswordButton}
+                onPress={() => router.push("/(attendee)/ChangePasswordScreen" as any)}
+              >
+                <MaterialCommunityIcons
+                  name="lock-reset"
+                  size={20}
+                  color={Colors.color.primary}
+                />
+                <CustomText variant="medium" style={styles.changePasswordButtonText}>
+                  Change Password
                 </CustomText>
               </TouchableOpacity>
 
@@ -188,16 +221,19 @@ const InfoRow = ({
   icon,
   label,
   value,
+  alignTop = false,
 }: {
   icon: any;
   label: string;
   value: string;
+  alignTop?: boolean;
 }) => (
-  <View style={styles.infoRow}>
+  <View style={[styles.infoRow, alignTop && { alignItems: "flex-start" }]}>
     <MaterialCommunityIcons
       name={icon}
       size={22}
       color={Colors.color.primary}
+      style={alignTop ? { marginTop: 2 } : null}
     />
     <View style={styles.infoTextContainer}>
       <CustomText style={styles.infoLabel}>{label}</CustomText>
@@ -339,6 +375,23 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   logoutButtonText: {
+    color: Colors.color.primary,
+    fontSize: 16,
+  },
+  changePasswordButton: {
+    width: "100%",
+    height: 54,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#F0F4F8",
+    borderWidth: 1,
+    borderColor: "#D0DCE7",
+    borderRadius: 27,
+    gap: 8,
+    marginBottom: 12,
+  },
+  changePasswordButtonText: {
     color: Colors.color.primary,
     fontSize: 16,
   },

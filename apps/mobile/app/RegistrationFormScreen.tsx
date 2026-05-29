@@ -12,6 +12,7 @@ import {
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
+  Alert,
   TouchableWithoutFeedback,
 } from "react-native";
 import { CustomText } from "@/components/CustomText";
@@ -21,6 +22,7 @@ import { EventService } from "@/axios/eventService";
 import * as Notifications from "expo-notifications";
 import { NotificationService } from "@/axios/notificationService";
 import { SchedulableTriggerInputTypes } from "expo-notifications";
+import { ApplicationService } from "@/axios/applicationService";
 
 export default function RegistrationFormScreen() {
   const router = useRouter();
@@ -78,7 +80,6 @@ export default function RegistrationFormScreen() {
         });
       } else {
         const event = await EventService.getEvent(id);
-        console.log("event duoc lay ve:", event);
         setData(event);
         const formConfig = event.form_config
           ? JSON.parse(event.form_config)
@@ -116,8 +117,8 @@ export default function RegistrationFormScreen() {
       await EventService.createEvent(data);
       const notification = {
         userId: await getUserId(),
-        title: data.title,
-        body: "Bạn vừa đăng kí sự kiện " + data.title,
+        title: "Tạo sự kiện thành công",
+        body: "Bạn vừa tạo sự kiện " + data.title,
       };
       await Notifications.scheduleNotificationAsync({
         content: {
@@ -131,7 +132,8 @@ export default function RegistrationFormScreen() {
       router.push("/HostDashBoardScreen");
       setIsLoading(false);
     } catch (error) {
-      console.error("Error creating event:", error);
+      console.log("Error creating event:", error);
+      setIsLoading(false);
     }
   };
   const handleRegisterEvent = async () => {
@@ -152,21 +154,61 @@ export default function RegistrationFormScreen() {
           ticketType: ticketType,
         },
       };
-      console.log(
-        "Đang gửi đơn đăng ký sự kiện lên server...",
-        applicationData,
-      );
-      await EventService.registerForEvent(applicationData);
-      router.replace({
-        pathname: "/SuccessScreen",
-        params: { ticketType: ticketType },
-      });
+      const result = await ApplicationService.registerForEvent(applicationData);
+      if (result.status === "WAITLISTED") {
+        Alert.alert(
+          "Sự kiện đã đầy!",
+          "Bạn đã được đưa vào danh sách chờ. Chúng tôi sẽ thông báo nếu có người hủy vé."
+        );
+        router.back();
+      } else {
+        const notification = {
+          userId: currentUserId,
+          title: "Đăng ký sự kiện thành công",
+          body: "Bạn vừa đăng ký tham gia sự kiện " + data.title,
+        };
+        await Notifications.scheduleNotificationAsync({
+          content: {
+            title: notification.title,
+            body: notification.body,
+            data: { eventId: data.id },
+          },
+          trigger: null,
+        });
+        await NotificationService.sendAndSaveNotification(notification);
+
+        router.replace({
+          pathname: "/SuccessScreen",
+          params: { ticketType: ticketType },
+        });
+      }
       scheduleEventReminder(data.title, data.event_date);
       setIsLoading(false);
     } catch (error: any) {
-      console.error("Error creating event application:", error);
+      console.log("Error creating event application:", error);
       const errorMsg =
-        error.response?.data?.message || "Không thể kết nối đến Server!";
+        error.response?.data?.message || error.message || "Không thể kết nối đến Server!";
+      setIsLoading(false);
+      if (
+        typeof errorMsg === "string" &&
+        (errorMsg.includes("đã đăng ký") || errorMsg.includes("đã đăng kí"))
+      ) {
+        Alert.alert(
+          "Thông báo",
+          "Bạn đã đăng ký sự kiện này rồi!",
+          [
+            {
+              text: "OK",
+              onPress: () => {
+                router.replace("/HomeScreen");
+              },
+            },
+          ],
+          { cancelable: false }
+        );
+      } else {
+        Alert.alert("Đăng ký thất bại", errorMsg);
+      }
     }
   };
 
@@ -174,71 +216,38 @@ export default function RegistrationFormScreen() {
     eventTitle: string,
     eventStartStr: string,
   ) {
-    const eventTime = new Date(data.event_date).getTime();
-    const triggerDate = new Date(eventTime - 30 * 60 * 1000);
-    await Notifications.scheduleNotificationAsync({
-      content: {
-        title: `⏰ Sắp diễn ra: ${eventTitle}`,
-        body: "Sự kiện của bạn sẽ bắt đầu sau 30 phút nữa. Hãy chuẩn bị nhé!",
-        sound: true,
-      },
-      trigger: {
-        type: SchedulableTriggerInputTypes.DATE,
-        date: triggerDate,
-      },
-    });
+    try {
+      const dateStr = eventStartStr || data.event_date;
+      if (!dateStr) return;
+      const eventTime = new Date(dateStr).getTime();
+      if (isNaN(eventTime)) return;
+
+      const triggerDate = new Date(eventTime - 30 * 60 * 1000);
+      
+      // Only schedule if the trigger time is in the future
+      if (triggerDate.getTime() > Date.now()) {
+        await Notifications.scheduleNotificationAsync({
+          content: {
+            title: `⏰ Sắp diễn ra: ${eventTitle}`,
+            body: "Sự kiện của bạn sẽ bắt đầu sau 30 phút nữa. Hãy chuẩn bị nhé!",
+            sound: true,
+          },
+          trigger: {
+            type: SchedulableTriggerInputTypes.DATE,
+            date: triggerDate,
+          },
+        });
+      } else {
+        console.log("Reminder not scheduled: trigger date is in the past.");
+      }
+    } catch (err) {
+      console.log("Error scheduling event reminder:", err);
+    }
   }
   const ticketOptions = [
     { id: "1", name: "Standard Pass" },
     { id: "2", name: "Premium Pass" },
   ];
-
-  const InputField = ({
-    label,
-    placeholder,
-    isShort,
-    value,
-    onChangeText,
-  }: any) => (
-    <View style={[styles.inputGroup, isShort && { flex: 1 }]}>
-      <CustomText variant="bold" style={styles.label}>
-        {label}
-      </CustomText>
-      <View style={styles.inputWrapper}>
-        <TextInput
-          style={[styles.input, isCreate && { opacity: 0.5 }]}
-          placeholder={placeholder}
-          placeholderTextColor="#bbb"
-          value={value}
-          onChangeText={onChangeText}
-          editable={!IsCreate}
-        />
-      </View>
-    </View>
-  );
-
-  const InfoModal = ({ visible, title, content, onClose }: any) => (
-    <Modal visible={visible} transparent animationType="fade">
-      <View style={styles.infoOverlay}>
-        <View style={styles.infoCard}>
-          <CustomText variant="bold" style={styles.infoTitle}>
-            {title}
-          </CustomText>
-          <ScrollView style={{ maxHeight: 250 }}>
-            <CustomText style={styles.infoBodyText}>{content}</CustomText>
-          </ScrollView>
-          <TouchableOpacity
-            style={[styles.infoCloseBtn, { backgroundColor: themeColor }]}
-            onPress={onClose}
-          >
-            <CustomText variant="bold" style={styles.infoCloseBtnText}>
-              ĐÓNG
-            </CustomText>
-          </TouchableOpacity>
-        </View>
-      </View>
-    </Modal>
-  );
 
   return (
     <KeyboardAvoidingView
@@ -250,15 +259,6 @@ export default function RegistrationFormScreen() {
         activeOpacity={1}
         onPressOut={() => router.back()}
       />
-      {IsCreate && (
-        <TouchableOpacity
-          activeOpacity={0.7}
-          style={styles.floatingAddBtn}
-          onPress={() => setShowCustomQuestionModal(true)}
-        >
-          <Ionicons name="add" size={28} color="white" />
-        </TouchableOpacity>
-      )}
 
       <Modal
         visible={showCustomQuestionModal}
@@ -317,13 +317,11 @@ export default function RegistrationFormScreen() {
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
-        <TouchableOpacity
-          style={styles.scrollDismissArea}
-          activeOpacity={1}
-          onPress={() => router.back()}
-        >
-          <TouchableWithoutFeedback onPress={() => {}}>
-            <View style={styles.modalCard}>
+        <TouchableWithoutFeedback onPress={() => router.back()}>
+          <View style={StyleSheet.absoluteFillObject} />
+        </TouchableWithoutFeedback>
+
+        <View style={styles.modalCard}>
               <CustomText style={styles.eventSmallTitle}>
                 International Tech Summit 2024
               </CustomText>
@@ -355,10 +353,7 @@ export default function RegistrationFormScreen() {
                 </View>
               )}
 
-              <ScrollView
-                showsVerticalScrollIndicator={false}
-                style={{ maxHeight: 300 }}
-              >
+              <View>
                 <View style={styles.row}>
                   <InputField
                     label="First Name"
@@ -366,6 +361,7 @@ export default function RegistrationFormScreen() {
                     isShort
                     value={firstName}
                     onChangeText={setFirstName}
+                    editable={!IsCreate}
                   />
                   <View style={{ width: 10 }} />
                   <InputField
@@ -374,6 +370,7 @@ export default function RegistrationFormScreen() {
                     isShort
                     value={lastName}
                     onChangeText={setLastName}
+                    editable={!IsCreate}
                   />
                 </View>
                 <InputField
@@ -381,18 +378,21 @@ export default function RegistrationFormScreen() {
                   placeholder="nguyenvana@gm.uit.edu.vn"
                   value={email}
                   onChangeText={setEmail}
+                  editable={!IsCreate}
                 />
                 <InputField
                   label="Job Title"
                   placeholder="Software Engineer"
                   value={jobTitle}
                   onChangeText={setJobTitle}
+                  editable={!IsCreate}
                 />
                 {customQuestions.map((q) => (
                   <InputField
                     key={q.id}
                     label={q.question}
                     placeholder="Your answer here..."
+                    editable={!IsCreate}
                   />
                 ))}
 
@@ -426,7 +426,7 @@ export default function RegistrationFormScreen() {
                     </CustomText>
                   </View>
                 )}
-              </ScrollView>
+              </View>
 
               <View style={styles.footerRow}>
                 <TouchableOpacity
@@ -445,7 +445,7 @@ export default function RegistrationFormScreen() {
                     styles.completeBtn,
                     {
                       backgroundColor: themeColor,
-                      opacity: isCreate ? 1 : agreed ? 1 : 0.5,
+                      opacity: IsCreate ? 1 : agreed ? 1 : 0.5,
                     },
                   ]}
                   disabled={IsCreate ? false : !agreed}
@@ -461,8 +461,6 @@ export default function RegistrationFormScreen() {
                 </TouchableOpacity>
               </View>
             </View>
-          </TouchableWithoutFeedback>
-        </TouchableOpacity>
       </ScrollView>
 
       <Modal visible={showTicketPicker} transparent animationType="slide">
@@ -521,13 +519,25 @@ export default function RegistrationFormScreen() {
         title="Terms of Service"
         content="Nội dung điều khoản dịch vụ chi tiết ở đây..."
         onClose={() => setShowTerms(false)}
+        themeColor={themeColor}
       />
       <InfoModal
         visible={showPrivacy}
         title="Privacy Policy"
         content="Nội dung chính sách bảo mật chi tiết ở đây..."
         onClose={() => setShowPrivacy(false)}
+        themeColor={themeColor}
       />
+
+      {IsCreate && (
+        <TouchableOpacity
+          activeOpacity={0.7}
+          style={[styles.floatingAddBtn, { backgroundColor: themeColor }]}
+          onPress={() => setShowCustomQuestionModal(true)}
+        >
+          <Ionicons name="add" size={28} color="white" />
+        </TouchableOpacity>
+      )}
     </KeyboardAvoidingView>
   );
 }
@@ -632,6 +642,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     elevation: 5,
+    zIndex: 10,
   },
   modalCard: {
     backgroundColor: "white",
@@ -764,3 +775,52 @@ const styles = StyleSheet.create({
   },
   infoCloseBtnText: { color: "white" },
 });
+
+const InputField = ({
+  label,
+  placeholder,
+  isShort,
+  value,
+  onChangeText,
+  editable = true,
+}: any) => (
+  <View style={[styles.inputGroup, isShort && { flex: 1 }]}>
+    <CustomText variant="bold" style={styles.label}>
+      {label}
+    </CustomText>
+    <View style={styles.inputWrapper}>
+      <TextInput
+        style={[styles.input, !editable && { opacity: 0.5 }]}
+        placeholder={placeholder}
+        placeholderTextColor="#bbb"
+        value={value}
+        onChangeText={onChangeText}
+        editable={editable}
+      />
+    </View>
+  </View>
+);
+
+const InfoModal = ({ visible, title, content, onClose, themeColor }: any) => (
+  <Modal visible={visible} transparent animationType="fade">
+    <View style={styles.infoOverlay}>
+      <View style={styles.infoCard}>
+        <CustomText variant="bold" style={styles.infoTitle}>
+          {title}
+        </CustomText>
+        <ScrollView style={{ maxHeight: 250 }}>
+          <CustomText style={styles.infoBodyText}>{content}</CustomText>
+        </ScrollView>
+        <TouchableOpacity
+          style={[styles.infoCloseBtn, { backgroundColor: themeColor }]}
+          onPress={onClose}
+        >
+          <CustomText variant="bold" style={styles.infoCloseBtnText}>
+            ĐÓNG
+          </CustomText>
+        </TouchableOpacity>
+      </View>
+    </View>
+  </Modal>
+);
+

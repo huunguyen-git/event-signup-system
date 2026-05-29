@@ -3,4 +3,5 @@ export class UpdateProfile {
   birthdate?: string;
   phone_number?: string;
   avatar_url?: string;
+  description?:string;
 }

@@ -29,6 +29,12 @@ export class UserService {
     return new ResponseUserDto(user);
   }
 
+  async findByEmail(email: string): Promise<ResponseUserDto | null> {
+    const user = await this.prisma.user.findUnique({ where: { email } });
+    if (!user) return null;
+    return new ResponseUserDto(user);
+  }
+
   async update(
     id: string,
     dto: UpdateProfileDto,
@@ -37,21 +43,29 @@ export class UserService {
     const { avatar_url, ...restDto } = dto;
     await this.findById(id);
     let finalImageUrl: string | null | undefined = avatar_url;
+    console.log(dto);
     if (file) {
-      const fileName = `${Date.now()}-${file.originalname}`;
+      const fileExt = file.originalname.split('.').pop()?.toLowerCase() || 'jpeg';
+      const fileName = `user-${id}-${Date.now()}.${fileExt}`;
+
       const { error } = await this.supabase.storage
         .from('banner')
         .upload(fileName, file.buffer, {
           contentType: file.mimetype,
-          upsert: false,
+          upsert: true,
         });
-      if (error) throw new Error(error.message);
-      const { data: publicUrl } = this.supabase.storage
+
+      if (error) {
+        throw new Error(`Không thể tải ảnh lên: ${error.message}`);
+      }
+
+      const { data } = this.supabase.storage
         .from('banner')
         .getPublicUrl(fileName);
-      finalImageUrl = publicUrl.publicUrl;
+
+      finalImageUrl = data.publicUrl;
     }
-    console.log(file);
+
     const user = await this.prisma.user.update({
       where: { id },
       data: {

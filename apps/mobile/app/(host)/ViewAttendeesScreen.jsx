@@ -39,7 +39,7 @@ export default function ViewAttendeesScreen() {
       });
       setAttendees(response.data || []);
     } catch (error) {
-      console.error("Lỗi fetch attendees:", error);
+      console.log("Lỗi fetch attendees:", error);
       Alert.alert("Lỗi", "Không thể lấy danh sách người đăng ký.");
     } finally {
       setLoading(false);
@@ -89,7 +89,7 @@ export default function ViewAttendeesScreen() {
       setSelectedIds([]);
       fetchAttendees();
     } catch (error) {
-      console.error("Lỗi update status:", error);
+      console.log("Lỗi update status:", error);
       Alert.alert("Lỗi", "Cập nhật thất bại.");
     }
   };
@@ -122,9 +122,19 @@ export default function ViewAttendeesScreen() {
         </View>
 
         <View style={styles.infoSection}>
-          <CustomText variant="bold" style={styles.nameText}>
-            {item.user?.full_name || "Unknown User"}
-          </CustomText>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+            <CustomText variant="bold" style={styles.nameText}>
+              {item.user?.full_name || "Unknown User"}
+            </CustomText>
+            {item.checked_in && (
+              <View style={styles.checkedInBadge}>
+                <Ionicons name="checkmark" size={10} color="#2E7D32" />
+                <CustomText variant="bold" style={styles.checkedInText}>
+                  Checked-in
+                </CustomText>
+              </View>
+            )}
+          </View>
           <CustomText style={styles.eventText}>{item.user?.email}</CustomText>
         </View>
 
@@ -160,6 +170,7 @@ export default function ViewAttendeesScreen() {
           <TextInput
             style={styles.searchInput}
             placeholder="Search by name..."
+            placeholderTextColor={Colors.color.placeholder}
             value={search}
             onChangeText={setSearch}
           />
@@ -263,10 +274,12 @@ function createStyles() {
       flex: 1,
       flexDirection: "row",
       alignItems: "center",
-      backgroundColor: "#EEE",
-      borderRadius: 10,
+      backgroundColor: "white",
+      borderRadius: 12,
       paddingHorizontal: 12,
       height: 45,
+      borderWidth: 1,
+      borderColor: "#E5E7EB",
     },
     searchInput: { flex: 1, marginLeft: 8, fontSize: 14 },
 
@@ -328,6 +341,21 @@ function createStyles() {
       borderRadius: 12,
     },
     statusText: { fontSize: 10, color: "white" },
+    checkedInBadge: {
+      flexDirection: "row",
+      alignItems: "center",
+      backgroundColor: "#E8F5E9",
+      paddingHorizontal: 6,
+      paddingVertical: 2,
+      borderRadius: 4,
+      borderWidth: 1,
+      borderColor: "#C8E6C9",
+    },
+    checkedInText: {
+      fontSize: 9,
+      color: "#2E7D32",
+      marginLeft: 2,
+    },
 
     footer: {
       position: "absolute",

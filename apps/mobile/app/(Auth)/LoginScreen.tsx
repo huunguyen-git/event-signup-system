@@ -43,29 +43,46 @@ const LoginScreen = () => {
       const data = await AuthService.login({ email, password });
       await saveToken(data.access_token);
       await saveUserId(data.user.id);
-      if (Device.isDevice) {
-        const { status: existingStatus } =
-          await Notifications.getPermissionsAsync();
-        let finalStatus = existingStatus;
+      // Request notification permissions (on both physical devices and emulators)
+      const { status: existingStatus } =
+        await Notifications.getPermissionsAsync();
+      let finalStatus = existingStatus;
 
-        if (existingStatus !== "granted") {
-          const { status } = await Notifications.requestPermissionsAsync();
-          finalStatus = status;
-        }
+      if (existingStatus !== "granted") {
+        const { status } = await Notifications.requestPermissionsAsync();
+        finalStatus = status;
+      }
 
-        if (finalStatus === "granted") {
-          Notifications.setNotificationHandler({
-            handleNotification: async () => ({
-              shouldShowAlert: true,
-              shouldPlaySound: true,
-              shouldSetBadge: false,
-              shouldShowBanner: true,
-              shouldShowList: true,
-            }),
-          });
-          const token = await getToken();
-          const tok = { token: token };
-          await NotificationService.SaveToken(data.user.id, tok);
+      if (finalStatus === "granted") {
+        Notifications.setNotificationHandler({
+          handleNotification: async () => ({
+            shouldPlaySound: true,
+            shouldSetBadge: false,
+            shouldShowBanner: true,
+            shouldShowList: true,
+          }),
+        });
+
+        // If running on a physical device, get the actual Expo Push Token and register it on the backend
+        if (Device.isDevice) {
+          try {
+            const projectId =
+              Constants.expoConfig?.extra?.eas?.projectId ??
+              Constants.easConfig?.projectId;
+            
+            const expoPushToken = (
+              await Notifications.getExpoPushTokenAsync({
+                projectId,
+              })
+            ).data;
+            console.log("Obtained Expo Push Token:", expoPushToken);
+
+            if (expoPushToken) {
+              await NotificationService.SaveToken(data.user.id, { token: expoPushToken });
+            }
+          } catch (tokenError) {
+            console.log("Error getting Expo Push Token:", tokenError);
+          }
         }
       }
       router.replace("/HomeScreen");

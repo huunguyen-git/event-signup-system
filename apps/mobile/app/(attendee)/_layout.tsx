@@ -5,6 +5,7 @@ export default function AttendeeLayout() {
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="(tabs)" />
       <Stack.Screen name="EditProfileScreen" />
+      <Stack.Screen name="ChangePasswordScreen" />
     </Stack>
   );
 }

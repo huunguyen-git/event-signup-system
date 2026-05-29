@@ -14,6 +14,7 @@ import { MaterialCommunityIcons, Ionicons } from "@expo/vector-icons";
 import { Colors } from "../constants/theme";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { UserService } from "../axios/userService";
+import NotificationBell from "@/components/NotificationBell";
 
 type User = {
   full_name: string;
@@ -69,11 +70,7 @@ const OrganizerProfileScreen = () => {
             <Text style={styles.event}>ORGANIZER </Text>PROFILE
           </Text>
           <View style={styles.Icon}>
-            <MaterialCommunityIcons
-              name="bell-outline"
-              size={40}
-              color={Colors.color.white}
-            />
+            <NotificationBell />
           </View>
         </View>
 

@@ -11,10 +11,9 @@ interface EventItem {
 const MyEventItem = (event: EventItem) => {
   const router = useRouter();
   const handleEventDetails = () => {
-    console.log(event.event.id);
     router.push({
       pathname: "/EventDetailsScreen",
-      params: { id: event.event.id },
+      params: { id: event.event.id, isRegistered: "true" },
     });
   };
   const eventDate = new Date(event.event.event_date);

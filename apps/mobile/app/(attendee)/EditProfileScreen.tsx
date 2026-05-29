@@ -19,7 +19,7 @@ import { Colors } from "../../constants/theme";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Stack, useRouter } from "expo-router";
 import DateTimePicker from "@react-native-community/datetimepicker";
-import * as ImagePicker from "expo-image-picker";
+import ImageCropPicker from 'react-native-image-crop-picker';
 import { getToken } from "@/services/storage";
 import { UserService } from "../../axios/userService";
 
@@ -28,21 +28,31 @@ const EditProfileScreen = () => {
   const [phoneNumber, setPhoneNumber] = useState("");
   const [avatarUrl, setAvatarUrl] = useState("");
   const [birthdate, setBirthdate] = useState<Date | null>(null);
+  const [description, setDescription] = useState("");
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const router = useRouter();
 
   const pickImage = async () => {
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 1,
-    });
+    try {
+      const result = await ImageCropPicker.openPicker({
+        width: 400,
+        height: 400,
+        cropping: true,               
+        cropperCircleOverlay: true,   
+        mediaType: 'photo',           
+        compressImageQuality: 0.8,    
+        forceJpg: true,               
+      });
 
-    if (!result.canceled) {
-      setAvatarUrl(result.assets[0].uri);
+      if (result && result.path) {
+        setAvatarUrl(result.path);
+      }
+    } catch (error: any) {
+      if (error?.message !== "User cancelled image selection") {
+        Alert.alert("Error", error?.message || "Failed to pick image");
+      }
     }
   };
 
@@ -59,9 +69,22 @@ const EditProfileScreen = () => {
         setFullName(data.full_name ?? "");
         setPhoneNumber(data.phone_number ?? "");
         setAvatarUrl(data.avatar_url ?? "");
+        setDescription(data.description ?? "");
         if (data.birthdate) setBirthdate(new Date(data.birthdate));
-      } catch (e) {
-        Alert.alert("Error", "Failed to load profile");
+      } catch (e: any) {
+        console.log("Error loading profile:", e);
+        if (e.response?.status === 401) {
+          Alert.alert("Phiên đăng nhập hết hạn", "Vui lòng đăng nhập lại.", [
+            {
+              text: "Đăng nhập",
+              onPress: async () => {
+                router.replace("/LoginScreen");
+              },
+            },
+          ]);
+        } else {
+          Alert.alert("Error", "Failed to load profile");
+        }
       } finally {
         setLoading(false);
       }
@@ -85,6 +108,7 @@ const EditProfileScreen = () => {
         birthdate: birthdate
           ? birthdate.toISOString().split("T")[0]
           : undefined,
+        description: description || undefined,
       });
       Alert.alert("Success", "Profile updated", [
         { text: "OK", onPress: () => router.back() },
@@ -116,27 +140,28 @@ const EditProfileScreen = () => {
           style={{ flex: 1 }}
           behavior={Platform.OS === "ios" ? "padding" : "height"}
         >
-          <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-            <View style={{ flex: 1 }}>
-              <View style={styles.header}>
-                <TouchableOpacity onPress={() => router.back()}>
-                  <MaterialCommunityIcons
-                    name="arrow-left"
-                    size={28}
-                    color={Colors.color.white}
-                  />
-                </TouchableOpacity>
-                <CustomText variant="bold" style={styles.headerTitle}>
-                  Edit Profile
-                </CustomText>
-              </View>
+          <View style={{ flex: 1 }}>
+            <View style={styles.header}>
+              <TouchableOpacity onPress={() => router.back()}>
+                <MaterialCommunityIcons
+                  name="arrow-left"
+                  size={28}
+                  color={Colors.color.white}
+                />
+              </TouchableOpacity>
+              <CustomText variant="bold" style={styles.headerTitle}>
+                Edit Profile
+              </CustomText>
+            </View>
 
-              <ScrollView
-                style={styles.body}
-                contentContainerStyle={[styles.bodyContent, { flexGrow: 1 }]}
-                keyboardShouldPersistTaps="handled"
-                showsVerticalScrollIndicator={false}
-              >
+            <ScrollView
+              style={styles.body}
+              contentContainerStyle={[styles.bodyContent, { flexGrow: 1 }]}
+              keyboardShouldPersistTaps="handled"
+              showsVerticalScrollIndicator={false}
+            >
+              <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+                <View style={{ flex: 1 }}>
                 <View style={styles.field}>
                   <CustomText variant="medium" style={styles.label}>
                     Full Name
@@ -156,7 +181,39 @@ const EditProfileScreen = () => {
                     />
                   </View>
                 </View>
-
+                <View style={styles.field}>
+                  <CustomText variant="medium" style={styles.label}>
+                    Avatar
+                  </CustomText>
+                  <TouchableOpacity
+                    style={[
+                      styles.avatarContainer,
+                      avatarUrl ? styles.avatarActive : null,
+                    ]}
+                    onPress={pickImage}
+                  >
+                    {avatarUrl ? (
+                      <View style={styles.avatarImageWrapper}>
+                        <Image
+                          source={{ uri: avatarUrl }}
+                          style={styles.avatarImageCircular}
+                        />
+                        <CustomText variant="medium" style={styles.avatarChangeText}>
+                          Tap to change photo
+                        </CustomText>
+                      </View>
+                    ) : (
+                      <View style={styles.uploadPlaceholder}>
+                        <View style={styles.cameraCircle}>
+                          <Ionicons name="camera-outline" size={24} color="#FFF" />
+                        </View>
+                        <CustomText variant="medium" style={styles.uploadMainText}>
+                          Tap to select photo
+                        </CustomText>
+                      </View>
+                    )}
+                  </TouchableOpacity>
+                </View>
                 <View style={styles.field}>
                   <CustomText variant="medium" style={styles.label}>
                     Phone Number
@@ -219,45 +276,28 @@ const EditProfileScreen = () => {
                   )}
                 </View>
 
+                
                 <View style={styles.field}>
                   <CustomText variant="medium" style={styles.label}>
-                    Avatar URL
+                    Description
                   </CustomText>
-                  <TouchableOpacity
-                    style={[
-                      styles.imageContainer,
-                      avatarUrl && styles.imageActive,
-                    ]}
-                    onPress={pickImage}
-                  >
-                    {avatarUrl ? (
-                      <Image
-                        source={{ uri: avatarUrl }}
-                        style={styles.previewImage}
-                      />
-                    ) : (
-                      <View style={styles.uploadPlaceholder}>
-                        <View style={styles.cameraCircle}>
-                          <Ionicons
-                            name="camera-outline"
-                            size={24}
-                            color="#FFF"
-                          />
-                        </View>
-                        <CustomText
-                          variant="medium"
-                          style={styles.uploadMainText}
-                        >
-                          Tap to add
-                        </CustomText>
-                        <CustomText style={styles.uploadSubText}>
-                          Recommended (1:1)
-                        </CustomText>
-                      </View>
-                    )}
-                  </TouchableOpacity>
+                  <View style={[styles.inputContainer, { alignItems: "flex-start" }]}>
+                    <MaterialCommunityIcons
+                      name="card-text-outline"
+                      size={22}
+                      color={Colors.color.placeholder}
+                      style={{ marginTop: Platform.OS === "ios" ? 2 : 4 }}
+                    />
+                    <TextInput
+                      style={[styles.input, { textAlignVertical: "top", minHeight: 80 }]}
+                      value={description}
+                      onChangeText={setDescription}
+                      placeholder="Enter your description"
+                      placeholderTextColor={Colors.color.placeholder}
+                      multiline={true}
+                    />
+                  </View>
                 </View>
-
                 <TouchableOpacity
                   style={styles.saveButton}
                   onPress={handleSave}
@@ -271,10 +311,11 @@ const EditProfileScreen = () => {
                     </CustomText>
                   )}
                 </TouchableOpacity>
-              </ScrollView>
-            </View>
-          </TouchableWithoutFeedback>
-        </KeyboardAvoidingView>
+              </View>
+            </TouchableWithoutFeedback>
+          </ScrollView>
+        </View>
+      </KeyboardAvoidingView>
       </SafeAreaView>
     </>
   );
@@ -318,6 +359,8 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: Colors.color.text,
     marginLeft: 4,
+    marginBottom: 4,
+    marginTop: 8,
   },
   inputContainer: {
     flexDirection: "row",
@@ -355,21 +398,36 @@ const styles = StyleSheet.create({
     color: Colors.color.white,
     fontSize: 16,
   },
-  imageContainer: {
-    height: 120,
+  avatarContainer: {
+    height: 140,
     borderWidth: 1,
     borderColor: "#cccccccb",
     borderStyle: "dashed",
     borderRadius: 12,
     justifyContent: "center",
     alignItems: "center",
-    marginBottom: 20,
-    overflow: "hidden",
-    backgroundColor: "#FFF",
+    marginBottom: 10,
+    backgroundColor: Colors.color.white,
+    width: "100%",
   },
-  imageActive: {
+  avatarActive: {
     borderStyle: "solid",
-    borderColor: "#1a2a44",
+    borderColor: Colors.color.primary,
+  },
+  avatarImageWrapper: {
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  avatarImageCircular: {
+    width: 70,
+    height: 70,
+    borderRadius: 35,
+    backgroundColor: "#eee",
+  },
+  avatarChangeText: {
+    fontSize: 12,
+    color: "#888",
+    marginTop: 8,
   },
   uploadPlaceholder: {
     alignItems: "center",
@@ -379,23 +437,13 @@ const styles = StyleSheet.create({
     width: 46,
     height: 46,
     borderRadius: 23,
-    backgroundColor: "#1a2a44",
+    backgroundColor: Colors.color.primary,
     justifyContent: "center",
     alignItems: "center",
     marginBottom: 8,
   },
   uploadMainText: {
     fontSize: 14,
-    color: "#333",
-  },
-  uploadSubText: {
-    fontSize: 12,
-    color: "#888",
-    marginTop: 2,
-  },
-  previewImage: {
-    width: "100%",
-    height: "100%",
-    resizeMode: "cover",
+    color: Colors.color.text,
   },
 });

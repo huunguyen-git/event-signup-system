@@ -6,7 +6,6 @@ import {
   TouchableOpacity,
 } from "react-native";
 import { CustomText } from "@/components/CustomText";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { Colors } from "../../../constants/theme";
 import { SafeAreaView } from "react-native-safe-area-context";
 import React, { useEffect, useState } from "react";
@@ -14,16 +13,28 @@ import { Stack, useRouter } from "expo-router";
 import { EventService } from "@/axios/eventService";
 import { CameraView, useCameraPermissions } from "expo-camera";
 import Header from "@/components/Header";
+import { ApplicationService } from "@/axios/applicationService";
+import { getUserId } from "@/services/storage";
+import { NotificationService } from "@/axios/notificationService";
+import * as Notifications from "expo-notifications";
 
 const QrScreen = () => {
-  const router = useRouter();
   const [isScanned, setIsScanned] = useState(false);
+  const [myEvent ,setMyEvent] = useState([]);
   const [permission, requestPermission] = useCameraPermissions();
+  const [userId, setUserId] = useState("");
 
   useEffect(() => {
     if (permission && !permission.granted && permission.canAskAgain) {
       requestPermission();
     }
+    const fetchData = async () =>{
+      const UserId = await getUserId();
+      const data = await ApplicationService.getMyRegisteredEvents(UserId);
+      setUserId(UserId ?? "")
+      setMyEvent(data);
+    }
+    fetchData();
   }, [permission]);
   if (!permission) {
     return <View />;
@@ -41,30 +52,76 @@ const QrScreen = () => {
     );
   }
   const onReadCode = async ({ data }: any) => {
-    console.log("isscanned:", isScanned);
     if (isScanned) return;
 
     const qrData = data.trim();
 
     if (qrData) {
       setIsScanned(true);
-      console.log("🚀 Camera vừa quét được mã:", qrData);
       try {
         const data = await EventService.getEvent(qrData);
-        if (data) {
-          router.push({
-            pathname: "/EventDetailsScreen",
-            params: { id: qrData },
-          });
-        } else {
+        if(!data){
           Alert.alert(
             "Thông báo",
             "Mã QR này không thuộc về bất kỳ sự kiện nào.",
           );
           setIsScanned(false);
+          return;
+        }
+        if (myEvent) {
+          const matchingApps: any = myEvent.filter(
+            (item: any) =>
+              item.status === "APPROVED" && item.event_id === qrData
+          );
+          if (matchingApps.length !== 0) {
+            const app = matchingApps[0];
+            if (app.checked_in) {
+              Alert.alert(
+                "Thông báo",
+                "Bạn đã check-in sự kiện này trước đó rồi!"
+              );
+              setIsScanned(false);
+            } else {
+              await ApplicationService.checkIn(app.id);
+
+              setMyEvent((prevEvents: any) =>
+                prevEvents.map((item: any) =>
+                  item.id === app.id ? { ...item, checked_in: true } : item
+                )
+              );
+
+              const notification = {
+                userId: userId,
+                title: "Thông báo",
+                body: `Bạn vừa check in sự kiện ${data.title}`,
+              };
+              await NotificationService.sendAndSaveNotification(notification);
+
+              await Notifications.scheduleNotificationAsync({
+                content: {
+                  title: notification.title,
+                  body: notification.body,
+                  data: { eventId: data.id },
+                },
+                trigger: null,
+              });
+
+              Alert.alert(
+                "Thành công",
+                `Check-in sự kiện ${data.title} thành công!`
+              );
+              setIsScanned(false);
+            }
+          } else {
+            Alert.alert(
+              "Thông báo",
+              "Bạn chưa đăng ký sự kiện này hoặc đăng ký chưa được duyệt."
+            );
+            setIsScanned(false);
+          }
         }
       } catch (error) {
-        console.error("Lỗi API khi lấy sự kiện:", error);
+        console.log("Lỗi API khi lấy sự kiện:", error);
         Alert.alert("Lỗi", "Không thể tìm thấy sự kiện, vui lòng thử lại.");
         setIsScanned(false);
       }
