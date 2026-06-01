@@ -8,6 +8,7 @@ import {
   Image,
   ActivityIndicator,
   Alert,
+  Modal
 } from "react-native";
 import { CustomText } from "@/components/CustomText";
 import { Ionicons } from "@expo/vector-icons";
@@ -16,18 +17,21 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import apiClient from "@/axios/axios";
 import { getToken } from "@/services/storage";
 
-const STATUS_TABS = ["All", "PENDING", "APPROVED", "REJECTED", "WAITLISTED"];
+const STATUS_TABS = ["PENDING", "APPROVED", "REJECTED"];
 
 export default function ViewAttendeesScreen() {
   const { id } = useLocalSearchParams();
   const router = useRouter();
 
   const [search, setSearch] = useState("");
-  const [activeTab, setActiveTab] = useState("All");
+  const [activeTab, setActiveTab] = useState("PENDING");
 
   const [attendees, setAttendees] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedIds, setSelectedIds] = useState([]);
+
+  const [rejectModalVisible, setRejectModalVisible] = useState(false);
+  const [rejectReason, setRejectReason] = useState("");
 
   const fetchAttendees = async () => {
     try {
@@ -53,7 +57,7 @@ export default function ViewAttendeesScreen() {
   }, [id]);
 
   const filteredAttendees = attendees.filter((item) => {
-    const matchStatus = activeTab === "All" || item.status === activeTab;
+    const matchStatus = item.status === activeTab;
     const matchSearch = item.user?.full_name?.toLowerCase().includes(search.toLowerCase());
     return matchStatus && matchSearch;
   });
@@ -74,23 +78,33 @@ export default function ViewAttendeesScreen() {
     }
   };
 
-  const handleUpdateStatus = async (newStatus) => {
+  const handleUpdateStatus = async (newStatus, reason = "") => {
     if (selectedIds.length === 0) return;
 
     try {
       const token = await getToken();
       await apiClient.patch(
         `/applications/bulk-update-status`,
-        { ids: selectedIds, status: newStatus },
+        { ids: selectedIds, status: newStatus, reason: reason },
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      Alert.alert("Thành công", `Đã chuyển sang ${newStatus}`);
+      let message = "Đã cập nhật trạng thái thành công.";
+      if (newStatus === "APPROVED") {
+        message = `Bạn đã phê duyệt thành công ${selectedIds.length} người tham gia.`;
+      } else if (newStatus === "REJECTED") {
+        message = `Bạn đã từ chối ${selectedIds.length} người tham gia.\nLý do: ${reason || "Không có"}`;
+      }
+
+      Alert.alert("Hoàn tất", message);
       setSelectedIds([]);
+      setRejectModalVisible(false);
+      setRejectReason("");
       fetchAttendees();
     } catch (error) {
       console.log("Lỗi update status:", error);
-      Alert.alert("Lỗi", "Cập nhật thất bại.");
+      const errorMessage = error.response?.data?.message || "Quá trình cập nhật gặp sự cố, vui lòng thử lại.";
+      Alert.alert("Không thể phê duyệt", errorMessage);
     }
   };
 
@@ -100,22 +114,23 @@ export default function ViewAttendeesScreen() {
     let statusColor = "#666";
     if (item.status === "APPROVED") statusColor = "#4CAF50";
     if (item.status === "REJECTED") statusColor = "#F44336";
-    if (item.status === "WAITLISTED") statusColor = "#FF9800";
     if (item.status === "PENDING") statusColor = "#2196F3";
 
     return (
       <View style={styles.attendeeRow}>
         <View style={styles.leftSection}>
-          <TouchableOpacity style={styles.checkbox} onPress={() => toggleSelect(item.id)}>
-            {isSelected && <View style={styles.checkboxInner} />}
-          </TouchableOpacity>
+          {activeTab !== "REJECTED" && (
+            <TouchableOpacity style={styles.checkbox} onPress={() => toggleSelect(item.id)}>
+              {isSelected && <View style={styles.checkboxInner} />}
+            </TouchableOpacity>
+          )}
           {item.user?.avatar_url ? (
             <Image
               source={{ uri: item.user.avatar_url }}
               style={styles.avatar}
             />
           ) : (
-            <View style={[styles.avatar, { backgroundColor: "#e1e4e8", justifyContent: "center", alignItems: "center" }]}>
+            <View style={[styles.avatar, { backgroundColor: "#e1e4e8", justifyContent: "center", alignItems: "center", marginLeft: activeTab === "REJECTED" ? 10 : 0 }]}>
               <Ionicons name="person" size={20} color="#a3a6ac" />
             </View>
           )}
@@ -201,12 +216,16 @@ export default function ViewAttendeesScreen() {
       </View>
 
       <View style={styles.listHeaderRow}>
-        <TouchableOpacity style={{ flex: 0.2, flexDirection: "row", alignItems: "center" }} onPress={toggleSelectAll}>
-            <View style={styles.checkbox}>
-              {isAllSelected && <View style={styles.checkboxInner} />}
-            </View>
-            <CustomText variant="bold" style={styles.listHeaderText}>All</CustomText>
-        </TouchableOpacity>
+        {activeTab !== "REJECTED" ? (
+          <TouchableOpacity style={{ flex: 0.2, flexDirection: "row", alignItems: "center" }} onPress={toggleSelectAll}>
+              <View style={styles.checkbox}>
+                {isAllSelected && <View style={styles.checkboxInner} />}
+              </View>
+              <CustomText variant="bold" style={styles.listHeaderText}>All</CustomText>
+          </TouchableOpacity>
+        ) : (
+          <View style={{ flex: 0.2 }} />
+        )}
         <CustomText variant="bold" style={[styles.listHeaderText, { flex: 0.5 }]}>Info</CustomText>
         <CustomText variant="bold" style={[styles.listHeaderText, { flex: 0.3, textAlign: "right" }]}>Status</CustomText>
       </View>
@@ -228,30 +247,85 @@ export default function ViewAttendeesScreen() {
         />
       )}
 
-      {selectedIds.length > 0 && (
+      {selectedIds.length > 0 && activeTab !== "REJECTED" && (
         <View style={styles.footer}>
           <CustomText variant="bold" style={styles.managementTitle}>
-            Action for {selectedIds.length} selected
+            Thao tác cho {selectedIds.length} người được chọn
           </CustomText>
           <View style={styles.actionScroll}>
-            <TouchableOpacity
-              style={[styles.actionBtn, { backgroundColor: "#4CAF50", flex: 1 }]}
-              onPress={() => handleUpdateStatus("APPROVED")}
-            >
-              <Ionicons name="checkmark-circle" size={18} color="white" style={{ marginRight: 5 }} />
-              <CustomText variant="bold" style={styles.actionBtnText}>APPROVE</CustomText>
-            </TouchableOpacity>
 
-            <TouchableOpacity
-              style={[styles.actionBtn, { backgroundColor: "#F44336", flex: 1 }]}
-              onPress={() => handleUpdateStatus("REJECTED")}
-            >
-              <Ionicons name="close-circle" size={18} color="white" style={{ marginRight: 5 }} />
-              <CustomText variant="bold" style={styles.actionBtnText}>REJECT</CustomText>
-            </TouchableOpacity>
+            {(activeTab === "PENDING") && (
+              <>
+                <TouchableOpacity
+                  style={[styles.actionBtn, { backgroundColor: "#4CAF50", flex: 1 }]}
+                  onPress={() => handleUpdateStatus("APPROVED")}
+                >
+                  <Ionicons name="checkmark-circle" size={18} color="white" style={{ marginRight: 5 }} />
+                  <CustomText variant="bold" style={styles.actionBtnText}>PHÊ DUYỆT</CustomText>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[styles.actionBtn, { backgroundColor: "#F44336", flex: 1 }]}
+                  onPress={() => setRejectModalVisible(true)}
+                >
+                  <Ionicons name="close-circle" size={18} color="white" style={{ marginRight: 5 }} />
+                  <CustomText variant="bold" style={styles.actionBtnText}>TỪ CHỐI</CustomText>
+                </TouchableOpacity>
+              </>
+            )}
+
+            {activeTab === "APPROVED" && (
+              <TouchableOpacity
+                style={[styles.actionBtn, { backgroundColor: "#F44336", flex: 1 }]}
+                onPress={() => setRejectModalVisible(true)}
+              >
+                <Ionicons name="close-circle" size={18} color="white" style={{ marginRight: 5 }} />
+                <CustomText variant="bold" style={styles.actionBtnText}>TỪ CHỐI</CustomText>
+              </TouchableOpacity>
+            )}
+
           </View>
         </View>
       )}
+
+      <Modal
+        visible={rejectModalVisible}
+        transparent
+        animationType="fade"
+      >
+        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center' }}>
+          <View style={{ backgroundColor: 'white', width: '85%', padding: 20, borderRadius: 12 }}>
+            <CustomText variant="bold" style={{ fontSize: 16, marginBottom: 10 }}>Nhập lý do từ chối (Tùy chọn)</CustomText>
+
+            <TextInput
+              style={{
+                borderWidth: 1, borderColor: '#ddd', borderRadius: 8,
+                padding: 12, minHeight: 80, textAlignVertical: 'top', marginBottom: 20
+              }}
+              placeholder="VD: Sự kiện đã đủ số lượng, Không đúng đối tượng..."
+              multiline
+              value={rejectReason}
+              onChangeText={setRejectReason}
+            />
+
+            <View style={{ flexDirection: 'row', justifyContent: 'flex-end', gap: 10 }}>
+              <TouchableOpacity
+                onPress={() => { setRejectModalVisible(false); setRejectReason(""); }}
+                style={{ paddingHorizontal: 15, paddingVertical: 10, borderRadius: 8, backgroundColor: '#eee' }}
+              >
+                <CustomText variant="bold" style={{ color: '#555' }}>Hủy bỏ</CustomText>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                onPress={() => handleUpdateStatus("REJECTED", rejectReason)}
+                style={{ paddingHorizontal: 15, paddingVertical: 10, borderRadius: 8, backgroundColor: '#F44336' }}
+              >
+                <CustomText variant="bold" style={{ color: 'white' }}>Xác nhận Từ chối</CustomText>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }

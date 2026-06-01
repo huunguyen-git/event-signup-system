@@ -26,37 +26,29 @@ import { NotificationService } from "@/axios/notificationService";
 import * as Notifications from "expo-notifications";
 
 export default function EditEventScreen() {
-  const [isStatusOpen, setIsStatusOpen] = useState(false);
-  const [status, setStatus] = useState("LIVE");
+  const [status, setStatus] = useState("DRAFT");
   const { id } = useLocalSearchParams();
   const [event, setEvent] = useState<ICreateEvent>(new ICreateEvent());
   const [showStartPicker, setShowStartPicker] = useState(false);
   const [showEndPicker, setShowEndPicker] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
+
+  // Biến quyết định xem màn hình này có cho phép sửa hay không
+  const isEditable = status === "DRAFT";
+
   useEffect(() => {
     const fetchData = async () => {
-      const data = await EventService.getEvent(id);
+      const data = await EventService.getEvent(id as string);
       setEvent(data);
       setStatus(data.status);
     };
     fetchData();
   }, [id]);
-  const statusOptions = [
-    { label: "PUBLISHED", color: "#4CAF50" },
-    { label: "DRAFT", color: "#FFC107" },
-    { label: "COMPLETED", color: "#2196F3" },
-  ];
-
-  const selectStatus = (val: string) => {
-    setStatus(val);
-    setEvent((prev) => ({ ...prev, status: val }));
-    setIsStatusOpen(false);
-  };
 
   const pickImage = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: 'images',
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
       aspect: [6, 9],
       quality: 1,
@@ -71,7 +63,7 @@ export default function EditEventScreen() {
     try {
       setIsLoading(true);
       await EventService.updateEvent(event.id, event);
-      
+
       const notification = {
         userId: await getUserId(),
         title: "Cập nhật sự kiện",
@@ -122,7 +114,7 @@ export default function EditEventScreen() {
 
           <View style={styles.headerTitleContainer}>
             <CustomText variant="bold" style={styles.headerSubtitle}>
-              Editing Event
+              {isEditable ? "Editing Event" : "Event Details"}
             </CustomText>
             <CustomText
               variant="bold"
@@ -133,18 +125,22 @@ export default function EditEventScreen() {
             </CustomText>
           </View>
 
-          <TouchableOpacity
-            onPress={handleSaveChanges}
-            style={styles.headerSaveBtn}
-          >
-            {isLoading ? (
-              <ActivityIndicator size="small" color="#ffffff" />
-            ) : (
-              <CustomText variant="bold" style={styles.saveBtnText}>
-                Save
-              </CustomText>
-            )}
-          </TouchableOpacity>
+          {isEditable ? (
+            <TouchableOpacity
+              onPress={handleSaveChanges}
+              style={styles.headerSaveBtn}
+            >
+              {isLoading ? (
+                <ActivityIndicator size="small" color="#ffffff" />
+              ) : (
+                <CustomText variant="bold" style={styles.saveBtnText}>
+                  Save
+                </CustomText>
+              )}
+            </TouchableOpacity>
+          ) : (
+            <View style={{ width: 60 }} />
+          )}
         </View>
 
         <ScrollView
@@ -155,75 +151,47 @@ export default function EditEventScreen() {
         >
           <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
             <View>
-            {/*  EVENT STATUS */}
+            {!isEditable && (
+              <View style={styles.warningBanner}>
+                <Ionicons name="information-circle-outline" size={20} color="#D97706" style={{ marginRight: 8 }} />
+                <CustomText style={styles.warningText}>
+                  Sự kiện này đã được gửi duyệt hoặc xuất bản. Bạn không thể chỉnh sửa thông tin.
+                </CustomText>
+              </View>
+            )}
+
             <View style={styles.card}>
               <CustomText variant="bold" style={styles.cardSectionTitle}>
                 EVENT STATUS
               </CustomText>
 
-              {/* DROPDOWN TRIGGER */}
-              <TouchableOpacity
-                style={styles.statusSelectorRow}
-                onPress={() => setIsStatusOpen(!isStatusOpen)}
-              >
+              <View style={[styles.statusSelectorRow, { backgroundColor: "#F0F3F7", borderColor: "transparent" }]}>
                 <View style={{ flexDirection: "row", alignItems: "center" }}>
                   <View
                     style={[
                       styles.statusDot,
                       {
-                        backgroundColor: statusOptions.find(
-                          (o) => o.label === status,
-                        )?.color,
+                        backgroundColor:
+                          status === "PUBLISHED" ? "#4CAF50" :
+                          status === "DRAFT" ? "#FFC107" :
+                          status === "PENDING" ? "#F59E0B" :
+                          status === "REJECTED" ? "#EF4444" : "#2196F3"
                       },
                     ]}
                   />
-                  <CustomText variant="medium" style={styles.selectorMainText}>
+                  <CustomText variant="bold" style={styles.selectorMainText}>
                     {status}
                   </CustomText>
                 </View>
-                <Ionicons
-                  name={isStatusOpen ? "chevron-up" : "chevron-down"}
-                  size={20}
-                  color="#666"
-                />
-              </TouchableOpacity>
-
-              {/* THE DROPDOWN MENU */}
-              {isStatusOpen && (
-                <View style={styles.dropdownMenu}>
-                  {statusOptions.map((opt) => (
-                    <TouchableOpacity
-                      key={opt.label}
-                      style={styles.dropdownItem}
-                      onPress={() => selectStatus(opt.label)}
-                    >
-                      <View
-                        style={[
-                          styles.statusDot,
-                          { backgroundColor: opt.color },
-                        ]}
-                      />
-                      <CustomText
-                        variant={status === opt.label ? "bold" : "regular"}
-                        style={[
-                          styles.dropdownItemText,
-                          status === opt.label && {
-                            color: "#1a2a44",
-                          },
-                        ]}
-                      >
-                        {opt.label}
-                      </CustomText>
-                      {status === opt.label && (
-                        <Ionicons name="checkmark" size={18} color="#1a2a44" />
-                      )}
-                    </TouchableOpacity>
-                  ))}
-                </View>
+                <Ionicons name="lock-closed-outline" size={18} color="#9CA3AF" />
+              </View>
+              {isEditable && (
+                <CustomText style={{ fontSize: 12, color: "#6B7280", marginTop: 8, fontStyle: "italic" }}>
+                  *Trạng thái sự kiện do Ban tổ chức kiểm duyệt, bạn không thể tự ý thay đổi.
+                </CustomText>
               )}
             </View>
 
-            {/* EVENT INFORMATION */}
             <View style={styles.card}>
               <CustomText variant="bold" style={styles.cardSectionTitle}>
                 EVENT INFORMATION
@@ -234,9 +202,10 @@ export default function EditEventScreen() {
               </CustomText>
               <View style={styles.inputWrapper}>
                 <TextInput
-                  style={styles.wrapperInput}
+                  style={[styles.wrapperInput, !isEditable && styles.readOnlyInput]}
                   value={event.title}
                   onChangeText={(val) => setEvent({ ...event, title: val })}
+                  editable={isEditable}
                 />
               </View>
 
@@ -247,8 +216,10 @@ export default function EditEventScreen() {
                 style={[
                   styles.imageContainer,
                   event.banner_url && styles.imageActive,
+                  !isEditable && { opacity: 0.7 }
                 ]}
                 onPress={pickImage}
+                disabled={!isEditable}
               >
                 {event.banner_url ? (
                   <Image
@@ -270,7 +241,6 @@ export default function EditEventScreen() {
                 )}
               </TouchableOpacity>
 
-              {/* DESCRIPTION */}
               <CustomText variant="medium" style={styles.label}>
                 Description
               </CustomText>
@@ -288,6 +258,7 @@ export default function EditEventScreen() {
                     styles.wrapperInput,
                     styles.textAreaInput,
                     { minHeight: 80, height: "auto" },
+                    !isEditable && styles.readOnlyInput
                   ]}
                   placeholder="Provide a detailed description..."
                   placeholderTextColor="#BBB"
@@ -296,19 +267,68 @@ export default function EditEventScreen() {
                   onChangeText={(val) =>
                     setEvent({ ...event, description: val })
                   }
+                  editable={isEditable}
                 />
               </View>
+
+              <View style={{ height: 1, backgroundColor: "#E5E7EB", marginVertical: 15 }} />
+              <CustomText variant="bold" style={styles.cardSectionTitle}>
+                THÔNG TIN CHI TIẾT ĐẠI HỌC
+              </CustomText>
+
+              <CustomText variant="medium" style={styles.label}>Loại sự kiện</CustomText>
+              <View style={styles.inputWrapper}>
+                <TextInput
+                  style={[styles.wrapperInput, !isEditable && styles.readOnlyInput]}
+                  value={event.event_type}
+                  onChangeText={(val) => setEvent({ ...event, event_type: val })}
+                  editable={isEditable}
+                />
+              </View>
+
+              <CustomText variant="medium" style={styles.label}>Điểm rèn luyện</CustomText>
+              <View style={styles.inputWrapper}>
+                <TextInput
+                  style={[styles.wrapperInput, !isEditable && styles.readOnlyInput]}
+                  keyboardType="numeric"
+                  value={event.training_points !== undefined && event.training_points !== null ? String(event.training_points) : ""}
+                  onChangeText={(val) => setEvent({ ...event, training_points: Number(val) })}
+                  editable={isEditable}
+                />
+              </View>
+
+              <CustomText variant="medium" style={styles.label}>Đối tượng tham gia</CustomText>
+              <View style={styles.inputWrapper}>
+                <TextInput
+                  style={[styles.wrapperInput, !isEditable && styles.readOnlyInput]}
+                  value={event.target_audience}
+                  onChangeText={(val) => setEvent({ ...event, target_audience: val })}
+                  editable={isEditable}
+                />
+              </View>
+
+              <CustomText variant="medium" style={styles.label}>Quyền lợi tham gia</CustomText>
+              <View style={[styles.inputWrapper, { alignItems: "flex-start", paddingVertical: 10 }]}>
+                <TextInput
+                  style={[styles.wrapperInput, styles.textAreaInput, { minHeight: 60, height: "auto" }, !isEditable && styles.readOnlyInput]}
+                  multiline={true}
+                  value={event.benefits}
+                  onChangeText={(val) => setEvent({ ...event, benefits: val })}
+                  editable={isEditable}
+                />
+              </View>
+
             </View>
 
-            {/* DATE & VENUE */}
             <View style={styles.card}>
               <CustomText variant="bold" style={styles.cardSectionTitle}>
                 DATE & VENUE
               </CustomText>
-              <View style={[styles.inputWrapper, {paddingHorizontal: 0}]}>
+              <View style={[styles.inputWrapper, {paddingHorizontal: 0, backgroundColor: 'transparent'}]}>
                 <TouchableOpacity
-                  style={styles.dateTimeSelector}
+                  style={[styles.dateTimeSelector, !isEditable && styles.readOnlySelector]}
                   onPress={() => setShowStartPicker(true)}
+                  disabled={!isEditable}
                 >
                   <Ionicons
                     name="calendar-clear-outline"
@@ -328,11 +348,11 @@ export default function EditEventScreen() {
                   </CustomText>
                 </TouchableOpacity>
                 </View>
-                <View style={[styles.inputWrapper, {paddingHorizontal: 0}]}>
-                {/* Nút chọn End Date */}
+                <View style={[styles.inputWrapper, {paddingHorizontal: 0, backgroundColor: 'transparent'}]}>
                 <TouchableOpacity
-                  style={styles.dateTimeSelector}
+                  style={[styles.dateTimeSelector, !isEditable && styles.readOnlySelector]}
                   onPress={() => setShowEndPicker(true)}
+                  disabled={!isEditable}
                 >
                   <Ionicons name="time-outline" size={18} color="#1a2a44" />
                   <CustomText variant="medium" style={styles.selectorMainText}>
@@ -382,19 +402,18 @@ export default function EditEventScreen() {
                 )}
               </View>
             <View style={styles.inputWrapper}>
-              
+
               <TextInput
-                style={styles.wrapperInput}
+                style={[styles.wrapperInput, !isEditable && styles.readOnlyInput]}
                 value={event.location_url}
                 onChangeText={(val) =>
                   setEvent({ ...event, location_url: val })
                 }
+                editable={isEditable}
               />
             </View>
             </View>
 
-
-            {/* CAPACITY & PRICE */}
             <View style={styles.card}>
               <CustomText variant="bold" style={styles.cardSectionTitle}>
                 CAPACITY
@@ -403,12 +422,13 @@ export default function EditEventScreen() {
                 <View
                   style={[styles.inputWrapper, { flex: 1}]}>
                   <TextInput
-                    style={styles.wrapperInput}
+                    style={[styles.wrapperInput, !isEditable && styles.readOnlyInput]}
                     keyboardType="numeric"
-                    value={String(event.max_attendees)}
+                    value={String(event.max_attendees || "")}
                     onChangeText={(val) =>
                       setEvent({ ...event, max_attendees: Number(val) })
                     }
+                    editable={isEditable}
                   />
                 </View>
               </View>
@@ -476,6 +496,22 @@ function createStyles() {
       color: "white",
       fontSize: 14,
     },
+    warningBanner: {
+      flexDirection: "row",
+      backgroundColor: "#FEF3C7",
+      padding: 12,
+      borderRadius: 12,
+      marginBottom: 16,
+      alignItems: "center",
+      borderWidth: 1,
+      borderColor: "#FDE68A",
+    },
+    warningText: {
+      flex: 1,
+      fontSize: 13,
+      color: "#92400E",
+      lineHeight: 18,
+    },
     card: {
       backgroundColor: "white",
       borderRadius: 16,
@@ -511,6 +547,9 @@ function createStyles() {
       height: 48,
       fontSize: 15,
       color: "#333",
+    },
+    readOnlyInput: {
+      color: "#9CA3AF",
     },
     textAreaInput: {
       textAlignVertical: "top",
@@ -564,13 +603,17 @@ function createStyles() {
       marginBottom: 15,
     },
     dateTimeSelector: {
-      flex: 0.48,
+      flex: 1,
       flexDirection: "row",
       alignItems: "center",
       justifyContent: "center",
       backgroundColor: "#F5F7FA",
       padding: 14,
       borderRadius: 10,
+    },
+    readOnlySelector: {
+      opacity: 0.7,
+      backgroundColor: "#F9FAFB",
     },
     ticketRow: {
       alignItems: "center",
@@ -595,36 +638,6 @@ function createStyles() {
       marginLeft: 8,
       fontSize: 14,
       color: "#1a2a44",
-    },
-
-    // DROPDOWN MENU STYLES
-    dropdownMenu: {
-      backgroundColor: "#FFF",
-      marginTop: 5,
-      borderRadius: 12,
-      padding: 5,
-      ...Platform.select({
-        ios: {
-          shadowColor: "#000",
-          shadowOffset: { width: 0, height: 4 },
-          shadowOpacity: 0.1,
-          shadowRadius: 8,
-        },
-        android: { elevation: 5 },
-      }),
-      borderWidth: 1,
-      borderColor: "#EEE",
-    },
-    dropdownItem: {
-      flexDirection: "row",
-      alignItems: "center",
-      padding: 15,
-      borderRadius: 8,
-    },
-    dropdownItemText: {
-      flex: 1,
-      fontSize: 14,
-      color: "#666",
-    },
+    }
   });
 }

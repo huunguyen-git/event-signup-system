@@ -223,7 +223,7 @@ export default function RegistrationFormScreen() {
       if (isNaN(eventTime)) return;
 
       const triggerDate = new Date(eventTime - 30 * 60 * 1000);
-      
+
       // Only schedule if the trigger time is in the future
       if (triggerDate.getTime() > Date.now()) {
         await Notifications.scheduleNotificationAsync({
@@ -823,4 +823,3 @@ const InfoModal = ({ visible, title, content, onClose, themeColor }: any) => (
     </View>
   </Modal>
 );
-

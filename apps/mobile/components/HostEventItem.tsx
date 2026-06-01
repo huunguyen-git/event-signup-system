@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { View, StyleSheet, TouchableOpacity, Alert, Modal, TextInput, Image } from "react-native";
 import { Colors } from "../constants/theme";
-import { Users, MessageSquare, Calendar, Edit2, Trash2, Ban } from "lucide-react-native";
+import { Users, MessageSquare, Calendar, Edit2, Trash2, Ban, Send } from "lucide-react-native";
 import { ICreateEvent } from "@/axios/dto/eventModel";
 import { useRouter } from "expo-router";
 import { CustomText } from "@/components/CustomText";
@@ -64,6 +64,33 @@ const HostEventItem = ({ event, onRefresh }: HostItem) => {
     } catch (e) {
       return "N/A";
     }
+  };
+
+  const handleSubmitForApproval = () => {
+    Alert.alert(
+      "Gửi duyệt sự kiện",
+      `Bạn có muốn gửi sự kiện "${event.title}" cho Ban tổ chức phê duyệt không?`,
+      [
+        { text: "Huỷ", style: "cancel" },
+        {
+          text: "Gửi duyệt",
+          onPress: async () => {
+            try {
+              const token = await getToken();
+              await apiClient.patch(
+                `/events/${event.id}/submit`,
+                {},
+                { headers: { Authorization: `Bearer ${token}` } }
+              );
+              Alert.alert("Thành công", "Đã gửi yêu cầu phê duyệt sự kiện.");
+              if (onRefresh) onRefresh();
+            } catch (error) {
+              Alert.alert("Lỗi", "Không thể gửi duyệt sự kiện lúc này.");
+            }
+          },
+        },
+      ]
+    );
   };
 
   const handleCancelEvent = async () => {
@@ -197,6 +224,15 @@ const HostEventItem = ({ event, onRefresh }: HostItem) => {
             {event.status === "Draft" ? "View Vendors" : "View Attendees"}
           </CustomText>
         </TouchableOpacity>
+
+        {isDraft && (
+          <TouchableOpacity
+            style={[styles.dangerIconButton, { backgroundColor: "#DBEAFE" }]}
+            onPress={handleSubmitForApproval}
+          >
+            <Send size={18} color="#2563EB" />
+          </TouchableOpacity>
+        )}
 
         {isPublished ? (
           <TouchableOpacity

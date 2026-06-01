@@ -6,11 +6,15 @@ import {
   IsDateString,
   IsOptional,
   MaxLength,
+  Matches,
 } from 'class-validator';
 
 export class RegisterDto {
   @IsEmail()
   @IsNotEmpty()
+  @Matches(/^[a-zA-Z0-9._%+-]+@(gm\.uit\.edu\.vn|uit\.edu\.vn)$/, {
+    message: 'Chỉ chấp nhận email nội bộ trường (@gm.uit.edu.vn hoặc @uit.edu.vn)',
+  })
   email!: string;
 
   @IsString()

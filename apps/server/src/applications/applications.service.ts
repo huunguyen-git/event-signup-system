@@ -16,6 +16,14 @@ export class ApplicationsService {
     if (!event || !user)
       throw new BadRequestException('Sự kiện hoặc Người dùng không tồn tại!');
 
+    if (event.status !== 'PUBLISHED') {
+      throw new BadRequestException('Sự kiện này chưa được mở đăng ký.');
+    }
+
+    if (new Date() >= new Date(event.event_date)) {
+      throw new BadRequestException('Sự kiện đã bắt đầu hoặc kết thúc, không thể đăng ký.');
+    }
+
     if (event.allowed_domain) {
       const targetDomain = event.allowed_domain.startsWith('@')
         ? event.allowed_domain.slice(1)
@@ -28,13 +36,17 @@ export class ApplicationsService {
       }
     }
 
-    let finalStatus: ApplicationStatus = ApplicationStatus.APPROVED;
     if (event.max_attendees) {
-      const currentCount = await this.prisma.application.count({
-        where: { event_id, status: { in: ['APPROVED', 'PENDING'] } },
+      const approvedCount = await this.prisma.application.count({
+        where: { event_id, status: 'APPROVED' },
       });
-      if (currentCount >= event.max_attendees) finalStatus = ApplicationStatus.WAITLISTED;
+
+      if (approvedCount >= event.max_attendees) {
+        throw new BadRequestException('Sự kiện đã đủ số lượng người tham gia! Không thể đăng ký thêm.');
+      }
     }
+
+    let finalStatus: ApplicationStatus = ApplicationStatus.PENDING;
 
     try {
       return await this.prisma.application.create({
@@ -57,7 +69,7 @@ export class ApplicationsService {
     return this.prisma.application.findMany({
       where: { event_id },
       include: { user: { select: { full_name: true, email: true, avatar_url: true } } },
-      orderBy: { applied_at: 'desc' },
+      orderBy: { applied_at: 'asc' },
     });
   }
 
@@ -72,6 +84,35 @@ export class ApplicationsService {
   }
 
   async bulkUpdateStatus(ids: string[], status: string) {
+    if (ids.length === 0) return { count: 0 };
+
+    if (status === 'APPROVED') {
+      const firstApp = await this.prisma.application.findUnique({
+        where: { id: ids[0] },
+        select: { event_id: true }
+      });
+
+      if (firstApp) {
+        const event = await this.prisma.event.findUnique({
+          where: { id: firstApp.event_id }
+        });
+
+        if (event && event.max_attendees) {
+          const currentApprovedCount = await this.prisma.application.count({
+            where: { event_id: event.id, status: 'APPROVED' }
+          });
+
+          const availableSlots = event.max_attendees - currentApprovedCount;
+
+          if (ids.length > availableSlots) {
+            throw new BadRequestException(
+              `Chỉ còn ${availableSlots > 0 ? availableSlots : 0} chỗ trống, nhưng bạn đang chọn phê duyệt ${ids.length} người.`
+            );
+          }
+        }
+      }
+    }
+
     return this.prisma.application.updateMany({
       where: {
         id: { in: ids },

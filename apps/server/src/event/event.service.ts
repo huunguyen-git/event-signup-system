@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma.service.js';
 import { CreateEventDto } from './event.dto.js';
 import { Event, Prisma } from '../generated/prisma/client.js';
@@ -8,7 +8,7 @@ import { NotificationService } from '../notification/notification.service.js';
 @Injectable()
 export class EventService {
   private supabase: ReturnType<typeof createClient>;
-  
+
   constructor(
     private prisma: PrismaService,
     private notificationService: NotificationService
@@ -88,6 +88,7 @@ export class EventService {
         created_at: new Date(data.created_at),
         max_attendees: Number(data.max_attendees),
         form_config: data.form_config as unknown as Prisma.InputJsonValue,
+        status: 'DRAFT' as any,
       },
     });
   }
@@ -136,7 +137,7 @@ export class EventService {
   async cancelEvent(eventId: string, reason: string): Promise<Event> {
     const updatedEvent = await this.prisma.event.update({
       where: { id: eventId },
-      data: { status: 'CANCELLED' as any }, 
+      data: { status: 'CANCELLED' as any },
     });
 
     const applications = await this.prisma.application.findMany({
@@ -153,5 +154,51 @@ export class EventService {
     }
 
     return updatedEvent;
+  }
+
+  async submitEventForApproval(eventId: string, hostId: string): Promise<Event> {
+    const event = await this.prisma.event.findFirst({
+      where: { id: eventId, host_id: hostId },
+    });
+
+    if (!event) throw new NotFoundException('Không tìm thấy sự kiện.');
+    if (event.status !== 'DRAFT') {
+      throw new BadRequestException('Chỉ có thể gửi duyệt sự kiện đang ở trạng thái nháp.');
+    }
+
+    return await this.prisma.event.update({
+      where: { id: eventId },
+      data: { status: 'PENDING' as any },
+    });
+  }
+
+  async approveEvent(eventId: string): Promise<Event> {
+    const event = await this.prisma.event.update({
+      where: { id: eventId },
+      data: { status: 'PUBLISHED' as any },
+    });
+
+    await this.notificationService.sendAndSaveNotification({
+      userId: event.host_id,
+      title: 'Sự kiện đã được duyệt!',
+      body: `Sự kiện "${event.title}" của bạn đã được duyệt và chính thức mở đăng ký.`,
+    });
+
+    return event;
+  }
+
+  async rejectEvent(eventId: string, reason: string): Promise<Event> {
+    const event = await this.prisma.event.update({
+      where: { id: eventId },
+      data: { status: 'REJECTED' as any },
+    });
+
+    await this.notificationService.sendAndSaveNotification({
+      userId: event.host_id,
+      title: 'Sự kiện đã bị từ chối',
+      body: `Sự kiện "${event.title}" của bạn không được duyệt. Lý do: ${reason}`,
+    });
+
+    return event;
   }
 }

@@ -84,4 +84,31 @@ export class EventController {
   ): Promise<Event> {
     return this.eventService.cancelEvent(id, reason);
   }
+
+  @Patch(':id/submit')
+  async submitEventForApproval(
+    @Param('id') id: string,
+    @Body('host_id') hostId?: string,
+  ): Promise<Event> {
+    let currentHostId = hostId;
+    if (!currentHostId) {
+      const event = await this.eventService.getEvent({ id });
+      if (!event) throw new NotFoundException('Không tìm thấy sự kiện');
+      currentHostId = event.host_id;
+    }
+    return this.eventService.submitEventForApproval(id, currentHostId);
+  }
+
+  @Patch(':id/approve')
+  async approveEvent(@Param('id') id: string): Promise<Event> {
+    return this.eventService.approveEvent(id);
+  }
+
+  @Patch(':id/reject')
+  async rejectEvent(
+    @Param('id') id: string,
+    @Body('reason') reason: string,
+  ): Promise<Event> {
+    return this.eventService.rejectEvent(id, reason || 'Không đủ điều kiện phê duyệt');
+  }
 }

@@ -1,11 +1,6 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
 generator client {
-  provider = "prisma-client"
-  output   = "../src/generated/prisma"
+  provider     = "prisma-client"
+  output       = "../src/generated/prisma"
   moduleFormat = "cjs"
 }
 
@@ -13,13 +8,136 @@ datasource db {
   provider = "postgresql"
 }
 
-// ---ENUM---
+model User {
+  id            String          @id @db.Uuid
+  email         String          @unique
+  full_name     String
+  birthdate     DateTime        @db.Date
+  phone_number  String?
+  avatar_url    String?
+  created_at    DateTime        @default(now())
+  token         String?
+  description   String?
+  role          Role            @default(STUDENT)
+  notification  Notification[]
+  applications  Application[]
+  club_requests club_requests[]
+  comments      Comment[]
+  hosted_events Event[]         @relation("HostedEvents")
+
+  @@map("profiles")
+}
+
+model Event {
+  id               String             @id @default(uuid()) @db.Uuid
+  host_id          String             @db.Uuid
+  title            String
+  description      String?
+  event_date       DateTime
+  end_date         DateTime?
+  banner_url       String?
+  location_url     String?
+  allowed_domain   String?
+  max_attendees    Int?
+  status           EventStatus        @default(PENDING)
+  form_config      Json?
+  created_at       DateTime           @default(now())
+  room_id          String?            @db.Uuid
+  training_points Int?     
+  target_audience String?  
+  event_type      String?  
+  benefits        String?  
+  applications     Application[]
+  comments         Comment[]
+  event_equipments event_equipments[]
+  host             User               @relation("HostedEvents", fields: [host_id], references: [id], onDelete: Cascade)
+  rooms            rooms?             @relation(fields: [room_id], references: [id])
+
+  @@map("events")
+}
+
+model Notification {
+  id        String   @id @default(uuid()) @db.Uuid
+  title     String
+  body      String
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+  userId    String   @db.Uuid
+  user      User     @relation(fields: [userId], references: [id])
+}
+
+model Application {
+  id         String            @id @default(uuid()) @db.Uuid
+  event_id   String            @db.Uuid
+  user_id    String            @db.Uuid
+  status     ApplicationStatus @default(PENDING)
+  answers    Json
+  checked_in Boolean           @default(false)
+  applied_at DateTime          @default(now())
+  event      Event             @relation(fields: [event_id], references: [id], onDelete: Cascade)
+  user       User              @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@unique([event_id, user_id])
+  @@map("applications")
+}
+
+model Comment {
+  id         String    @id @default(uuid()) @db.Uuid
+  event_id   String    @db.Uuid
+  user_id    String    @db.Uuid
+  parent_id  String?   @db.Uuid
+  content    String
+  is_pinned  Boolean   @default(false)
+  created_at DateTime  @default(now())
+  event      Event     @relation(fields: [event_id], references: [id], onDelete: Cascade)
+  parent     Comment?  @relation("CommentReplies", fields: [parent_id], references: [id], onDelete: Cascade)
+  replies    Comment[] @relation("CommentReplies")
+  user       User      @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@map("comments")
+}
+
+model club_requests {
+  id          String            @id @db.Uuid
+  user_id     String            @db.Uuid
+  club_name   String
+  description String
+  status      ApplicationStatus @default(PENDING)
+  created_at  DateTime          @default(now())
+  profiles    User              @relation(fields: [user_id], references: [id], onDelete: Cascade)
+}
+
+model equipments {
+  id               String             @id @db.Uuid
+  name             String             @unique
+  quantity         Int                @default(0)
+  event_equipments event_equipments[]
+}
+
+model event_equipments {
+  event_id     String     @db.Uuid
+  equipment_id String     @db.Uuid
+  quantity     Int        @default(1)
+  equipments   equipments @relation(fields: [equipment_id], references: [id], onDelete: Cascade)
+  events       Event      @relation(fields: [event_id], references: [id], onDelete: Cascade)
+
+  @@id([event_id, equipment_id])
+}
+
+model rooms {
+  id       String  @id @db.Uuid
+  name     String  @unique
+  capacity Int?
+  events   Event[]
+}
 
 enum EventStatus {
   DRAFT
   PUBLISHED
   COMPLETED
   CANCELLED
+  PENDING
+  REJECTED
 }
 
 enum ApplicationStatus {
@@ -29,95 +147,8 @@ enum ApplicationStatus {
   REJECTED
 }
 
-// ---MODEL---
-
-model User {
-  id           String   @id @db.Uuid
-  email        String   @unique
-  full_name    String
-  birthdate    DateTime @db.Date
-  phone_number String?
-  avatar_url   String?  
-  created_at   DateTime @default(now())
-  description  String?
-  token        String?
-
-  // Relations
-  hosted_events Event[]       @relation("HostedEvents")
-  applications  Application[]
-  comments      Comment[]
-  notification    Notification[]
-
-  @@map("profiles")
-}
-
-model Event {
-  id              String      @id @default(uuid()) @db.Uuid
-  host_id         String      @db.Uuid
-  title           String
-  description     String?      @db.Text
-  event_date      DateTime
-  end_date        DateTime?
-  banner_url      String?
-  location_url    String?
-  allowed_domain  String?     // domain restriction feature
-  max_attendees   Int?
-  status          EventStatus @default(DRAFT)
-  form_config     Json?       // Stores custom field toggles as JSONB
-  created_at      DateTime    @default(now())
-
-  // Relations
-  host            User          @relation("HostedEvents", fields: [host_id], references: [id], onDelete: Cascade)
-  applications    Application[]
-  comments        Comment[]
-
-
-  @@map("events")
-}
-model Notification {
-  id          String   @id @default(uuid()) @db.Uuid
-  title       String   // Tiêu đề (VD: "Sự kiện mới!")
-  body        String   // Nội dung
-  isRead      Boolean  @default(false) // Trạng thái đọc
-  createdAt   DateTime @default(now())
-  
-  userId      String   @db.Uuid
-  user        User     @relation(fields: [userId], references: [id])
-}
-model Application {
-  id          String            @id @default(uuid()) @db.Uuid
-  event_id    String            @db.Uuid
-  user_id     String            @db.Uuid
-  status      ApplicationStatus @default(PENDING)
-  answers     Json              // Stores user responses to the custom form as JSONB
-  checked_in  Boolean           @default(false)
-  applied_at  DateTime          @default(now())
-
-  // Relations
-  event       Event @relation(fields: [event_id], references: [id], onDelete: Cascade)
-  user        User  @relation(fields: [user_id], references: [id], onDelete: Cascade)
-
-  // A user can only apply to a specific event once
-  @@unique([event_id, user_id]) 
-  @@map("applications")
-}
-
-model Comment {
-  id          String   @id @default(uuid()) @db.Uuid
-  event_id    String   @db.Uuid
-  user_id     String   @db.Uuid
-  parent_id   String?  @db.Uuid
-  content     String   @db.Text
-  is_pinned   Boolean  @default(false)
-  created_at  DateTime @default(now())
-
-  // Relations
-  event       Event     @relation(fields: [event_id], references: [id], onDelete: Cascade)
-  user        User      @relation(fields: [user_id], references: [id], onDelete: Cascade)
-  
-  // Self-referencing relationship for nested replies
-  parent      Comment?  @relation("CommentReplies", fields: [parent_id], references: [id], onDelete: Cascade)
-  replies     Comment[] @relation("CommentReplies")
-
-  @@map("comments")
+enum Role {
+  STUDENT
+  CLUB
+  FACULTY
 }
