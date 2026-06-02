@@ -62,7 +62,7 @@ export default function CreateEventScreen() {
     }
   };
 
-  const handleCreateEvent = async () => {
+  const handlePublish = async () => {
     setIsLoading(true);
     if (
       !form.title ||
@@ -71,7 +71,7 @@ export default function CreateEventScreen() {
       !form.max_attendees ||
       !form.location_url
     ) {
-      Alert.alert("Vui lòng nhập đầy đủ thông tin bắt buộc (gồm chọn phòng học)");
+      Alert.alert("Vui lòng nhập đầy đủ thông tin bắt buộc (gồm chọn phòng hoặc địa điểm)");
       setIsLoading(false);
       return;
     }
@@ -85,7 +85,63 @@ export default function CreateEventScreen() {
     form.host_id = (await getUserId()) ?? "";
     form.allowed_domain = "all";
     form.created_at = new Date().toISOString();
-    form.form_config = JSON.stringify({});
+    form.form_config = JSON.stringify([]);
+    form.banner_url = image;
+    form.status = "PENDING";
+    form.room_id = form.room_id || undefined;
+    form.equipments = JSON.stringify(selectedEquipments);
+
+    router.push({
+      pathname: "/RegistrationFormScreen",
+      params: {
+        host_id: form.host_id,
+        title: form.title,
+        description: form.description || "",
+        event_date: form.event_date,
+        end_date: form.end_date,
+        location_url: form.location_url,
+        max_attendees: form.max_attendees,
+        banner_url: form.banner_url || "",
+        created_at: form.created_at,
+        form_config: form.form_config,
+        allowed_domain: form.allowed_domain,
+        status: form.status,
+        isCreate: "true",
+        room_id: form.room_id || "",
+        equipments: form.equipments || "{}",
+        event_type: form.event_type || "",
+        training_points: form.training_points ? String(form.training_points) : "",
+        target_audience: form.target_audience || "",
+        benefits: form.benefits || "",
+      },
+    });
+    setIsLoading(false);
+  };
+
+  const handleDraft = async () => {
+    setIsLoading(true);
+    if (
+      !form.title ||
+      !form.end_date ||
+      !form.event_date ||
+      !form.max_attendees ||
+      !form.location_url
+    ) {
+      Alert.alert("Vui lòng nhập đầy đủ thông tin bắt buộc (gồm chọn phòng học hoặc địa điểm khác)");
+      setIsLoading(false);
+      return;
+    }
+    if (form.event_date >= form.end_date) {
+      setErrorMsg("Ngày bắt đầu phải nhỏ hơn ngày kết thúc");
+      setIsLoading(false);
+      return;
+    }
+    setErrorMsg("");
+
+    form.host_id = (await getUserId()) ?? "";
+    form.allowed_domain = "all";
+    form.created_at = new Date().toISOString();
+    form.form_config = JSON.stringify([]);
     form.banner_url = image;
     form.status = "DRAFT";
     form.room_id = form.room_id || undefined;
@@ -95,7 +151,7 @@ export default function CreateEventScreen() {
       await EventService.createEvent(form);
       router.push("/HostDashBoardScreen");
     } catch (error: any) {
-      console.log("Error creating event:", error);
+      console.log("Error creating draft event:", error);
       const errorMsg = error.response?.data?.message || error.message || "Tạo sự kiện thất bại!";
       Alert.alert("Lỗi", Array.isArray(errorMsg) ? errorMsg.join("\n") : errorMsg);
     } finally {
@@ -507,14 +563,26 @@ export default function CreateEventScreen() {
             {/* ACTIONS */}
             <View style={styles.footer}>
               <TouchableOpacity
-                style={styles.btnCreate}
-                onPress={handleCreateEvent}
+                style={styles.btnSecondary}
+                onPress={handleDraft}
               >
                 {isLoading ? (
                   <ActivityIndicator size="small" color="#ffffff" />
                 ) : (
-                  <CustomText variant="bold" style={styles.btnCreateText}>
-                    Tạo sự kiện
+                  <CustomText variant="bold" style={styles.btnSecondaryText}>
+                    Lưu nháp
+                  </CustomText>
+                )}
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.btnPrimary}
+                onPress={handlePublish}
+              >
+                {isLoading ? (
+                  <ActivityIndicator size="small" color="#ffffff" />
+                ) : (
+                  <CustomText variant="bold" style={styles.btnPrimaryText}>
+                    Tiếp tục
                   </CustomText>
                 )}
               </TouchableOpacity>
@@ -675,20 +743,29 @@ function createStyles() {
       marginTop: 10,
       marginBottom: 40,
     },
-    btnCreate: {
-      flex: 1,
+    btnPrimary: {
+      flex: 1.5,
       backgroundColor: Colors.color.primary,
       paddingVertical: 16,
       borderRadius: 12,
       alignItems: "center",
     },
-    btnCreateText: {
+    btnSecondary: {
+      flex: 1,
+      borderWidth: 1,
+      borderColor: Colors.color.primary,
+      paddingVertical: 16,
+      borderRadius: 12,
+      alignItems: "center",
+      marginRight: 10,
+    },
+    btnPrimaryText: {
       color: "white",
       fontSize: 16,
     },
     btnSecondaryText: {
       color: Colors.color.primary,
-      fontSize: 15,
+      fontSize: 16,
     },
     roomsContainer: {
       flexDirection: "row",

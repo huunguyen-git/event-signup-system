@@ -57,6 +57,10 @@ export default function RegistrationFormScreen() {
     isCreate,
     room_id,
     equipments,
+    event_type,
+    training_points,
+    target_audience,
+    benefits,
   } = useLocalSearchParams();
   const [data, setData] = useState<ICreateEvent>(new ICreateEvent());
   const [customQuestions, setCustomQuestions] = useState<any[]>([]);
@@ -81,6 +85,10 @@ export default function RegistrationFormScreen() {
           form_config: form_config as string,
           room_id: (room_id as string) || undefined,
           equipments: (equipments as string) || undefined,
+          event_type: (event_type as string) || undefined,
+          training_points: training_points ? parseInt(training_points as string) : undefined,
+          target_audience: (target_audience as string) || undefined,
+          benefits: (benefits as string) || undefined,
         });
       } else {
         const event = await EventService.getEvent(id);
