@@ -62,55 +62,7 @@ export default function CreateEventScreen() {
     }
   };
 
-  const handlePublish = async () => {
-    setIsLoading(true);
-    form.host_id = (await getUserId()) ?? "";
-    form.allowed_domain = "all";
-    form.created_at = new Date().toISOString();
-    form.form_config = JSON.stringify({});
-    form.banner_url = image;
-    form.status = "PENDING";
-    if (
-      !form.title ||
-      !form.end_date ||
-      !form.event_date ||
-      !form.max_attendees ||
-      !form.location_url
-    ) {
-      Alert.alert("Vui lòng nhập thông tin bắt buộc (gồm chọn phòng học)");
-      setIsLoading(false);
-      return;
-    }
-    if (form.event_date >= form.end_date) {
-      setErrorMsg("Ngày bắt đầu phải nhỏ hơn ngày kết thúc");
-      setIsLoading(false);
-      return;
-    }
-    setErrorMsg("");
-
-    router.push({
-      pathname: "/RegistrationFormScreen",
-      params: {
-        host_id: form.host_id,
-        title: form.title,
-        description: form.description,
-        event_date: form.event_date,
-        end_date: form.end_date,
-        location_url: form.location_url,
-        max_attendees: form.max_attendees,
-        banner_url: form.banner_url,
-        created_at: form.created_at,
-        form_config: form.form_config,
-        allowed_domain: form.allowed_domain,
-        status: form.status,
-        isCreate: "true",
-        room_id: form.room_id || "",
-        equipments: JSON.stringify(selectedEquipments),
-      },
-    });
-    setIsLoading(false);
-  };
-  const handleDraft = async () => {
+  const handleCreateEvent = async () => {
     setIsLoading(true);
     if (
       !form.title ||
@@ -129,6 +81,7 @@ export default function CreateEventScreen() {
       return;
     }
     setErrorMsg("");
+
     form.host_id = (await getUserId()) ?? "";
     form.allowed_domain = "all";
     form.created_at = new Date().toISOString();
@@ -137,16 +90,19 @@ export default function CreateEventScreen() {
     form.status = "DRAFT";
     form.room_id = form.room_id || undefined;
     form.equipments = JSON.stringify(selectedEquipments);
+
     try {
       await EventService.createEvent(form);
       router.push("/HostDashBoardScreen");
     } catch (error: any) {
-      console.log("Error saving draft:", error);
-      const errorMsg = error.response?.data?.message || error.message || "Lưu nháp thất bại!";
+      console.log("Error creating event:", error);
+      const errorMsg = error.response?.data?.message || error.message || "Tạo sự kiện thất bại!";
       Alert.alert("Lỗi", Array.isArray(errorMsg) ? errorMsg.join("\n") : errorMsg);
+    } finally {
+      setIsLoading(false);
     }
-    setIsLoading(false);
   };
+
   const styles = createStyles();
 
   return (
@@ -246,6 +202,58 @@ export default function CreateEventScreen() {
                   onChangeText={(val) => setForm({ ...form, description: val })}
                 />
               </View>
+
+              {/* TRƯỜNG THÔNG TIN SỰ KIỆN TRƯỜNG */}
+              <View style={{ height: 1, backgroundColor: "#E5E7EB", marginVertical: 15 }} />
+              <CustomText variant="bold" style={styles.cardSectionTitle}>
+                THÔNG TIN BỔ SUNG
+              </CustomText>
+
+              <CustomText variant="medium" style={styles.label}>Loại sự kiện</CustomText>
+              <View style={styles.inputWrapper}>
+                <TextInput
+                  style={styles.wrapperInput}
+                  placeholder="VD: Hội thảo, Tọa đàm, Lễ hội..."
+                  placeholderTextColor="#BBB"
+                  value={form.event_type}
+                  onChangeText={(val) => setForm({ ...form, event_type: val })}
+                />
+              </View>
+
+              <CustomText variant="medium" style={styles.label}>Điểm rèn luyện</CustomText>
+              <View style={styles.inputWrapper}>
+                <TextInput
+                  style={styles.wrapperInput}
+                  placeholder="VD: 5"
+                  keyboardType="numeric"
+                  placeholderTextColor="#BBB"
+                  value={form.training_points ? String(form.training_points) : ""}
+                  onChangeText={(val) => setForm({ ...form, training_points: Number(val) })}
+                />
+              </View>
+
+              <CustomText variant="medium" style={styles.label}>Đối tượng tham gia</CustomText>
+              <View style={styles.inputWrapper}>
+                <TextInput
+                  style={styles.wrapperInput}
+                  placeholder="VD: Sinh viên toàn trường..."
+                  placeholderTextColor="#BBB"
+                  value={form.target_audience}
+                  onChangeText={(val) => setForm({ ...form, target_audience: val })}
+                />
+              </View>
+
+              <CustomText variant="medium" style={styles.label}>Quyền lợi tham gia</CustomText>
+              <View style={[styles.inputWrapper, { alignItems: "flex-start", paddingVertical: 10 }]}>
+                <TextInput
+                  style={[styles.wrapperInput, styles.textAreaInput, { minHeight: 60, height: "auto" }]}
+                  placeholder="VD: Giấy chứng nhận, Teabreak..."
+                  placeholderTextColor="#BBB"
+                  multiline={true}
+                  value={form.benefits}
+                  onChangeText={(val) => setForm({ ...form, benefits: val })}
+                />
+              </View>
             </View>
 
             {/* DATE & LOCATION CARD */}
@@ -343,10 +351,10 @@ export default function CreateEventScreen() {
                 )}
               </View>
               {errorMsg ? (
-                <CustomText style={{ color: "red" }}>{errorMsg}</CustomText>
+                <CustomText style={{ color: "red", marginBottom: 10 }}>{errorMsg}</CustomText>
               ) : null}
               <CustomText variant="medium" style={styles.label}>
-                Select Room / Phòng học (Bắt buộc)
+                Select Room / Phòng học (Bắt buộc nếu không nhập địa điểm khác)
               </CustomText>
               <View style={styles.roomsContainer}>
                 {rooms.map((room) => {
@@ -391,6 +399,21 @@ export default function CreateEventScreen() {
                     </TouchableOpacity>
                   );
                 })}
+              </View>
+
+              <CustomText variant="medium" style={styles.label}>
+                Or Custom Location / Hoặc Địa điểm khác
+              </CustomText>
+              <View style={styles.inputWrapper}>
+                <TextInput
+                  style={styles.wrapperInput}
+                  placeholder="Venue / Location (VD: Hội trường C...)"
+                  placeholderTextColor="#BBB"
+                  value={form.location_url}
+                  onChangeText={(val) =>
+                    setForm({ ...form, location_url: val })
+                  }
+                />
               </View>
             </View>
 
@@ -470,7 +493,7 @@ export default function CreateEventScreen() {
                 >
                   <TextInput
                     style={styles.wrapperInput}
-                    placeholder="Capacity"
+                    placeholder="Capacity (VD: 100)"
                     placeholderTextColor="#BBB"
                     keyboardType="numeric"
                     onChangeText={(val) =>
@@ -484,26 +507,14 @@ export default function CreateEventScreen() {
             {/* ACTIONS */}
             <View style={styles.footer}>
               <TouchableOpacity
-                style={styles.btnSecondary}
-                onPress={handleDraft}
+                style={styles.btnCreate}
+                onPress={handleCreateEvent}
               >
                 {isLoading ? (
                   <ActivityIndicator size="small" color="#ffffff" />
                 ) : (
-                  <CustomText variant="bold" style={styles.btnSecondaryText}>
-                    Save Draft
-                  </CustomText>
-                )}
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.btnPrimary}
-                onPress={handlePublish}
-              >
-                {isLoading ? (
-                  <ActivityIndicator size="small" color="#ffffff" />
-                ) : (
-                  <CustomText variant="bold" style={styles.btnPrimaryText}>
-                    Publish
+                  <CustomText variant="bold" style={styles.btnCreateText}>
+                    Tạo sự kiện
                   </CustomText>
                 )}
               </TouchableOpacity>
@@ -664,23 +675,14 @@ function createStyles() {
       marginTop: 10,
       marginBottom: 40,
     },
-    btnPrimary: {
-      flex: 1.5,
-      backgroundColor: Colors.color.primary,
-      padding: 18,
-      borderRadius: 12,
-      alignItems: "center",
-    },
-    btnSecondary: {
+    btnCreate: {
       flex: 1,
-      borderWidth: 1,
-      borderColor: "#001F3F",
-      padding: 18,
+      backgroundColor: Colors.color.primary,
+      paddingVertical: 16,
       borderRadius: 12,
       alignItems: "center",
-      marginRight: 10,
     },
-    btnPrimaryText: {
+    btnCreateText: {
       color: "white",
       fontSize: 16,
     },

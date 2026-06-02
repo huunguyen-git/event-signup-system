@@ -9,7 +9,7 @@ import { RealtimeGateway } from '../realtime/realtime.gateway.js';
 @Injectable()
 export class EventService {
   private supabase: ReturnType<typeof createClient>;
-  
+
   constructor(
     private prisma: PrismaService,
     private notificationService: NotificationService,
@@ -198,6 +198,7 @@ export class EventService {
         created_at: new Date(data.created_at),
         max_attendees: Number(data.max_attendees),
         form_config: data.form_config as unknown as Prisma.InputJsonValue,
+        status: 'DRAFT' as any,
         equipments: parsedEquipments.length > 0 ? {
           createMany: {
             data: parsedEquipments,
@@ -304,7 +305,7 @@ export class EventService {
   async cancelEvent(eventId: string, reason: string): Promise<Event> {
     const updatedEvent = await this.prisma.event.update({
       where: { id: eventId },
-      data: { status: 'CANCELLED' as any }, 
+      data: { status: 'CANCELLED' as any },
     });
 
     const applications = await this.prisma.application.findMany({
@@ -366,5 +367,44 @@ export class EventService {
 
     this.realtimeGateway.broadcast('events_changed');
     return updatedEvent;
+  }
+
+  async submitEventForApproval(eventId: string, hostId: string): Promise<Event> {
+    const event = await this.prisma.event.findFirst({
+      where: { id: eventId, host_id: hostId },
+    });
+
+    if (!event) throw new NotFoundException('Không tìm thấy sự kiện.');
+    if (event.status !== 'DRAFT') {
+      throw new BadRequestException('Chỉ có thể gửi duyệt sự kiện đang ở trạng thái nháp.');
+    }
+
+    return await this.prisma.event.update({
+      where: { id: eventId },
+      data: { status: 'PENDING' as any },
+    });
+  }
+
+  async rejectEvent(eventId: string, approverId: string, reason: string): Promise<Event> {
+    const user = await this.prisma.user.findUnique({
+      where: { id: approverId },
+    });
+    if (!user || user.role !== 'FACULTY') {
+      throw new ForbiddenException('Chỉ Cấp Khoa/Đoàn trường mới có quyền từ chối sự kiện');
+    }
+
+    const event = await this.prisma.event.update({
+      where: { id: eventId },
+      data: { status: 'REJECTED' as any },
+    });
+
+    await this.notificationService.sendAndSaveNotification({
+      userId: event.host_id,
+      title: 'Sự kiện đã bị từ chối',
+      body: `Sự kiện "${event.title}" của bạn không được duyệt. Lý do: ${reason}`,
+    });
+
+    this.realtimeGateway.broadcast('events_changed');
+    return event;
   }
 }

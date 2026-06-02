@@ -1,42 +1,12 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
 generator client {
-  provider = "prisma-client"
-  output   = "../src/generated/prisma"
+  provider     = "prisma-client"
+  output       = "../src/generated/prisma"
   moduleFormat = "cjs"
 }
 
 datasource db {
   provider = "postgresql"
 }
-
-// ---ENUM---
-
-enum EventStatus {
-  DRAFT
-  PENDING
-  PUBLISHED
-  COMPLETED
-  CANCELLED
-}
-
-enum Role {
-  STUDENT
-  CLUB
-  FACULTY
-}
-
-enum ApplicationStatus {
-  PENDING
-  APPROVED
-  WAITLISTED
-  REJECTED
-}
-
-// ---MODEL---
 
 model User {
   id           String   @id @db.Uuid
@@ -54,7 +24,7 @@ model User {
   hosted_events Event[]       @relation("HostedEvents")
   applications  Application[]
   comments      Comment[]
-  notification    Notification[]
+  notification  Notification[]
   club_requests ClubRequest[]
 
   @@map("profiles")
@@ -64,7 +34,7 @@ model Event {
   id              String      @id @default(uuid()) @db.Uuid
   host_id         String      @db.Uuid
   title           String
-  description     String?      @db.Text
+  description     String?     @db.Text
   event_date      DateTime
   end_date        DateTime?
   banner_url      String?
@@ -74,15 +44,20 @@ model Event {
   status          EventStatus @default(PENDING)
   form_config     Json?       // Stores custom field toggles as JSONB
   created_at      DateTime    @default(now())
-  room_id         String?      @db.Uuid
-  room            Room?        @relation(fields: [room_id], references: [id], onDelete: SetNull)
+  room_id         String?     @db.Uuid
+  
+  training_points Int?
+  target_audience String?
+  event_type      String?
+  benefits        String?
+
+  room            Room?       @relation(fields: [room_id], references: [id], onDelete: SetNull)
   equipments      EventEquipment[]
 
   // Relations
   host            User          @relation("HostedEvents", fields: [host_id], references: [id], onDelete: Cascade)
   applications    Application[]
   comments        Comment[]
-
 
   @@map("events")
 }
@@ -116,6 +91,7 @@ model EventEquipment {
   @@id([event_id, equipment_id])
   @@map("event_equipments")
 }
+
 model Notification {
   id          String   @id @default(uuid()) @db.Uuid
   title       String   // Tiêu đề (VD: "Sự kiện mới!")
@@ -126,6 +102,7 @@ model Notification {
   userId      String   @db.Uuid
   user        User     @relation(fields: [userId], references: [id])
 }
+
 model Application {
   id          String            @id @default(uuid()) @db.Uuid
   event_id    String            @db.Uuid
@@ -176,4 +153,26 @@ model ClubRequest {
   user        User              @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
   @@map("club_requests")
+}
+
+enum EventStatus {
+  DRAFT
+  PENDING
+  PUBLISHED
+  COMPLETED
+  CANCELLED
+  REJECTED
+}
+
+enum Role {
+  STUDENT
+  CLUB
+  FACULTY
+}
+
+enum ApplicationStatus {
+  PENDING
+  APPROVED
+  WAITLISTED
+  REJECTED
 }

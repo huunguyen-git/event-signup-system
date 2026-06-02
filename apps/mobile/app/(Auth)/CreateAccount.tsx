@@ -38,6 +38,16 @@ const CreateAccountScreen = () => {
       Alert.alert("Lỗi", "Vui lòng nhập đầy đủ các trường thông tin");
       return;
     }
+
+  const uitEmailRegex = /^[a-zA-Z0-9._%+-]+@(gm\.uit\.edu\.vn|uit\.edu\.vn)$/;
+      if (!uitEmailRegex.test(email)) {
+        Alert.alert(
+          "Lỗi định dạng Email",
+          "Hệ thống chỉ chấp nhận email nội bộ trường (@gm.uit.edu.vn hoặc @uit.edu.vn). Vui lòng kiểm tra lại."
+        );
+        return;
+      }
+
     if (password !== confirmPassword) {
       Alert.alert("Lỗi", "Mật khẩu xác nhận không khớp");
       return;
@@ -134,7 +144,7 @@ const CreateAccountScreen = () => {
                         color={Colors.color.placeholder}
                       />
                       <TextInput
-                        placeholder="user@gmail.com"
+                        placeholder="user@gm.uit.edu.vn"
                         placeholderTextColor={Colors.color.placeholder}
                         value={email}
                         onChangeText={(value) => setEmail(value)}

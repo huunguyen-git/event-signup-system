@@ -3,6 +3,7 @@ import {
   IsString,
   IsNotEmpty,
   IsEnum,
+  IsNumber,
   Min,
   IsOptional,
   IsDateString,
@@ -64,7 +65,6 @@ export class CreateEventDto {
   @IsDateString()
   @IsNotEmpty()
   created_at!: string;
-
   @IsString()
   @IsOptional()
   room_id?: string;
@@ -72,4 +72,21 @@ export class CreateEventDto {
   @IsString()
   @IsOptional()
   equipments?: string;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  training_points?: number;
+
+  @IsOptional()
+  @IsString()
+  target_audience?: string;
+
+  @IsOptional()
+  @IsString()
+  event_type?: string;
+
+  @IsOptional()
+  @IsString()
+  benefits?: string;
 }
