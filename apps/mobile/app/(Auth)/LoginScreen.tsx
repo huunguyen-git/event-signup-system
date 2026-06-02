@@ -19,7 +19,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import HeaderText from "@/components/HeaderText";
 import { useRouter } from "expo-router";
 import { AuthService } from "../../axios/authService";
-import { saveToken, saveUserId, getToken } from "@/services/storage";
+import { saveToken, saveUserId, getToken, saveUserRole } from "@/services/storage";
 import * as Notifications from "expo-notifications";
 import * as Device from "expo-device";
 import { NotificationService } from "@/axios/notificationService";
@@ -43,6 +43,9 @@ const LoginScreen = () => {
       const data = await AuthService.login({ email, password });
       await saveToken(data.access_token);
       await saveUserId(data.user.id);
+      if (data.user && data.user.role) {
+        await saveUserRole(data.user.role);
+      }
       // Request notification permissions (on both physical devices and emulators)
       const { status: existingStatus } =
         await Notifications.getPermissionsAsync();
@@ -87,8 +90,16 @@ const LoginScreen = () => {
       }
       router.replace("/HomeScreen");
     } catch (error: any) {
-      Alert.alert("Login Failed", "Invalid email or password");
-      console.log(error);
+      console.log("Login error detail:", error);
+      if (error.message === "Network Error" || !error.response) {
+        Alert.alert(
+          "Connection Error",
+          "Cannot connect to the server. Please ensure that:\n1. Your phone and computer are on the same Wi-Fi network.\n2. Your Windows Firewall is not blocking port 3000.\n3. The backend server is running."
+        );
+      } else {
+        const errorMsg = error.response?.data?.message || "Invalid email or password";
+        Alert.alert("Login Failed", typeof errorMsg === "string" ? errorMsg : "Invalid email or password");
+      }
     } finally {
       setLoading(false);
     }

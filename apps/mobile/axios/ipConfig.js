@@ -9,7 +9,7 @@ const getBaseUrl = () => {
         .split("://")[1]
         .split(":")[0];
     }
-    return hostUri ? `http://${hostUri}:3000` : "http://192.168.1.30:3000";
+    return hostUri ? `http://${hostUri}:3000` : "http://192.168.101.34:3000";
   }
   return "https://api.your-production-url.com";
 };

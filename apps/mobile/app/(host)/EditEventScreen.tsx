@@ -33,17 +33,39 @@ export default function EditEventScreen() {
   const [showStartPicker, setShowStartPicker] = useState(false);
   const [showEndPicker, setShowEndPicker] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [rooms, setRooms] = useState<any[]>([]);
+  const [equipments, setEquipments] = useState<any[]>([]);
+  const [selectedEquipments, setSelectedEquipments] = useState<{ [key: string]: number }>({});
   const router = useRouter();
   useEffect(() => {
     const fetchData = async () => {
-      const data = await EventService.getEvent(id);
-      setEvent(data);
-      setStatus(data.status);
+      try {
+        const data = await EventService.getEvent(id);
+        setEvent(data);
+        setStatus(data.status);
+
+        // Pre-populate equipment quantities
+        const eqMap: { [key: string]: number } = {};
+        if (data.equipments && Array.isArray(data.equipments)) {
+          data.equipments.forEach((eq: any) => {
+            eqMap[eq.equipment_id] = eq.quantity;
+          });
+        }
+        setSelectedEquipments(eqMap);
+
+        // Fetch rooms and equipments list
+        const roomsData = await EventService.getRooms();
+        const equipmentsData = await EventService.getEquipments();
+        setRooms(roomsData);
+        setEquipments(equipmentsData);
+      } catch (err) {
+        console.error("Lỗi khi tải thông tin sự kiện:", err);
+      }
     };
     fetchData();
   }, [id]);
   const statusOptions = [
-    { label: "PUBLISHED", color: "#4CAF50" },
+    { label: "PENDING", color: "#4CAF50" },
     { label: "DRAFT", color: "#FFC107" },
     { label: "COMPLETED", color: "#2196F3" },
   ];
@@ -70,7 +92,11 @@ export default function EditEventScreen() {
   const handleSaveChanges = async () => {
     try {
       setIsLoading(true);
-      await EventService.updateEvent(event.id, event);
+      const updatedEventPayload = {
+        ...event,
+        equipments: JSON.stringify(selectedEquipments),
+      };
+      await EventService.updateEvent(event.id, updatedEventPayload);
       
       const notification = {
         userId: await getUserId(),
@@ -92,8 +118,10 @@ export default function EditEventScreen() {
       Alert.alert("Thành công", "Cập nhật sự kiện thành công");
       router.push("/HostDashBoardScreen");
       setIsLoading(false);
-    } catch (error) {
+    } catch (error: any) {
       console.log("Error updating event:", error);
+      const errorMsg = error.response?.data?.message || error.message || "Cập nhật sự kiện thất bại!";
+      Alert.alert("Lỗi", Array.isArray(errorMsg) ? errorMsg.join("\n") : errorMsg);
       setIsLoading(false);
     }
   };
@@ -381,16 +409,108 @@ export default function EditEventScreen() {
                   />
                 )}
               </View>
-            <View style={styles.inputWrapper}>
-              
-              <TextInput
-                style={styles.wrapperInput}
-                value={event.location_url}
-                onChangeText={(val) =>
-                  setEvent({ ...event, location_url: val })
-                }
-              />
+              <CustomText variant="medium" style={styles.label}>
+                Select Room / Phòng học (Bắt buộc)
+              </CustomText>
+              <View style={styles.roomsContainer}>
+                {rooms.map((room) => {
+                  const isSelected = event.room_id === room.id;
+                  return (
+                    <TouchableOpacity
+                      key={room.id}
+                      style={[
+                        styles.roomChip,
+                        isSelected && styles.roomChipSelected,
+                      ]}
+                      onPress={() => {
+                        if (isSelected) {
+                          setEvent({
+                            ...event,
+                            room_id: undefined,
+                            location_url: "",
+                          });
+                        } else {
+                          setEvent({
+                            ...event,
+                            room_id: room.id,
+                            location_url: room.name,
+                          });
+                        }
+                      }}
+                    >
+                      <Ionicons
+                        name="home-outline"
+                        size={14}
+                        color={isSelected ? "#FFF" : "#1a2a44"}
+                      />
+                      <CustomText
+                        variant="bold"
+                        style={[
+                          styles.roomChipText,
+                          isSelected && styles.roomChipTextSelected,
+                        ]}
+                      >
+                        {room.name}
+                      </CustomText>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
             </View>
+
+            {/* EQUIPMENT CARD */}
+            <View style={styles.card}>
+              <CustomText variant="bold" style={styles.cardSectionTitle}>
+                REQUEST EQUIPMENT / MƯỢN THIẾT BỊ
+              </CustomText>
+              {equipments.map((eq) => {
+                const qty = selectedEquipments[eq.id] || 0;
+                return (
+                  <View key={eq.id} style={styles.equipmentRow}>
+                    <View style={{ flex: 1 }}>
+                      <CustomText variant="medium" style={styles.equipmentName}>
+                        {eq.name}
+                      </CustomText>
+                      <CustomText style={styles.equipmentSubText}>
+                        Sẵn có: {eq.quantity}
+                      </CustomText>
+                    </View>
+                    <View style={styles.stepperContainer}>
+                      <TouchableOpacity
+                        style={styles.stepperBtn}
+                        onPress={() => {
+                          if (qty > 0) {
+                            setSelectedEquipments({
+                              ...selectedEquipments,
+                              [eq.id]: qty - 1,
+                            });
+                          }
+                        }}
+                      >
+                        <Ionicons name="remove" size={18} color={Colors.color.primary} />
+                      </TouchableOpacity>
+                      <CustomText variant="bold" style={styles.stepperVal}>
+                        {qty}
+                      </CustomText>
+                      <TouchableOpacity
+                        style={styles.stepperBtn}
+                        onPress={() => {
+                          if (qty < eq.quantity) {
+                            setSelectedEquipments({
+                              ...selectedEquipments,
+                              [eq.id]: qty + 1,
+                            });
+                          } else {
+                            Alert.alert("Thông báo", `Số lượng ${eq.name} trong kho chỉ còn ${eq.quantity}`);
+                          }
+                        }}
+                      >
+                        <Ionicons name="add" size={18} color={Colors.color.primary} />
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                );
+              })}
             </View>
 
 
@@ -625,6 +745,80 @@ function createStyles() {
       flex: 1,
       fontSize: 14,
       color: "#666",
+    },
+    roomsContainer: {
+      flexDirection: "row",
+      flexWrap: "wrap",
+      gap: 10,
+      marginVertical: 10,
+    },
+    roomChip: {
+      flexDirection: "row",
+      alignItems: "center",
+      backgroundColor: "#F5F7FA",
+      paddingVertical: 10,
+      paddingHorizontal: 16,
+      borderRadius: 20,
+      borderWidth: 1,
+      borderColor: "#E2E8F0",
+      gap: 6,
+    },
+    roomChipSelected: {
+      backgroundColor: Colors.color.primary,
+      borderColor: Colors.color.primary,
+    },
+    roomChipText: {
+      fontSize: 13,
+      color: "#1a2a44",
+    },
+    roomChipTextSelected: {
+      color: "#FFF",
+    },
+    equipmentRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      paddingVertical: 12,
+      borderBottomWidth: 1,
+      borderBottomColor: "#EDF2F7",
+    },
+    equipmentName: {
+      fontSize: 15,
+      color: "#2D3748",
+    },
+    equipmentSubText: {
+      fontSize: 12,
+      color: "#718096",
+      marginTop: 2,
+    },
+    stepperContainer: {
+      flexDirection: "row",
+      alignItems: "center",
+      backgroundColor: "#F5F7FA",
+      borderRadius: 8,
+      borderWidth: 1,
+      borderColor: "#E2E8F0",
+      padding: 4,
+    },
+    stepperBtn: {
+      width: 32,
+      height: 32,
+      justifyContent: "center",
+      alignItems: "center",
+      backgroundColor: "#FFF",
+      borderRadius: 6,
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.05,
+      shadowRadius: 2,
+      elevation: 1,
+    },
+    stepperVal: {
+      paddingHorizontal: 12,
+      fontSize: 15,
+      color: "#2D3748",
+      textAlign: "center",
+      minWidth: 30,
     },
   });
 }

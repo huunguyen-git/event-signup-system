@@ -18,6 +18,7 @@ import { EventService } from "@/axios/eventService";
 import { useRouter } from "expo-router";
 import Header from "@/components/Header";
 import { getUserId } from "@/services/storage";
+import { getSocket } from "@/services/socket";
 
 const STATUS_TABS = ["All", "DRAFT", "PUBLISHED", "COMPLETED", "CANCELLED"];
 
@@ -36,6 +37,15 @@ export default function HostDashboardScreen() {
 
   useEffect(() => {
     fetchEvents();
+
+    const socket = getSocket();
+    socket.on("events_changed", fetchEvents);
+    socket.on("applications_changed", fetchEvents);
+
+    return () => {
+      socket.off("events_changed", fetchEvents);
+      socket.off("applications_changed", fetchEvents);
+    };
   }, []);
 
   const filterData = useMemo(() => {

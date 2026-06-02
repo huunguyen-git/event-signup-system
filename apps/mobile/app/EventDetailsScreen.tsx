@@ -597,30 +597,70 @@ export default function EventDetailsScreen() {
           <View style={styles.infoRow}>
             <Ionicons name="location-sharp" size={28} color={themeColor} />
             <View style={styles.infoTextGroup}>
-              <CustomText variant="bold" style={styles.infoLabel}>
-                Location
-              </CustomText>
-              <CustomText style={styles.infoValue}>
-                {eventData?.location_url || EVENT_LOCATION_DEFAULT}
-              </CustomText>
+              <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+                <View style={{ flex: 1, marginRight: 8 }}>
+                  <CustomText variant="bold" style={styles.infoLabel}>
+                    Location
+                  </CustomText>
+                  <CustomText style={styles.infoValue}>
+                    {eventData?.location_url || EVENT_LOCATION_DEFAULT}
+                  </CustomText>
+                </View>
+                {eventData?.location_url && (
+                  <TouchableOpacity
+                    style={styles.compactMapBtn}
+                    onPress={handleOpenMap}
+                    activeOpacity={0.7}
+                  >
+                    <Ionicons name="map-outline" size={14} color={themeColor} />
+                    <CustomText variant="bold" style={[styles.compactMapBtnText, { color: themeColor }]}>
+                      Bản đồ
+                    </CustomText>
+                  </TouchableOpacity>
+                )}
+              </View>
             </View>
           </View>
 
-          {eventData?.location_url && (
-            <View style={styles.mapContainer}>
-              <View style={[styles.mapFrame, { backgroundColor: "#f5f5f5" }]} />
-              <TouchableOpacity
-                style={styles.mapButton}
-                onPress={handleOpenMap}
-                activeOpacity={0.7}
-              >
-                <Ionicons name="map-outline" size={16} color="#007AFF" />
-                <CustomText style={styles.mapButtonText}>
-                  Open in Maps
+          {eventData?.room && (
+            <View style={styles.infoRow}>
+              <MaterialCommunityIcons
+                name="door-open"
+                size={28}
+                color={themeColor}
+              />
+              <View style={styles.infoTextGroup}>
+                <CustomText variant="bold" style={styles.infoLabel}>
+                  Phòng cấp (Allocated Room)
                 </CustomText>
-              </TouchableOpacity>
-              <View style={styles.mapPin}>
-                <Ionicons name="location" size={36} color="red" />
+                <CustomText style={styles.infoValue}>
+                  {eventData.room.name} {eventData.room.capacity ? `(Sức chứa: ${eventData.room.capacity} chỗ)` : ""}
+                </CustomText>
+              </View>
+            </View>
+          )}
+
+          {eventData?.equipments && eventData.equipments.length > 0 && (
+            <View style={styles.section}>
+              <View style={styles.sectionHeaderRow}>
+                <Ionicons
+                  name="construct-outline"
+                  size={20}
+                  color={themeColor}
+                />
+                <CustomText variant="bold" style={styles.sectionTitle}>
+                  Thiết bị yêu cầu (Requested Equipment)
+                </CustomText>
+              </View>
+              <View style={styles.equipmentListContainer}>
+                {eventData.equipments.map((eq: any) => (
+                  <View key={eq.equipment_id} style={styles.equipmentDetailRow}>
+                    <Ionicons name="hardware-chip-outline" size={16} color="#666" style={{ marginRight: 6 }} />
+                    <CustomText style={styles.equipmentDetailText}>
+                      {eq.equipment?.name}: <CustomText variant="bold">{eq.quantity}</CustomText>
+                    </CustomText>
+                  </View>
+                ))}
               </View>
             </View>
           )}
@@ -962,39 +1002,19 @@ const styles = StyleSheet.create({
   infoTextGroup: { marginLeft: 12, flex: 1 },
   infoLabel: { fontSize: 15, color: "#333" },
   infoValue: { color: "#666", marginTop: 3, fontSize: 13 },
-  mapContainer: {
-    width: "100%",
-    height: 150,
-    borderRadius: 16,
-    overflow: "hidden",
-    marginVertical: 15,
-    backgroundColor: "white",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.08,
-    shadowRadius: 10,
-    elevation: 4,
-    position: "relative",
-  },
-  mapFrame: { width: "100%", height: "100%" },
-  mapButton: {
-    position: "absolute",
-    top: 12,
-    left: 12,
-    backgroundColor: "white",
+  compactMapBtn: {
     flexDirection: "row",
     alignItems: "center",
+    borderColor: "#1a2a44",
+    borderWidth: 1,
+    borderRadius: 8,
     paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 5,
-    elevation: 4,
-    shadowColor: "#000",
-    shadowOpacity: 0.2,
-    shadowRadius: 3,
-    zIndex: 10,
+    paddingVertical: 5,
+    gap: 4,
   },
-  mapButtonText: { color: "#007AFF", fontSize: 12, marginLeft: 5 },
-  mapPin: { position: "absolute", top: "35%", left: "46%" },
+  compactMapBtnText: {
+    fontSize: 12,
+  },
   section: { marginTop: 25 },
   sectionHeaderRow: {
     flexDirection: "row",
@@ -1213,5 +1233,22 @@ const styles = StyleSheet.create({
   notificationText: {
     color: "#666",
     fontSize: 14,
+  },
+  equipmentListContainer: {
+    backgroundColor: "#F8FAFC",
+    borderRadius: 12,
+    padding: 15,
+    marginTop: 8,
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
+  },
+  equipmentDetailRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginVertical: 4,
+  },
+  equipmentDetailText: {
+    fontSize: 14,
+    color: "#4A5568",
   },
 });

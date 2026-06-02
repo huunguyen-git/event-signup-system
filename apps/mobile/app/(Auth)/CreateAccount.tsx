@@ -187,6 +187,8 @@ const CreateAccountScreen = () => {
                     )}
                   </View>
 
+
+
                   <View style={styles.input}>
                     <CustomText variant="bold" style={styles.labelText}>
                       Password
@@ -377,5 +379,36 @@ const styles = StyleSheet.create({
   footerText: {
     fontSize: 16,
     color: Colors.color.text,
+  },
+  roleContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    gap: 8,
+    marginTop: 5,
+    marginBottom: 10,
+  },
+  roleButton: {
+    flex: 1,
+    flexDirection: "column",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#f4f6f9",
+    borderRadius: 12,
+    paddingVertical: 12,
+    borderWidth: 1,
+    borderColor: "transparent",
+  },
+  roleButtonActive: {
+    backgroundColor: Colors.color.primary,
+    borderColor: Colors.color.primary,
+  },
+  roleButtonText: {
+    fontSize: 12,
+    color: Colors.color.primary,
+    marginTop: 4,
+    textAlign: "center",
+  },
+  roleButtonTextActive: {
+    color: Colors.color.white,
   },
 });

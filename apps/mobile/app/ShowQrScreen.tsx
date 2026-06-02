@@ -1,9 +1,14 @@
 import React from "react";
-import { View, StyleSheet, SafeAreaView, TouchableOpacity } from "react-native";
+import { View, StyleSheet, SafeAreaView, TouchableOpacity, LogBox } from "react-native";
 import { CustomText } from "@/components/CustomText";
 import QRCode from "react-native-qrcode-svg";
 import { useLocalSearchParams, useRouter, Stack } from "expo-router";
 import { Colors } from "../constants/theme";
+
+LogBox.ignoreLogs([
+  "react-native-qrcode-svg",
+  "Failed prop type",
+]);
 
 const ShowQrScreen = () => {
   const { id, title } = useLocalSearchParams(); // Lấy ID sự kiện từ router

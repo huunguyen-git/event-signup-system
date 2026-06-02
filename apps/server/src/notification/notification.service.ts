@@ -2,12 +2,16 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma.service.js';
 import { CreateNotificationDto, SaveTokenDto } from './notification.dto.js';
 import { Expo } from 'expo-server-sdk';
+import { RealtimeGateway } from '../realtime/realtime.gateway.js';
 
 @Injectable()
 export class NotificationService {
   private expo = new Expo();
 
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private realtimeGateway: RealtimeGateway,
+  ) {}
 
   async savePushToken(userId: string, tok: SaveTokenDto) {
     return this.prisma.user.update({
@@ -33,6 +37,10 @@ export class NotificationService {
     const notification = await this.prisma.notification.create({
       data: { userId, title, body },
     });
+    
+    // Broadcast realtime event to the recipient
+    this.realtimeGateway.broadcast('notification_received', { userId, notification });
+
     try {
       if (user?.token && Expo.isExpoPushToken(user.token)) {
         await this.expo.sendPushNotificationsAsync([

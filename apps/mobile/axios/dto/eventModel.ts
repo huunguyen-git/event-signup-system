@@ -21,4 +21,11 @@ export class ICreateEvent {
   created_at!: string;
   imageUri?: string;
   applications?: any[];
+  room_id?: string;
+  room?: {
+    id: string;
+    name: string;
+    capacity?: number;
+  };
+  equipments?: any;
 }

@@ -55,7 +55,7 @@ export class CreateEventDto {
 
   @IsEnum(EventStatus)
   @IsNotEmpty()
-  status: EventStatus = EventStatus.DRAFT;
+  status: EventStatus = EventStatus.PENDING;
 
   @IsJSON()
   @IsNotEmpty()
@@ -64,4 +64,12 @@ export class CreateEventDto {
   @IsDateString()
   @IsNotEmpty()
   created_at!: string;
+
+  @IsString()
+  @IsOptional()
+  room_id?: string;
+
+  @IsString()
+  @IsOptional()
+  equipments?: string;
 }

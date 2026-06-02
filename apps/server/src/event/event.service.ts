@@ -1,9 +1,10 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, ForbiddenException, BadRequestException, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma.service.js';
 import { CreateEventDto } from './event.dto.js';
 import { Event, Prisma } from '../generated/prisma/client.js';
 import { createClient } from '@supabase/supabase-js';
 import { NotificationService } from '../notification/notification.service.js';
+import { RealtimeGateway } from '../realtime/realtime.gateway.js';
 
 @Injectable()
 export class EventService {
@@ -11,7 +12,8 @@ export class EventService {
   
   constructor(
     private prisma: PrismaService,
-    private notificationService: NotificationService
+    private notificationService: NotificationService,
+    private realtimeGateway: RealtimeGateway
   ) {
     this.supabase = createClient(
       process.env.SUPABASE_URL!,
@@ -24,6 +26,12 @@ export class EventService {
       where,
       include: {
         host: true,
+        room: true,
+        equipments: {
+          include: {
+            equipment: true,
+          },
+        },
         _count: {
           select: { applications: true, comments: true },
         },
@@ -35,6 +43,12 @@ export class EventService {
     return this.prisma.event.findMany({
       include: {
         host: true,
+        room: true,
+        equipments: {
+          include: {
+            equipment: true,
+          },
+        },
         _count: {
           select: { applications: true, comments: true },
         },
@@ -49,6 +63,12 @@ export class EventService {
       },
       include: {
         host: true,
+        room: true,
+        equipments: {
+          include: {
+            equipment: true,
+          },
+        },
         _count: {
           select: { applications: true, comments: true },
         },
@@ -59,11 +79,100 @@ export class EventService {
     });
   }
 
+  async checkRoomAvailability(
+    roomId: string,
+    startDate: string,
+    endDate: string,
+    currentEventId?: string,
+  ): Promise<void> {
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+
+    const conflictingEvent = await this.prisma.event.findFirst({
+      where: {
+        room_id: roomId,
+        status: { notIn: ['CANCELLED', 'DRAFT'] },
+        id: currentEventId ? { not: currentEventId } : undefined,
+        event_date: { lt: end.toISOString() },
+        end_date: { gt: start.toISOString() },
+      },
+    });
+
+    if (conflictingEvent) {
+      // Find all rooms
+      const allRooms = await this.prisma.room.findMany();
+      // Find booked room IDs in this time slot
+      const bookedEvents = await this.prisma.event.findMany({
+        where: {
+          status: { notIn: ['CANCELLED', 'DRAFT'] },
+          id: currentEventId ? { not: currentEventId } : undefined,
+          event_date: { lt: end.toISOString() },
+          end_date: { gt: start.toISOString() },
+        },
+        select: {
+          room_id: true,
+        },
+      });
+
+      const bookedRoomIds = new Set(bookedEvents.map((e) => e.room_id).filter(Boolean));
+      const availableRooms = allRooms.filter((r) => !bookedRoomIds.has(r.id));
+      const suggestions = availableRooms.map((r) => r.name).join(', ');
+
+      throw new BadRequestException(
+        `Phòng học đã có người đăng ký trong khung giờ từ ${start.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })} ${start.toLocaleDateString('vi-VN')} đến ${end.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })} ${end.toLocaleDateString('vi-VN')}. Gợi ý phòng trống: ${suggestions || 'Không có phòng nào trống'}`,
+      );
+    }
+  }
+
+  private parseEquipments(equipmentsStr?: string): { equipment_id: string; quantity: number }[] {
+    const parsedEquipments: { equipment_id: string; quantity: number }[] = [];
+    if (equipmentsStr) {
+      try {
+        const parsed = JSON.parse(equipmentsStr);
+        if (Array.isArray(parsed)) {
+          for (const item of parsed) {
+            const eqId = item.equipment_id || item.id || item.equipmentId;
+            const qty = Number(item.quantity || 1);
+            if (eqId && qty > 0) {
+              parsedEquipments.push({ equipment_id: eqId, quantity: qty });
+            }
+          }
+        } else if (typeof parsed === 'object' && parsed !== null) {
+          for (const [key, val] of Object.entries(parsed)) {
+            const qty = Number(val);
+            if (key && qty > 0) {
+              parsedEquipments.push({ equipment_id: key, quantity: qty });
+            }
+          }
+        }
+      } catch (err) {
+        console.error('Failed to parse equipments:', err);
+      }
+    }
+    return parsedEquipments;
+  }
+
   async createEvent(
     data: CreateEventDto,
     file?: Express.Multer.File,
   ): Promise<Event> {
-    const { banner_url, ...restData } = data;
+    const host = await this.prisma.user.findUnique({
+      where: { id: data.host_id },
+    });
+
+    if (host) {
+      if (host.role === 'STUDENT') {
+        throw new ForbiddenException('Sinh viên không được phép tạo sự kiện.');
+      }
+    }
+
+    if (data.room_id) {
+      await this.checkRoomAvailability(data.room_id, data.event_date, data.end_date);
+    }
+
+    const parsedEquipments = this.parseEquipments(data.equipments);
+
+    const { banner_url, equipments, ...restData } = data;
     let imageUrl: string | null = banner_url;
     if (file) {
       const fileName = `${Date.now()}-${file.originalname}`;
@@ -79,17 +188,40 @@ export class EventService {
         .getPublicUrl(fileName);
       imageUrl = publicUrl.publicUrl;
     }
-    return this.prisma.event.create({
+    const newEvent = await this.prisma.event.create({
       data: {
         ...restData,
+        room_id: data.room_id || null,
         banner_url: imageUrl,
         event_date: new Date(data.event_date).toISOString(),
         end_date: new Date(data.end_date).toISOString(),
         created_at: new Date(data.created_at),
         max_attendees: Number(data.max_attendees),
         form_config: data.form_config as unknown as Prisma.InputJsonValue,
+        equipments: parsedEquipments.length > 0 ? {
+          createMany: {
+            data: parsedEquipments,
+          }
+        } : undefined,
       },
     });
+
+    this.realtimeGateway.broadcast('events_changed');
+
+    if (host && host.role === 'CLUB') {
+      const admins = await this.prisma.user.findMany({
+        where: { role: 'FACULTY' },
+      });
+      for (const admin of admins) {
+        await this.notificationService.sendAndSaveNotification({
+          userId: admin.id,
+          title: `Yêu cầu duyệt sự kiện mới`,
+          body: `CLB "${host.full_name}" vừa tạo sự kiện "${newEvent.title}" và đang chờ phê duyệt.`,
+        });
+      }
+    }
+
+    return newEvent;
   }
 
   async updateEvent(param: {
@@ -98,7 +230,23 @@ export class EventService {
     file?: Express.Multer.File;
   }): Promise<Event> {
     const { where, data, file } = param;
-    const { banner_url, ...restData } = data;
+    const host = await this.prisma.user.findUnique({
+      where: { id: data.host_id },
+    });
+
+    if (host) {
+      if (host.role === 'STUDENT') {
+        throw new ForbiddenException('Sinh viên không được phép sửa sự kiện.');
+      }
+    }
+
+    if (data.room_id) {
+      await this.checkRoomAvailability(data.room_id, data.event_date, data.end_date, where.id);
+    }
+
+    const parsedEquipments = this.parseEquipments(data.equipments);
+
+    const { banner_url, equipments, ...restData } = data;
     let finalImageUrl: string | null | undefined = banner_url;
     if (file) {
       const fileName = `${Date.now()}-${file.originalname}`;
@@ -115,10 +263,11 @@ export class EventService {
       finalImageUrl = publicUrl.publicUrl;
     }
 
-    return this.prisma.event.update({
+    const updated = await this.prisma.event.update({
       where,
       data: {
         ...restData,
+        room_id: data.room_id || null,
         banner_url: finalImageUrl,
         event_date: new Date(data.event_date),
         end_date: new Date(data.end_date),
@@ -127,10 +276,29 @@ export class EventService {
         form_config: data.form_config as unknown as Prisma.InputJsonValue,
       },
     });
+
+    await this.prisma.eventEquipment.deleteMany({
+      where: { event_id: where.id },
+    });
+
+    if (parsedEquipments.length > 0) {
+      await this.prisma.eventEquipment.createMany({
+        data: parsedEquipments.map((pe) => ({
+          event_id: where.id!,
+          equipment_id: pe.equipment_id,
+          quantity: pe.quantity,
+        })),
+      });
+    }
+
+    this.realtimeGateway.broadcast('events_changed');
+    return updated;
   }
 
   async deleteEvent(where: Prisma.EventWhereUniqueInput): Promise<Event> {
-    return this.prisma.event.delete({ where });
+    const deleted = await this.prisma.event.delete({ where });
+    this.realtimeGateway.broadcast('events_changed');
+    return deleted;
   }
 
   async cancelEvent(eventId: string, reason: string): Promise<Event> {
@@ -152,6 +320,51 @@ export class EventService {
       });
     }
 
+    this.realtimeGateway.broadcast('events_changed');
+    return updatedEvent;
+  }
+
+  async approveEvent(eventId: string, approverId: string): Promise<Event> {
+    const user = await this.prisma.user.findUnique({
+      where: { id: approverId },
+    });
+    if (!user || user.role !== 'FACULTY') {
+      throw new ForbiddenException('Chỉ Cấp Khoa/Đoàn trường mới có quyền duyệt sự kiện');
+    }
+
+    const updatedEvent = await this.prisma.event.update({
+      where: { id: eventId },
+      data: {
+        status: 'PUBLISHED',
+      },
+      include: {
+        room: true,
+      },
+    });
+
+    const roomName = updatedEvent.room ? updatedEvent.room.name : 'Chưa xếp phòng';
+
+    await this.notificationService.sendAndSaveNotification({
+      userId: updatedEvent.host_id,
+      title: `Sự kiện đã được duyệt: ${updatedEvent.title}`,
+      body: `Phòng cấp: ${roomName}`,
+    });
+
+    // Notify all admins (FACULTY)
+    const host = await this.prisma.user.findUnique({ where: { id: updatedEvent.host_id } });
+    const hostName = host ? host.full_name : 'CLB';
+    const admins = await this.prisma.user.findMany({
+      where: { role: 'FACULTY' },
+    });
+    for (const admin of admins) {
+      await this.notificationService.sendAndSaveNotification({
+        userId: admin.id,
+        title: `Sự kiện đã được duyệt`,
+        body: `Sự kiện "${updatedEvent.title}" của CLB "${hostName}" đã được phê duyệt cấp phòng: ${roomName}.`,
+      });
+    }
+
+    this.realtimeGateway.broadcast('events_changed');
     return updatedEvent;
   }
 }

@@ -55,6 +55,8 @@ export default function RegistrationFormScreen() {
     allowed_domain,
     status,
     isCreate,
+    room_id,
+    equipments,
   } = useLocalSearchParams();
   const [data, setData] = useState<ICreateEvent>(new ICreateEvent());
   const [customQuestions, setCustomQuestions] = useState<any[]>([]);
@@ -77,6 +79,8 @@ export default function RegistrationFormScreen() {
           allowed_domain: allowed_domain as string,
           status: status as string,
           form_config: form_config as string,
+          room_id: (room_id as string) || undefined,
+          equipments: (equipments as string) || undefined,
         });
       } else {
         const event = await EventService.getEvent(id);
@@ -131,8 +135,11 @@ export default function RegistrationFormScreen() {
       await NotificationService.sendAndSaveNotification(notification);
       router.push("/HostDashBoardScreen");
       setIsLoading(false);
-    } catch (error) {
+    } catch (error: any) {
       console.log("Error creating event:", error);
+      const errorMsg =
+        error.response?.data?.message || error.message || "Tạo sự kiện thất bại!";
+      Alert.alert("Lỗi", Array.isArray(errorMsg) ? errorMsg.join("\n") : errorMsg);
       setIsLoading(false);
     }
   };

@@ -15,8 +15,15 @@ import { Colors } from "../../constants/theme";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import apiClient from "@/axios/axios";
 import { getToken } from "@/services/storage";
+import { getSocket } from "@/services/socket";
 
-const STATUS_TABS = ["All", "PENDING", "APPROVED", "REJECTED", "WAITLISTED"];
+const STATUS_TABS = [
+  { value: "All", label: "ALL" },
+  { value: "PENDING", label: "PENDING" },
+  { value: "APPROVED", label: "APPROVED" },
+  { value: "REJECTED", label: "REJECTED" },
+  { value: "WAITLISTED", label: "WAITLISTED" }
+];
 
 export default function ViewAttendeesScreen() {
   const { id } = useLocalSearchParams();
@@ -49,6 +56,13 @@ export default function ViewAttendeesScreen() {
   useEffect(() => {
     if (id) {
       fetchAttendees();
+
+      const socket = getSocket();
+      socket.on("applications_changed", fetchAttendees);
+
+      return () => {
+        socket.off("applications_changed", fetchAttendees);
+      };
     }
   }, [id]);
 
@@ -97,11 +111,27 @@ export default function ViewAttendeesScreen() {
   const renderAttendee = ({ item }) => {
     const isSelected = selectedIds.includes(item.id);
 
-    let statusColor = "#666";
-    if (item.status === "APPROVED") statusColor = "#4CAF50";
-    if (item.status === "REJECTED") statusColor = "#F44336";
-    if (item.status === "WAITLISTED") statusColor = "#FF9800";
-    if (item.status === "PENDING") statusColor = "#2196F3";
+    let statusBg = "#F3F4F6";
+    let statusTextColor = "#6B7280";
+    let statusLabel = item.status || "UNKNOWN";
+
+    if (item.status === "APPROVED") {
+      statusBg = "#E8F5E9";
+      statusTextColor = "#2E7D32";
+      statusLabel = "APPROVED";
+    } else if (item.status === "PENDING") {
+      statusBg = "#E3F2FD";
+      statusTextColor = "#1565C0";
+      statusLabel = "PENDING";
+    } else if (item.status === "REJECTED") {
+      statusBg = "#FFEBEE";
+      statusTextColor = "#C62828";
+      statusLabel = "REJECTED";
+    } else if (item.status === "WAITLISTED") {
+      statusBg = "#FFF3E0";
+      statusTextColor = "#EF6C00";
+      statusLabel = "WAITLISTED";
+    }
 
     return (
       <View style={styles.attendeeRow}>
@@ -139,9 +169,9 @@ export default function ViewAttendeesScreen() {
         </View>
 
         <View style={styles.rightSection}>
-          <View style={[styles.statusBadge, { backgroundColor: statusColor }]}>
-            <CustomText variant="bold" style={styles.statusText}>
-              {item.status || "UNKNOWN"}
+          <View style={[styles.statusBadge, { backgroundColor: statusBg }]}>
+            <CustomText variant="bold" style={[styles.statusText, { color: statusTextColor }]}>
+              {statusLabel}
             </CustomText>
           </View>
         </View>
@@ -182,18 +212,18 @@ export default function ViewAttendeesScreen() {
           horizontal
           showsHorizontalScrollIndicator={false}
           data={STATUS_TABS}
-          keyExtractor={(item) => item}
+          keyExtractor={(item) => item.value}
           contentContainerStyle={{ paddingHorizontal: 15, paddingBottom: 10 }}
           renderItem={({ item }) => (
             <TouchableOpacity
-              style={[styles.tabBtn, activeTab === item && styles.tabBtnActive]}
+              style={[styles.tabBtn, activeTab === item.value && styles.tabBtnActive]}
               onPress={() => {
-                setActiveTab(item);
+                setActiveTab(item.value);
                 setSelectedIds([]);
               }}
             >
-              <CustomText variant={activeTab === item ? "bold" : "medium"} style={[styles.tabText, activeTab === item && styles.tabTextActive]}>
-                {item}
+              <CustomText variant={activeTab === item.value ? "bold" : "medium"} style={[styles.tabText, activeTab === item.value && styles.tabTextActive]}>
+                {item.label}
               </CustomText>
             </TouchableOpacity>
           )}

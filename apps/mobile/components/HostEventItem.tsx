@@ -29,6 +29,7 @@ const HostEventItem = ({ event, onRefresh }: HostItem) => {
   const statusColors = {
     LIVE: { bg: "#E6F4EA", text: "#137333", label: "LIVE" },
     PUBLISHED: { bg: "#E6F4EA", text: "#137333", label: "PUBLISHED" },
+    PENDING: { bg: "#FEF7E0", text: "#B06000", label: "PENDING" },
     DRAFT: { bg: "#FEF7E0", text: "#B06000", label: "DRAFT" },
     COMPLETED: { bg: "#F1F3F4", text: "#5F6368", label: "COMPLETED" },
     COMPLETE: { bg: "#F1F3F4", text: "#5F6368", label: "COMPLETED" },

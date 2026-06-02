@@ -33,5 +33,9 @@ export class RegisterDto {
 
   @IsString()
   @IsOptional()
+  role?: 'STUDENT' | 'CLUB' | 'FACULTY';
+
+  @IsString()
+  @IsOptional()
   token?: string;
 }

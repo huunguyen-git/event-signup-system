@@ -23,3 +23,15 @@ export const getUserId = () => {
 export const removeUserId = () => {
   return SecureStore.deleteItemAsync("CurrentUserId");
 };
+
+export const saveUserRole = (role: string) => {
+  return SecureStore.setItemAsync("CurrentUserRole", role);
+};
+
+export const getUserRole = () => {
+  return SecureStore.getItemAsync("CurrentUserRole");
+};
+
+export const removeUserRole = () => {
+  return SecureStore.deleteItemAsync("CurrentUserRole");
+};

@@ -23,6 +23,9 @@ export class ResponseUserDto {
   @Expose()
   description!: string | null;
 
+  @Expose()
+  role!: string;
+
   constructor(partial: Partial<ResponseUserDto>) {
     Object.assign(this, partial);
   }

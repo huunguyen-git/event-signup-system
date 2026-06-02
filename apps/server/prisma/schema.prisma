@@ -17,9 +17,16 @@ datasource db {
 
 enum EventStatus {
   DRAFT
+  PENDING
   PUBLISHED
   COMPLETED
   CANCELLED
+}
+
+enum Role {
+  STUDENT
+  CLUB
+  FACULTY
 }
 
 enum ApplicationStatus {
@@ -41,12 +48,14 @@ model User {
   created_at   DateTime @default(now())
   description  String?
   token        String?
+  role         Role     @default(STUDENT)
 
   // Relations
   hosted_events Event[]       @relation("HostedEvents")
   applications  Application[]
   comments      Comment[]
   notification    Notification[]
+  club_requests ClubRequest[]
 
   @@map("profiles")
 }
@@ -62,9 +71,12 @@ model Event {
   location_url    String?
   allowed_domain  String?     // domain restriction feature
   max_attendees   Int?
-  status          EventStatus @default(DRAFT)
+  status          EventStatus @default(PENDING)
   form_config     Json?       // Stores custom field toggles as JSONB
   created_at      DateTime    @default(now())
+  room_id         String?      @db.Uuid
+  room            Room?        @relation(fields: [room_id], references: [id], onDelete: SetNull)
+  equipments      EventEquipment[]
 
   // Relations
   host            User          @relation("HostedEvents", fields: [host_id], references: [id], onDelete: Cascade)
@@ -73,6 +85,36 @@ model Event {
 
 
   @@map("events")
+}
+
+model Room {
+  id       String   @id @default(uuid()) @db.Uuid
+  name     String   @unique
+  capacity Int?
+  events   Event[]
+
+  @@map("rooms")
+}
+
+model Equipment {
+  id              String           @id @default(uuid()) @db.Uuid
+  name            String           @unique
+  quantity        Int              @default(0)
+  eventEquipments EventEquipment[]
+
+  @@map("equipments")
+}
+
+model EventEquipment {
+  event_id     String    @db.Uuid
+  equipment_id String    @db.Uuid
+  quantity     Int       @default(1)
+
+  event        Event     @relation(fields: [event_id], references: [id], onDelete: Cascade)
+  equipment    Equipment @relation(fields: [equipment_id], references: [id], onDelete: Cascade)
+
+  @@id([event_id, equipment_id])
+  @@map("event_equipments")
 }
 model Notification {
   id          String   @id @default(uuid()) @db.Uuid
@@ -120,4 +162,18 @@ model Comment {
   replies     Comment[] @relation("CommentReplies")
 
   @@map("comments")
+}
+
+model ClubRequest {
+  id          String            @id @default(uuid()) @db.Uuid
+  user_id     String            @db.Uuid
+  club_name   String
+  description String            @db.Text
+  status      ApplicationStatus @default(PENDING)
+  created_at  DateTime          @default(now())
+
+  // Relations
+  user        User              @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@map("club_requests")
 }
