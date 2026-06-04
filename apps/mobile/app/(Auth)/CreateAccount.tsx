@@ -38,6 +38,16 @@ const CreateAccountScreen = () => {
       Alert.alert("Lỗi", "Vui lòng nhập đầy đủ các trường thông tin");
       return;
     }
+
+  const uitEmailRegex = /^[a-zA-Z0-9._%+-]+@(gm\.uit\.edu\.vn|uit\.edu\.vn)$/;
+      if (!uitEmailRegex.test(email)) {
+        Alert.alert(
+          "Lỗi định dạng Email",
+          "Hệ thống chỉ chấp nhận email nội bộ trường (@gm.uit.edu.vn hoặc @uit.edu.vn). Vui lòng kiểm tra lại."
+        );
+        return;
+      }
+
     if (password !== confirmPassword) {
       Alert.alert("Lỗi", "Mật khẩu xác nhận không khớp");
       return;
@@ -134,7 +144,7 @@ const CreateAccountScreen = () => {
                         color={Colors.color.placeholder}
                       />
                       <TextInput
-                        placeholder="user@gmail.com"
+                        placeholder="user@gm.uit.edu.vn"
                         placeholderTextColor={Colors.color.placeholder}
                         value={email}
                         onChangeText={(value) => setEmail(value)}
@@ -186,6 +196,8 @@ const CreateAccountScreen = () => {
                       />
                     )}
                   </View>
+
+
 
                   <View style={styles.input}>
                     <CustomText variant="bold" style={styles.labelText}>
@@ -377,5 +389,36 @@ const styles = StyleSheet.create({
   footerText: {
     fontSize: 16,
     color: Colors.color.text,
+  },
+  roleContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    gap: 8,
+    marginTop: 5,
+    marginBottom: 10,
+  },
+  roleButton: {
+    flex: 1,
+    flexDirection: "column",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#f4f6f9",
+    borderRadius: 12,
+    paddingVertical: 12,
+    borderWidth: 1,
+    borderColor: "transparent",
+  },
+  roleButtonActive: {
+    backgroundColor: Colors.color.primary,
+    borderColor: Colors.color.primary,
+  },
+  roleButtonText: {
+    fontSize: 12,
+    color: Colors.color.primary,
+    marginTop: 4,
+    textAlign: "center",
+  },
+  roleButtonTextActive: {
+    color: Colors.color.white,
   },
 });

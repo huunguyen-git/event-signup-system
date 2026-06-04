@@ -3,6 +3,7 @@ import {
   IsString,
   IsNotEmpty,
   IsEnum,
+  IsNumber,
   Min,
   IsOptional,
   IsDateString,
@@ -55,7 +56,7 @@ export class CreateEventDto {
 
   @IsEnum(EventStatus)
   @IsNotEmpty()
-  status: EventStatus = EventStatus.DRAFT;
+  status: EventStatus = EventStatus.PENDING;
 
   @IsJSON()
   @IsNotEmpty()
@@ -64,4 +65,28 @@ export class CreateEventDto {
   @IsDateString()
   @IsNotEmpty()
   created_at!: string;
+  @IsString()
+  @IsOptional()
+  room_id?: string;
+
+  @IsString()
+  @IsOptional()
+  equipments?: string;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  training_points?: number;
+
+  @IsOptional()
+  @IsString()
+  target_audience?: string;
+
+  @IsOptional()
+  @IsString()
+  event_type?: string;
+
+  @IsOptional()
+  @IsString()
+  benefits?: string;
 }

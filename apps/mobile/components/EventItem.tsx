@@ -90,6 +90,7 @@ export default EventItem;
 const styles = StyleSheet.create({
   container: {
     flexDirection: "row",
+    alignItems: "center",
     backgroundColor: Colors.color.white,
     borderRadius: 16,
     padding: 15,
@@ -116,6 +117,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     marginBottom: 6,
     color: "#1B2B52",
+    paddingRight: 75,
   },
   eventDate: {
     fontSize: 14,

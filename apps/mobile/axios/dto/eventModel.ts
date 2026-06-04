@@ -1,6 +1,8 @@
 export const EventStatus = {
   DRAFT: "DRAFT",
+  PENDING: "PENDING",
   PUBLISHED: "PUBLISHED",
+  REJECTED: "REJECTED",
   CANCELLED: "CANCELLED",
   COMPLETED: "COMPLETED",
 };
@@ -21,4 +23,15 @@ export class ICreateEvent {
   created_at!: string;
   imageUri?: string;
   applications?: any[];
+  room_id?: string;
+  room?: {
+    id: string;
+    name: string;
+    capacity?: number;
+  };
+  equipments?: any;
+  training_points?: number;
+  target_audience?: string;
+  event_type?: string;
+  benefits?: string;
 }

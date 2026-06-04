@@ -5,4 +5,5 @@ export class ResponseUser {
   birthdate!: Date;
   phone_number!: string | null;
   avatar_url!: string | null;
+  role!: string;
 }

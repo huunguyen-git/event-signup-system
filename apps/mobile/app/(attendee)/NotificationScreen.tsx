@@ -12,6 +12,7 @@ import { useEffect, useState } from "react";
 import { Notification } from "@/axios/dto/notificationModel";
 import { NotificationService } from "../../axios/notificationService";
 import { getUserId } from "@/services/storage";
+import { getSocket } from "@/services/socket";
 
 export default function NotificationsScreen({ isOpen }: { isOpen?: boolean }) {
   const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -32,6 +33,28 @@ export default function NotificationsScreen({ isOpen }: { isOpen?: boolean }) {
       }
     };
     fetchNotifications();
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const socket = getSocket();
+    const handleNotification = async (data: any) => {
+      const currentUserId = await getUserId();
+      if (data && data.userId === currentUserId) {
+        try {
+          const freshData = await NotificationService.getUserNotifications(currentUserId);
+          setNotifications(freshData);
+        } catch (error) {
+          console.log("Error fetching notifications in socket handler:", error);
+        }
+      }
+    };
+
+    socket.on("notification_received", handleNotification);
+
+    return () => {
+      socket.off("notification_received", handleNotification);
+    };
   }, [isOpen]);
 
   const renderItem = ({ item }: { item: Notification }) => (

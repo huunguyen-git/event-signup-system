@@ -6,31 +6,46 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { FlatList } from "react-native-gesture-handler";
 import MyEventItem from "@/components/MyEventItem";
 import { Stack, useFocusEffect } from "expo-router";
-import React, { useState, useCallback, useMemo } from "react";
+import React, { useState, useCallback, useMemo, useEffect } from "react";
 import { ApplicationService } from "../../../axios/applicationService";
 import { getUserId } from "@/services/storage";
 import Header from "@/components/Header";
+import { getSocket } from "@/services/socket";
 
 const DashBoardScreen = () => {
   const [data, setData] = useState<any[]>([]);
   const [searchText, setSearchText] = useState<string>("");
+  
+  const fetchData = useCallback(async () => {
+    try {
+      const UserId = await getUserId();
+      if (UserId) {
+        const responseData =
+          await ApplicationService.getMyRegisteredEvents(UserId);
+        setData(responseData);
+      }
+    } catch (error) {
+      console.log("Error fetching data:", error);
+    }
+  }, []);
+
   useFocusEffect(
     useCallback(() => {
-      const fetchData = async () => {
-        try {
-          const UserId = await getUserId();
-          if (UserId) {
-            const responseData =
-              await ApplicationService.getMyRegisteredEvents(UserId);
-            setData(responseData);
-          }
-        } catch (error) {
-          console.log("Error fetching data:", error);
-        }
-      };
       fetchData();
-    }, []),
+    }, [fetchData]),
   );
+
+  useEffect(() => {
+    const socket = getSocket();
+    
+    socket.on("events_changed", fetchData);
+    socket.on("applications_changed", fetchData);
+    
+    return () => {
+      socket.off("events_changed", fetchData);
+      socket.off("applications_changed", fetchData);
+    };
+  }, [fetchData]);
   const filterData = useMemo(() => {
     if (!searchText) return data;
     const formatQuery = searchText.toLowerCase();
@@ -69,7 +84,13 @@ const DashBoardScreen = () => {
 
           <FlatList
             data={filterData}
-            renderItem={({ item }) => <MyEventItem event={item.event} />}
+            renderItem={({ item }) => (
+              <MyEventItem
+                event={item.event}
+                applicationStatus={item.status}
+                checkedIn={item.checked_in}
+              />
+            )}
             keyExtractor={(item) => item.id}
           />
         </View>

@@ -10,11 +10,14 @@ import {
   Delete,
   UseInterceptors,
   UploadedFile,
+  UseGuards,
+  Request,
 } from '@nestjs/common';
 import { EventService } from './event.service.js';
 import { CreateEventDto } from './event.dto.js';
 import { Event } from '../generated/prisma/client.js';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { JwtGuard } from '../auth/guards/jwt.guard.js';
 
 @Controller('events')
 export class EventController {
@@ -83,5 +86,38 @@ export class EventController {
     @Body('reason') reason: string,
   ): Promise<Event> {
     return this.eventService.cancelEvent(id, reason);
+  }
+
+  @Patch(':id/submit')
+  async submitEventForApproval(
+    @Param('id') id: string,
+    @Body('host_id') hostId?: string,
+  ): Promise<Event> {
+    let currentHostId = hostId;
+    if (!currentHostId) {
+      const event = await this.eventService.getEvent({ id });
+      if (!event) throw new NotFoundException('Không tìm thấy sự kiện');
+      currentHostId = event.host_id;
+    }
+    return this.eventService.submitEventForApproval(id, currentHostId);
+  }
+
+  @Patch(':id/approve')
+  @UseGuards(JwtGuard)
+  async approveEvent(
+    @Param('id') id: string,
+    @Request() req,
+  ): Promise<Event> {
+    return this.eventService.approveEvent(id, req.user.id);
+  }
+
+  @Patch(':id/reject')
+  @UseGuards(JwtGuard)
+  async rejectEvent(
+    @Param('id') id: string,
+    @Body('reason') reason: string,
+    @Request() req,
+  ): Promise<Event> {
+    return this.eventService.rejectEvent(id, req.user.id, reason || 'Không đủ điều kiện phê duyệt');
   }
 }

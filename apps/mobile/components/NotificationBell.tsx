@@ -12,6 +12,7 @@ import { NotificationService } from "@/axios/notificationService";
 import NotificationsScreen from "@/app/(attendee)/NotificationScreen";
 import { CustomText } from "@/components/CustomText";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { getSocket } from "@/services/socket";
 
 interface NotificationBellProps {
   size?: number;
@@ -37,6 +38,22 @@ export default function NotificationBell({ size = 40, color = Colors.color.white
   useEffect(() => {
     fetchUnreadCount();
   }, [notificationsVisible]);
+
+  useEffect(() => {
+    const socket = getSocket();
+    const handleNotification = async (data: any) => {
+      const currentUserId = await getUserId();
+      if (data && data.userId === currentUserId) {
+        fetchUnreadCount();
+      }
+    };
+
+    socket.on("notification_received", handleNotification);
+
+    return () => {
+      socket.off("notification_received", handleNotification);
+    };
+  }, []);
 
   return (
     <View>

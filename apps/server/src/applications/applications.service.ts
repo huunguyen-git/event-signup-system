@@ -2,10 +2,16 @@ import { Injectable, BadRequestException, ForbiddenException } from '@nestjs/com
 import { CreateApplicationDto } from './dto/create-application.dto.js';
 import { PrismaService } from '../prisma.service.js';
 import { ApplicationStatus } from '../generated/prisma/client.js';
+import { NotificationService } from '../notification/notification.service.js';
+import { RealtimeGateway } from '../realtime/realtime.gateway.js';
 
 @Injectable()
 export class ApplicationsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly notificationService: NotificationService,
+    private readonly realtimeGateway: RealtimeGateway,
+  ) {}
 
   async applyForEvent(dto: CreateApplicationDto) {
     const { event_id, user_id, answers } = dto;
@@ -15,6 +21,14 @@ export class ApplicationsService {
 
     if (!event || !user)
       throw new BadRequestException('Sự kiện hoặc Người dùng không tồn tại!');
+
+    if (event.status !== 'PUBLISHED') {
+      throw new BadRequestException('Sự kiện này chưa được mở đăng ký.');
+    }
+
+    if (new Date() >= new Date(event.event_date)) {
+      throw new BadRequestException('Sự kiện đã bắt đầu hoặc kết thúc, không thể đăng ký.');
+    }
 
     if (event.allowed_domain) {
       const targetDomain = event.allowed_domain.startsWith('@')
@@ -28,18 +42,49 @@ export class ApplicationsService {
       }
     }
 
-    let finalStatus: ApplicationStatus = ApplicationStatus.APPROVED;
+
     if (event.max_attendees) {
-      const currentCount = await this.prisma.application.count({
-        where: { event_id, status: { in: ['APPROVED', 'PENDING'] } },
+      const approvedCount = await this.prisma.application.count({
+        where: { event_id, status: 'APPROVED' },
       });
-      if (currentCount >= event.max_attendees) finalStatus = ApplicationStatus.WAITLISTED;
+
+      if (approvedCount >= event.max_attendees) {
+        throw new BadRequestException('Sự kiện đã đủ số lượng người tham gia! Không thể đăng ký thêm.');
+      }
     }
 
+    let finalStatus: ApplicationStatus = ApplicationStatus.PENDING;
+
     try {
-      return await this.prisma.application.create({
+      const application = await this.prisma.application.create({
         data: { event_id, user_id, answers, status: finalStatus },
       });
+
+      // Broadcast realtime event
+      this.realtimeGateway.broadcast('applications_changed');
+
+      // Notify the event host (CLUB/host)
+      await this.notificationService.sendAndSaveNotification({
+        userId: event.host_id,
+        title: `Đăng ký sự kiện mới`,
+        body: `Sinh viên "${user.full_name}" đã đăng ký tham gia sự kiện "${event.title}".`,
+      });
+
+      // Notify all admins (FACULTY)
+      const host = await this.prisma.user.findUnique({ where: { id: event.host_id } });
+      const hostName = host ? host.full_name : 'CLB';
+      const admins = await this.prisma.user.findMany({
+        where: { role: 'FACULTY' },
+      });
+      for (const admin of admins) {
+        await this.notificationService.sendAndSaveNotification({
+          userId: admin.id,
+          title: `Đăng ký sự kiện mới (Admin)`,
+          body: `Sinh viên "${user.full_name}" đã đăng ký tham gia sự kiện "${event.title}" do CLB "${hostName}" tổ chức.`,
+        });
+      }
+
+      return application;
     } catch (error: any) {
       if (error.code === 'P2002') throw new BadRequestException('Bạn đã đăng ký rồi!');
       throw error;
@@ -47,17 +92,19 @@ export class ApplicationsService {
   }
 
   async checkIn(id: string) {
-    return this.prisma.application.update({
+    const updated = await this.prisma.application.update({
       where: { id: id },
       data: { checked_in: true },
     });
+    this.realtimeGateway.broadcast('applications_changed');
+    return updated;
   }
 
   async getByEvent(event_id: string) {
     return this.prisma.application.findMany({
       where: { event_id },
       include: { user: { select: { full_name: true, email: true, avatar_url: true } } },
-      orderBy: { applied_at: 'desc' },
+      orderBy: { applied_at: 'asc' },
     });
   }
 
@@ -72,7 +119,43 @@ export class ApplicationsService {
   }
 
   async bulkUpdateStatus(ids: string[], status: string) {
-    return this.prisma.application.updateMany({
+    if (ids.length === 0) return { count: 0 };
+
+    // 1. Fetch details of applications to notify users
+    const apps = await this.prisma.application.findMany({
+      where: { id: { in: ids } },
+      include: { event: true },
+    });
+
+    if (status === 'APPROVED') {
+      const firstApp = await this.prisma.application.findUnique({
+        where: { id: ids[0] },
+        select: { event_id: true }
+      });
+
+      if (firstApp) {
+        const event = await this.prisma.event.findUnique({
+          where: { id: firstApp.event_id }
+        });
+
+        if (event && event.max_attendees) {
+          const currentApprovedCount = await this.prisma.application.count({
+            where: { event_id: event.id, status: 'APPROVED' }
+          });
+
+          const availableSlots = event.max_attendees - currentApprovedCount;
+
+          if (ids.length > availableSlots) {
+            throw new BadRequestException(
+              `Chỉ còn ${availableSlots > 0 ? availableSlots : 0} chỗ trống, nhưng bạn đang chọn phê duyệt ${ids.length} người.`
+            );
+          }
+        }
+      }
+    }
+
+    // 2. Perform update
+    const result = await this.prisma.application.updateMany({
       where: {
         id: { in: ids },
       },
@@ -80,5 +163,30 @@ export class ApplicationsService {
         status: status as ApplicationStatus,
       },
     });
+
+    // 3. Broadcast real-time change
+    this.realtimeGateway.broadcast('applications_changed');
+
+    // 4. Send custom notifications to each student
+    for (const app of apps) {
+      let bodyText = '';
+      if (status === 'APPROVED') {
+        bodyText = `Đơn đăng ký tham gia sự kiện "${app.event.title}" của bạn đã được duyệt!`;
+      } else if (status === 'REJECTED') {
+        bodyText = `Đơn đăng ký tham gia sự kiện "${app.event.title}" của bạn đã bị từ chối.`;
+      } else if (status === 'WAITLISTED') {
+        bodyText = `Bạn đã được đưa vào danh sách chờ của sự kiện "${app.event.title}".`;
+      } else {
+        bodyText = `Đơn đăng ký tham gia sự kiện "${app.event.title}" của bạn đã được cập nhật thành: ${status}.`;
+      }
+
+      await this.notificationService.sendAndSaveNotification({
+        userId: app.user_id,
+        title: `Kết quả đăng ký sự kiện: ${app.event.title}`,
+        body: bodyText,
+      });
+    }
+
+    return result;
   }
 }

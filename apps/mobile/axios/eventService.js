@@ -52,7 +52,13 @@ export const EventService = {
             value = parseInt(value).toString();
           }
 
-          formData.append(key, value);
+          if (key === "equipments" && value && typeof value === "object") {
+            value = JSON.stringify(value);
+          }
+
+          if (value !== null && value !== undefined) {
+            formData.append(key, value);
+          }
         }
       });
       if (eventData.banner_url) {
@@ -89,13 +95,18 @@ export const EventService = {
       const formData = new FormData();
 
       Object.keys(eventData).forEach((key) => {
-        if (key === "host" || key === "image" || key === "banner_url") return;
+        if (key === "host" || key === "image" || key === "banner_url" || key === "room" || key === "_count" || key === "comments" || key === "applications") return;
 
         let value = eventData[key];
 
         if (key === "max_attendees") {
           value = parseInt(value).toString();
         }
+
+        if (key === "equipments" && value && typeof value === "object") {
+          value = JSON.stringify(value);
+        }
+
         if (value !== null && value !== undefined) {
           formData.append(key, value);
         }
@@ -133,8 +144,43 @@ export const EventService = {
       throw error;
     }
   },
+  approveEvent: async (token, id) => {
+    try {
+      const response = await apiClient.patch(
+        `/events/${id}/approve`,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      return response.data;
+    } catch (error) {
+      console.log("Error approving event:", error.response?.data || error.message);
+      throw error;
+    }
+  },
   deleteEvent: async (id) => {
     const response = await apiClient.delete(`/events/${id}`);
     return response.data;
+  },
+  getRooms: async () => {
+    try {
+      const response = await apiClient.get("/rooms");
+      return response.data;
+    } catch (error) {
+      console.log("Error getting rooms:", error.message);
+      throw error;
+    }
+  },
+  getEquipments: async () => {
+    try {
+      const response = await apiClient.get("/equipments");
+      return response.data;
+    } catch (error) {
+      console.log("Error getting equipments:", error.message);
+      throw error;
+    }
   },
 };

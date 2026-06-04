@@ -8,16 +8,22 @@ import {
   Alert,
   ActivityIndicator,
   ScrollView,
+  Modal,
+  TextInput,
+  KeyboardAvoidingView,
+  TouchableWithoutFeedback,
+  Keyboard,
+  Platform,
 } from "react-native";
 import { CustomText } from "@/components/CustomText";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { Colors } from "../../../constants/theme";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Stack, useRouter } from "expo-router";
-import { getToken, removeToken } from "@/services/storage";
+import { getToken, removeToken, removeUserRole, removeUserId, saveUserRole, getUserRole } from "@/services/storage";
 import { UserService } from "../../../axios/userService";
 import { AuthService } from "../../../axios/authService";
-import { ResponseUser } from "../../../axios/dto/responseUserModel";
+import { ClubRequestService } from "../../../axios/clubRequestService";
 import Header from "@/components/Header";
 
 type User = {
@@ -28,11 +34,17 @@ type User = {
   birthdate: string;
   avatar_url: string | null;
   created_at: string;
+  role: string;
 };
 
 const AccountScreen = () => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [clubRequest, setClubRequest] = useState<any>(null);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [clubName, setClubName] = useState("");
+  const [clubDesc, setClubDesc] = useState("");
+  const [submittingRequest, setSubmittingRequest] = useState(false);
   const router = useRouter();
 
   useFocusEffect(
@@ -45,7 +57,24 @@ const AccountScreen = () => {
             return;
           }
           const data = await UserService.getMe(token);
+          
+          // Check role transition
+          const oldRole = await getUserRole();
+          await saveUserRole(data.role);
+          if (oldRole === "STUDENT" && data.role === "CLUB") {
+            Alert.alert(
+              "Tài khoản được duyệt",
+              "Tài khoản của bạn đã được nâng cấp lên CLB thành công! Vui lòng khởi động lại ứng dụng để cập nhật chức năng mới.",
+              [{ text: "Đã hiểu" }]
+            );
+          }
+
           setUser(data);
+
+          if (data.role === "STUDENT") {
+            const reqData = await ClubRequestService.getMyRequest(token);
+            setClubRequest(reqData);
+          }
         } catch (e: any) {
           console.log("Error loading profile:", e);
           if (e.response?.status === 401) {
@@ -84,6 +113,8 @@ const AccountScreen = () => {
             Alert.alert("Error", "Failed to log out");
           } finally {
             await removeToken();
+            await removeUserId();
+            await removeUserRole();
             router.replace("/LoginScreen");
           }
         },
@@ -97,6 +128,37 @@ const AccountScreen = () => {
       month: "long",
       day: "numeric",
     });
+  };
+
+  const handleSubmitClubRequest = async () => {
+    if (!clubName.trim() || !clubDesc.trim()) {
+      Alert.alert("Lỗi", "Vui lòng nhập đầy đủ tên CLB và lý do đăng ký.");
+      return;
+    }
+
+    try {
+      setSubmittingRequest(true);
+      const token = await getToken();
+      if (!token) return;
+
+      await ClubRequestService.submitRequest(token, {
+        club_name: clubName,
+        description: clubDesc,
+      });
+
+      Alert.alert("Thành công", "Đơn đăng ký đã được gửi thành công và đang chờ xét duyệt!");
+      setModalVisible(false);
+      setClubName("");
+      setClubDesc("");
+      
+      const reqData = await ClubRequestService.getMyRequest(token);
+      setClubRequest(reqData);
+    } catch (err: any) {
+      console.log("Error submitting club request:", err);
+      Alert.alert("Lỗi", err.response?.data?.message || "Gửi đơn đăng ký thất bại.");
+    } finally {
+      setSubmittingRequest(false);
+    }
   };
 
   return (
@@ -166,6 +228,47 @@ const AccountScreen = () => {
                 />
               </View>
 
+              {/* Club Request Card */}
+              {user?.role === "STUDENT" && (
+                <>
+                  {!clubRequest && (
+                    <View style={styles.clubRequestCard}>
+                      <MaterialCommunityIcons name="account-group-outline" size={28} color={Colors.color.primary} />
+                      <View style={{ flex: 1, marginLeft: 12 }}>
+                        <CustomText variant="bold" style={styles.clubTitle}>Nâng Cấp Tài Khoản CLB</CustomText>
+                        <CustomText style={styles.clubDesc}>Đăng ký nâng cấp tài khoản của bạn để có quyền tạo và tổ chức sự kiện.</CustomText>
+                      </View>
+                      <TouchableOpacity style={styles.clubSubmitBtn} onPress={() => setModalVisible(true)}>
+                        <CustomText variant="medium" style={styles.clubSubmitBtnText}>Đăng ký</CustomText>
+                      </TouchableOpacity>
+                    </View>
+                  )}
+
+                  {clubRequest?.status === "PENDING" && (
+                    <View style={[styles.clubRequestCard, styles.cardPending]}>
+                      <MaterialCommunityIcons name="clock-outline" size={28} color="#B06000" />
+                      <View style={{ flex: 1, marginLeft: 12 }}>
+                        <CustomText variant="bold" style={[styles.clubTitle, { color: "#B06000" }]}>Đang Chờ Duyệt</CustomText>
+                        <CustomText style={styles.clubDesc}>Yêu cầu đăng ký CLB "{clubRequest.club_name}" đang chờ Nhà trường phê duyệt.</CustomText>
+                      </View>
+                    </View>
+                  )}
+
+                  {clubRequest?.status === "REJECTED" && (
+                    <View style={[styles.clubRequestCard, styles.cardRejected]}>
+                      <MaterialCommunityIcons name="alert-circle-outline" size={28} color="#EF4444" />
+                      <View style={{ flex: 1, marginLeft: 12 }}>
+                        <CustomText variant="bold" style={[styles.clubTitle, { color: "#EF4444" }]}>Yêu Cầu Bị Từ Chối</CustomText>
+                        <CustomText style={styles.clubDesc}>Đăng ký CLB "{clubRequest.club_name}" bị từ chối. Nhấp gửi lại để chỉnh sửa đơn.</CustomText>
+                      </View>
+                      <TouchableOpacity style={styles.clubReSubmitBtn} onPress={() => setModalVisible(true)}>
+                        <CustomText variant="medium" style={styles.clubReSubmitBtnText}>Gửi lại</CustomText>
+                      </TouchableOpacity>
+                    </View>
+                  )}
+                </>
+              )}
+
               {/* Buttons */}
               <TouchableOpacity
                 style={styles.editButton}
@@ -212,6 +315,75 @@ const AccountScreen = () => {
           )}
         </ScrollView>
       </SafeAreaView>
+
+      {/* Club Request Modal */}
+      <Modal visible={modalVisible} transparent animationType="slide">
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+          <View style={styles.modalOverlay}>
+            <KeyboardAvoidingView
+              behavior={Platform.OS === "ios" ? "padding" : "height"}
+              style={{ width: "100%", alignItems: "center" }}
+            >
+              <View style={styles.modalCard}>
+                <CustomText variant="bold" style={styles.modalTitle}>
+                  Đăng Ký Tài Khoản CLB
+                </CustomText>
+                <CustomText style={styles.modalSub}>
+                  Vui lòng nhập tên câu lạc bộ và mô tả hoạt động/lý do muốn nâng cấp tài khoản.
+                </CustomText>
+                
+                <View style={styles.modalInputGroup}>
+                  <CustomText variant="bold" style={styles.modalInputLabel}>Tên CLB/Đội</CustomText>
+                  <TextInput
+                    style={styles.modalInput}
+                    placeholder="Nhập tên chính thức của CLB..."
+                    placeholderTextColor="#9CA3AF"
+                    value={clubName}
+                    onChangeText={setClubName}
+                  />
+                </View>
+
+                <View style={styles.modalInputGroup}>
+                  <CustomText variant="bold" style={styles.modalInputLabel}>Mô tả / Lý do</CustomText>
+                  <TextInput
+                    style={[styles.modalInput, styles.modalTextarea]}
+                    placeholder="Mô tả tóm tắt hoạt động hoặc lý do..."
+                    placeholderTextColor="#9CA3AF"
+                    value={clubDesc}
+                    onChangeText={setClubDesc}
+                    multiline
+                  />
+                </View>
+
+                <View style={styles.modalActions}>
+                  <TouchableOpacity
+                    style={styles.modalCancelBtn}
+                    onPress={() => {
+                      setModalVisible(false);
+                      setClubName("");
+                      setClubDesc("");
+                    }}
+                    disabled={submittingRequest}
+                  >
+                    <CustomText variant="bold" style={styles.modalCancelText}>Hủy</CustomText>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.modalConfirmBtn}
+                    onPress={handleSubmitClubRequest}
+                    disabled={submittingRequest}
+                  >
+                    {submittingRequest ? (
+                      <ActivityIndicator size="small" color="#FFFFFF" />
+                    ) : (
+                      <CustomText variant="bold" style={styles.modalConfirmText}>Gửi Đơn</CustomText>
+                    )}
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </KeyboardAvoidingView>
+          </View>
+        </TouchableWithoutFeedback>
+      </Modal>
     </>
   );
 };
@@ -394,5 +566,138 @@ const styles = StyleSheet.create({
   changePasswordButtonText: {
     color: Colors.color.primary,
     fontSize: 16,
+  },
+  clubRequestCard: {
+    width: "100%",
+    backgroundColor: "#EBF5FF",
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 16,
+    flexDirection: "row",
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#BFDBFE",
+  },
+  cardPending: {
+    backgroundColor: "#FEF7E0",
+    borderColor: "#FED7AA",
+  },
+  cardRejected: {
+    backgroundColor: "#FEF2F2",
+    borderColor: "#FCA5A5",
+  },
+  clubTitle: {
+    fontSize: 16,
+    color: Colors.color.primary,
+    marginBottom: 4,
+  },
+  clubDesc: {
+    fontSize: 12,
+    color: "#4B5563",
+    lineHeight: 16,
+  },
+  clubSubmitBtn: {
+    backgroundColor: Colors.color.primary,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 20,
+  },
+  clubSubmitBtnText: {
+    color: Colors.color.white,
+    fontSize: 12,
+  },
+  clubReSubmitBtn: {
+    backgroundColor: "#EF4444",
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 20,
+  },
+  clubReSubmitBtnText: {
+    color: Colors.color.white,
+    fontSize: 12,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(15, 23, 42, 0.4)",
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 20,
+  },
+  modalCard: {
+    width: "100%",
+    maxWidth: 340,
+    backgroundColor: "white",
+    borderRadius: 24,
+    padding: 24,
+    shadowColor: "#0F172A",
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.1,
+    shadowRadius: 20,
+    elevation: 10,
+  },
+  modalTitle: {
+    fontSize: 20,
+    color: "#1B2B52",
+    marginBottom: 8,
+    textAlign: "center",
+  },
+  modalSub: {
+    fontSize: 13,
+    color: "#4B5563",
+    lineHeight: 18,
+    marginBottom: 16,
+    textAlign: "center",
+  },
+  modalInputGroup: {
+    width: "100%",
+    marginBottom: 14,
+  },
+  modalInputLabel: {
+    fontSize: 14,
+    color: "#1F2937",
+    marginBottom: 6,
+  },
+  modalInput: {
+    backgroundColor: "#F3F4F6",
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    height: 44,
+    color: "#1F2937",
+    fontSize: 14,
+  },
+  modalTextarea: {
+    minHeight: 80,
+    textAlignVertical: "top",
+    paddingTop: 10,
+  },
+  modalActions: {
+    flexDirection: "row",
+    justifyContent: "flex-end",
+    gap: 12,
+    marginTop: 10,
+  },
+  modalCancelBtn: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 12,
+    backgroundColor: "#F3F4F6",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  modalCancelText: {
+    color: "#4B5563",
+    fontSize: 14,
+  },
+  modalConfirmBtn: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 12,
+    backgroundColor: Colors.color.primary,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  modalConfirmText: {
+    color: "#FFFFFF",
+    fontSize: 14,
   },
 });

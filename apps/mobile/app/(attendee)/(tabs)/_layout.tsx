@@ -1,8 +1,26 @@
+import { useEffect, useState } from "react";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { Colors } from "../../../constants/theme";
 import { Tabs } from "expo-router";
+import { getUserRole } from "@/services/storage";
 
 export default function TabLayout() {
+  const [role, setRole] = useState<string>("STUDENT");
+
+  useEffect(() => {
+    const fetchRole = async () => {
+      try {
+        const storedRole = await getUserRole();
+        if (storedRole) {
+          setRole(storedRole);
+        }
+      } catch (err) {
+        console.log("Error loading role in TabLayout:", err);
+      }
+    };
+    fetchRole();
+  }, []);
+
   return (
     <Tabs
       screenOptions={{
@@ -25,6 +43,7 @@ export default function TabLayout() {
         name="DashBoardScreen"
         options={{
           title: "Registered",
+          href: role === "FACULTY" ? null : undefined,
           tabBarIcon: ({ color }) => (
             <MaterialIcons
               name="admin-panel-settings"
@@ -38,8 +57,19 @@ export default function TabLayout() {
         name="HostDashBoardScreen"
         options={{
           title: "My Events",
+          href: role === "CLUB" ? undefined : null,
           tabBarIcon: ({ color }) => (
             <MaterialIcons name="event" size={30} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="ApproveEventsScreen"
+        options={{
+          title: "Approve",
+          href: role === "FACULTY" ? undefined : null,
+          tabBarIcon: ({ color }) => (
+            <MaterialIcons name="verified-user" size={30} color={color} />
           ),
         }}
       />
@@ -47,6 +77,7 @@ export default function TabLayout() {
         name="ScanQrScreen"
         options={{
           title: "Scan QR",
+          href: role === "FACULTY" ? null : undefined,
           tabBarIcon: ({ color }) => (
             <MaterialIcons name="qr-code-scanner" size={30} color={color} />
           ),

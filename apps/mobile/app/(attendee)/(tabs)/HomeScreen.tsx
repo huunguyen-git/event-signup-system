@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useMemo, useCallback, useEffect } from "react";
 import { View, StyleSheet, TextInput } from "react-native";
 import { CustomText } from "@/components/CustomText";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
@@ -6,32 +6,50 @@ import { Colors } from "../../../constants/theme";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { FlatList } from "react-native-gesture-handler";
 import EventItem from "@/components/EventItem";
-import { Stack } from "expo-router";
+import { Stack, useFocusEffect } from "expo-router";
 import { ICreateEvent } from "@/axios/dto/eventModel";
 import { EventService } from "@/axios/eventService";
 import Header from "@/components/Header";
+import { getSocket } from "@/services/socket";
+
 const HomeScreen = () => {
   const [data, setData] = useState<ICreateEvent[]>([]);
   const [searchText, setSearchText] = useState<string>("");
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const data = await EventService.getEvents();
-        setData(
-          data
-            .filter((item: ICreateEvent) => item.status === "PUBLISHED")
-            .sort(
-              (a: ICreateEvent, b: ICreateEvent) =>
-                new Date(b.created_at).getTime() -
-                new Date(a.created_at).getTime(),
-            ),
-        );
-      } catch (error) {
-        console.log("Error fetching data:", error);
-      }
-    };
-    fetchData();
+  
+  const fetchData = useCallback(async () => {
+    try {
+      const events = await EventService.getEvents();
+      setData(
+        events
+          .filter((item: ICreateEvent) => item.status?.toUpperCase() === "PUBLISHED")
+          .sort(
+            (a: ICreateEvent, b: ICreateEvent) =>
+              new Date(b.created_at).getTime() -
+              new Date(a.created_at).getTime(),
+          ),
+      );
+    } catch (error) {
+      console.log("Error fetching data:", error);
+    }
   }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      fetchData();
+    }, [fetchData])
+  );
+
+  useEffect(() => {
+    const socket = getSocket();
+    
+    socket.on("events_changed", fetchData);
+    socket.on("applications_changed", fetchData);
+    
+    return () => {
+      socket.off("events_changed", fetchData);
+      socket.off("applications_changed", fetchData);
+    };
+  }, [fetchData]);
   const filterData = useMemo(() => {
     if (!searchText) return data;
     const formatQuery = searchText.toLowerCase();

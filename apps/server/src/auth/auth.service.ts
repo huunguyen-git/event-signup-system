@@ -55,6 +55,7 @@ export class AuthService {
       full_name: dto.full_name,
       birthdate: new Date(dto.birthdate),
       phone_number: dto.phone_number,
+      role: 'STUDENT',
     });
 
     return user;

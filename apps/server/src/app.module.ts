@@ -13,6 +13,10 @@ import { CommentsModule } from './comments/comments.module.js';
 import { NotificationController } from './notification/notification.controller.js';
 import { NotificationService } from './notification/notification.service.js';
 import { EmailModule } from './email/email.module.js';
+import { RoomModule } from './room/room.module.js';
+import { EquipmentModule } from './equipment/equipment.module.js';
+import { ClubRequestModule } from './club-request/club-request.module.js';
+import { RealtimeModule } from './realtime/realtime.module.js';
 
 @Module({
   imports: [
@@ -23,6 +27,10 @@ import { EmailModule } from './email/email.module.js';
     ApplicationsModule,
     CommentsModule,
     EmailModule,
+    RoomModule,
+    EquipmentModule,
+    ClubRequestModule,
+    RealtimeModule,
   ],
   controllers: [EventController, AppController, NotificationController],
   providers: [EventService, PrismaService, AppService, NotificationService],

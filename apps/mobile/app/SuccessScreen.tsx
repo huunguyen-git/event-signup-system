@@ -9,7 +9,7 @@ export default function SuccessScreen() {
   const router = useRouter();
   const themeColor = Colors.light.tint;
 
-  const { ticketType } = useLocalSearchParams();
+  const { ticketType, eventTitle } = useLocalSearchParams();
 
   return (
     <View style={styles.overlayContainer}>
@@ -17,14 +17,14 @@ export default function SuccessScreen() {
         <View style={styles.iconCircle}>
           <Ionicons name="checkmark" size={50} color="#4CAF50" />
         </View>
-
+ 
         <CustomText variant="bold" style={styles.mainTitle}>
           REGISTRATION SUCCESSFUL!
         </CustomText>
-
+ 
         <CustomText style={styles.description}>
           Thank you for registering for the{" "}
-          <CustomText variant="bold">International Tech Summit 2024</CustomText>
+          <CustomText variant="bold">{eventTitle || "International Tech Summit 2024"}</CustomText>
           . Your registration for the{" "}
           <CustomText variant="bold" style={{ color: themeColor }}>
             {ticketType || "Standard Pass"}
