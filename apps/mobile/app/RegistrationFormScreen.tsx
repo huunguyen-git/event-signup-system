@@ -33,10 +33,8 @@ export default function RegistrationFormScreen() {
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [jobTitle, setJobTitle] = useState("");
-  const [ticketType, setTicketType] = useState("Standard Pass");
   const [isLoading, setIsLoading] = useState(false);
 
-  const [showTicketPicker, setShowTicketPicker] = useState(false);
   const [showTerms, setShowTerms] = useState(false);
   const [showPrivacy, setShowPrivacy] = useState(false);
   const [showCustomQuestionModal, setShowCustomQuestionModal] = useState(false);
@@ -166,7 +164,6 @@ export default function RegistrationFormScreen() {
           lastName: lastName,
           email: email,
           jobTitle: jobTitle,
-          ticketType: ticketType,
         },
       };
       const result = await ApplicationService.registerForEvent(applicationData);
@@ -194,7 +191,7 @@ export default function RegistrationFormScreen() {
 
         router.replace({
           pathname: "/SuccessScreen",
-          params: { ticketType: ticketType },
+          params: { eventTitle: data.title },
         });
       }
       scheduleEventReminder(data.title, data.event_date);
@@ -259,10 +256,7 @@ export default function RegistrationFormScreen() {
       console.log("Error scheduling event reminder:", err);
     }
   }
-  const ticketOptions = [
-    { id: "1", name: "Standard Pass" },
-    { id: "2", name: "Premium Pass" },
-  ];
+
 
   return (
     <KeyboardAvoidingView
@@ -338,7 +332,7 @@ export default function RegistrationFormScreen() {
 
         <View style={styles.modalCard}>
               <CustomText style={styles.eventSmallTitle}>
-                International Tech Summit 2024
+                {data.title}
               </CustomText>
               <CustomText
                 variant="bold"
@@ -347,26 +341,7 @@ export default function RegistrationFormScreen() {
                 CONFIRM REGISTRATION
               </CustomText>
 
-              {!IsCreate && (
-                <View style={styles.ticketSummary}>
-                  <View>
-                    <CustomText variant="bold" style={styles.ticketLabel}>
-                      REGISTERING AS:
-                    </CustomText>
-                    <CustomText variant="bold" style={styles.ticketType}>
-                      {ticketType}
-                    </CustomText>
-                  </View>
-                  <TouchableOpacity onPress={() => setShowTicketPicker(true)}>
-                    <CustomText
-                      variant="bold"
-                      style={[styles.changeLink, { color: themeColor }]}
-                    >
-                      Change
-                    </CustomText>
-                  </TouchableOpacity>
-                </View>
-              )}
+
 
               <View>
                 <View style={styles.row}>
@@ -478,56 +453,7 @@ export default function RegistrationFormScreen() {
             </View>
       </ScrollView>
 
-      <Modal visible={showTicketPicker} transparent animationType="slide">
-        <View style={styles.pickerOverlay}>
-          <View style={styles.pickerCard}>
-            <CustomText variant="bold" style={styles.pickerHeader}>
-              Select Ticket Type
-            </CustomText>
-            {ticketOptions.map((option) => (
-              <TouchableOpacity
-                key={option.id}
-                style={[
-                  styles.optionCard,
-                  ticketType === option.name && {
-                    borderColor: themeColor,
-                    borderWidth: 2,
-                  },
-                ]}
-                onPress={() => {
-                  setTicketType(option.name);
-                  setShowTicketPicker(false);
-                }}
-              >
-                <CustomText
-                  variant="bold"
-                  style={[
-                    styles.optionName,
-                    ticketType === option.name && { color: themeColor },
-                  ]}
-                >
-                  {option.name}
-                </CustomText>
-                {ticketType === option.name && (
-                  <Ionicons
-                    name="checkmark-circle"
-                    size={20}
-                    color={themeColor}
-                  />
-                )}
-              </TouchableOpacity>
-            ))}
-            <TouchableOpacity
-              style={styles.pickerClose}
-              onPress={() => setShowTicketPicker(false)}
-            >
-              <CustomText variant="bold" style={{ color: "#999" }}>
-                QUAY LẠI
-              </CustomText>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
+
 
       <InfoModal
         visible={showTerms}
@@ -672,21 +598,7 @@ const styles = StyleSheet.create({
     marginTop: 5,
     marginBottom: 15,
   },
-  ticketSummary: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    backgroundColor: "#F1F3F5",
-    padding: 15,
-    borderRadius: 12,
-    marginBottom: 20,
-  },
-  ticketLabel: { fontSize: 11, color: "#777" },
-  ticketType: { fontSize: 15, color: "#333" },
-  changeLink: {
-    textDecorationLine: "underline",
-    fontSize: 13,
-  },
+
   row: { flexDirection: "row" },
   inputGroup: { marginBottom: 15 },
   label: { fontSize: 12, color: "#444", marginBottom: 5 },
@@ -734,35 +646,7 @@ const styles = StyleSheet.create({
     fontSize: 15,
     textAlign: "center",
   },
-  pickerOverlay: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.5)",
-    justifyContent: "flex-end",
-  },
-  pickerCard: {
-    backgroundColor: "white",
-    borderTopLeftRadius: 30,
-    borderTopRightRadius: 30,
-    padding: 25,
-  },
-  pickerHeader: {
-    fontSize: 18,
-    marginBottom: 20,
-    textAlign: "center",
-  },
-  optionCard: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    padding: 18,
-    backgroundColor: "#f8f9fa",
-    borderRadius: 15,
-    marginBottom: 12,
-    borderWidth: 1,
-    borderColor: "#eee",
-  },
-  optionName: { fontSize: 16, color: "#333" },
-  pickerClose: { padding: 15, alignItems: "center" },
+
   infoOverlay: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.8)",

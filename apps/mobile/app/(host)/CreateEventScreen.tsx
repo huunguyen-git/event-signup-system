@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
   StyleSheet,
   View,
@@ -12,6 +12,7 @@ import {
   Alert,
   TouchableWithoutFeedback,
   Keyboard,
+  Modal,
 } from "react-native";
 import { CustomText } from "@/components/CustomText";
 import { Ionicons } from "@expo/vector-icons";
@@ -33,21 +34,137 @@ export default function CreateEventScreen() {
   const [rooms, setRooms] = useState<any[]>([]);
   const [equipments, setEquipments] = useState<any[]>([]);
   const [selectedEquipments, setSelectedEquipments] = useState<{ [key: string]: number }>({});
+  const [allEvents, setAllEvents] = useState<any[]>([]);
+  const [selectedRoomForSchedule, setSelectedRoomForSchedule] = useState<any>(null);
+  const [scheduleModalVisible, setScheduleModalVisible] = useState(false);
+  const [selectedScheduleDate, setSelectedScheduleDate] = useState<Date>(new Date());
+  const [roomSearchQuery, setRoomSearchQuery] = useState("");
+  const [roomModalVisible, setRoomModalVisible] = useState(false);
   const router = useRouter();
 
+  const filteredRooms = useMemo(() => {
+    if (!roomSearchQuery.trim()) return rooms;
+    return rooms.filter((r) =>
+      r.name.toLowerCase().includes(roomSearchQuery.toLowerCase())
+    );
+  }, [rooms, roomSearchQuery]);
+
   useEffect(() => {
-    const fetchRoomsAndEquipments = async () => {
+    const fetchRoomsAndEquipmentsAndEvents = async () => {
       try {
         const roomsData = await EventService.getRooms();
         const equipmentsData = await EventService.getEquipments();
+        const eventsData = await EventService.getEvents();
         setRooms(roomsData);
         setEquipments(equipmentsData);
+        setAllEvents(eventsData);
       } catch (error) {
-        console.error("Lỗi khi tải danh sách phòng và thiết bị:", error);
+        console.error("Lỗi khi tải danh sách phòng, thiết bị và sự kiện:", error);
       }
     };
-    fetchRoomsAndEquipments();
+    fetchRoomsAndEquipmentsAndEvents();
   }, []);
+
+  const formatTime = (date: Date) => {
+    const hours = date.getHours().toString().padStart(2, '0');
+    const minutes = date.getMinutes().toString().padStart(2, '0');
+    return `${hours}:${minutes}`;
+  };
+
+  const getShortDayName = (date: Date) => {
+    const day = date.getDay();
+    const names = ["CN", "T2", "T3", "T4", "T5", "T6", "T7"];
+    return names[day];
+  };
+
+  const getScheduleForDate = (room: any, date: Date) => {
+    if (!room) return { booked: [], free: [] };
+    const dayStart = new Date(date);
+    dayStart.setHours(7, 0, 0, 0); // 7:00 AM
+    const dayEnd = new Date(date);
+    dayEnd.setHours(22, 0, 0, 0); // 10:00 PM
+
+    const dayStartMidnight = new Date(date);
+    dayStartMidnight.setHours(0, 0, 0, 0);
+    const dayEndMidnight = new Date(date);
+    dayEndMidnight.setHours(23, 59, 59, 999);
+
+    const roomEvents = allEvents.filter((evt) => {
+      if (evt.room_id !== room.id) return false;
+      if (evt.status === "CANCELLED" || evt.status === "DRAFT") return false;
+      
+      const evtStart = new Date(evt.event_date);
+      const evtEnd = evt.end_date ? new Date(evt.end_date) : evtStart;
+      return evtStart < dayEndMidnight && evtEnd > dayStartMidnight;
+    });
+
+    const bookings = roomEvents.map((evt) => {
+      const start = Math.max(new Date(evt.event_date).getTime(), dayStart.getTime());
+      const end = Math.min(new Date(evt.end_date || evt.event_date).getTime(), dayEnd.getTime());
+      return {
+        title: evt.title,
+        start,
+        end,
+      };
+    }).filter(b => b.start < b.end);
+
+    bookings.sort((a, b) => a.start - b.start);
+
+    const merged: { start: number; end: number; title?: string }[] = [];
+    for (const b of bookings) {
+      if (merged.length === 0) {
+        merged.push(b);
+      } else {
+        const last = merged[merged.length - 1];
+        if (b.start < last.end) {
+          last.end = Math.max(last.end, b.end);
+        } else {
+          merged.push(b);
+        }
+      }
+    }
+
+    const free = [];
+    let current = dayStart.getTime();
+    for (const b of merged) {
+      if (b.start > current) {
+        free.push({ start: current, end: b.start });
+      }
+      current = Math.max(current, b.end);
+    }
+    if (current < dayEnd.getTime()) {
+      free.push({ start: current, end: dayEnd.getTime() });
+    }
+
+    return {
+      booked: roomEvents.map(evt => ({
+        title: evt.title,
+        time: `${formatTime(new Date(evt.event_date))} - ${formatTime(new Date(evt.end_date))}`
+      })),
+      free: free.map(f => ({
+        time: `${formatTime(new Date(f.start))} - ${formatTime(new Date(f.end))}`
+      }))
+    };
+  };
+
+  const getDaysList = () => {
+    const list = [];
+    const baseDate = new Date();
+    baseDate.setHours(0, 0, 0, 0);
+    for (let i = 0; i < 10; i++) {
+      const d = new Date(baseDate);
+      d.setDate(baseDate.getDate() + i);
+      list.push(d);
+    }
+    return list;
+  };
+
+  const openScheduleModal = (room: any) => {
+    setSelectedRoomForSchedule(room);
+    const initialDate = form.event_date ? new Date(form.event_date) : new Date();
+    setSelectedScheduleDate(initialDate);
+    setScheduleModalVisible(true);
+  };
 
   const pickImage = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -64,6 +181,58 @@ export default function CreateEventScreen() {
 
   const handlePublish = async () => {
     setIsLoading(true);
+    if (!form.event_date || !form.end_date) {
+      Alert.alert("Thông báo", "Vui lòng chọn thời gian bắt đầu và kết thúc trước!");
+      setIsLoading(false);
+      return;
+    }
+    if (!form.room_id) {
+      Alert.alert("Thông báo", "Vui lòng chọn một phòng học trong danh sách!");
+      setIsLoading(false);
+      return;
+    }
+    if (!form.max_attendees) {
+      Alert.alert("Thông báo", "Vui lòng nhập số lượng người tham gia (Capacity)!");
+      setIsLoading(false);
+      return;
+    }
+    if (form.event_date >= form.end_date) {
+      setErrorMsg("Ngày bắt đầu phải nhỏ hơn ngày kết thúc");
+      setIsLoading(false);
+      return;
+    }
+
+    // Check capacity
+    const selectedRoom = rooms.find((r) => r.id === form.room_id);
+    if (selectedRoom && selectedRoom.capacity && form.max_attendees > selectedRoom.capacity) {
+      Alert.alert(
+        "Vượt quá sức chứa",
+        `Phòng ${selectedRoom.name} chỉ có sức chứa tối đa là ${selectedRoom.capacity} người. Vui lòng giảm số lượng người tham gia hoặc chọn phòng khác.`
+      );
+      setIsLoading(false);
+      return;
+    }
+
+    // Check conflict
+    const conflict = allEvents.find((evt) => {
+      if (evt.room_id !== form.room_id) return false;
+      if (evt.status === "CANCELLED" || evt.status === "DRAFT") return false;
+      const evtStart = new Date(evt.event_date).getTime();
+      const evtEnd = new Date(evt.end_date).getTime();
+      const formStart = new Date(form.event_date).getTime();
+      const formEnd = new Date(form.end_date).getTime();
+      return evtStart < formEnd && evtEnd > formStart;
+    });
+
+    if (conflict) {
+      Alert.alert(
+        "Lịch trùng lặp",
+        `Phòng học ${conflict.room?.name || "đã chọn"} đã có sự kiện "${conflict.title}" đăng ký trong khung giờ từ ${new Date(conflict.event_date).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })} ${new Date(conflict.event_date).toLocaleDateString("vi-VN")} đến ${new Date(conflict.end_date).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })} ${new Date(conflict.end_date).toLocaleDateString("vi-VN")}. Vui lòng chọn phòng khác hoặc thay đổi thời gian.`
+      );
+      setIsLoading(false);
+      return;
+    }
+
     if (
       !form.title ||
       !form.end_date ||
@@ -71,12 +240,7 @@ export default function CreateEventScreen() {
       !form.max_attendees ||
       !form.location_url
     ) {
-      Alert.alert("Vui lòng nhập đầy đủ thông tin bắt buộc (gồm chọn phòng hoặc địa điểm)");
-      setIsLoading(false);
-      return;
-    }
-    if (form.event_date >= form.end_date) {
-      setErrorMsg("Ngày bắt đầu phải nhỏ hơn ngày kết thúc");
+      Alert.alert("Vui lòng nhập đầy đủ thông tin bắt buộc");
       setIsLoading(false);
       return;
     }
@@ -120,6 +284,58 @@ export default function CreateEventScreen() {
 
   const handleDraft = async () => {
     setIsLoading(true);
+    if (!form.event_date || !form.end_date) {
+      Alert.alert("Thông báo", "Vui lòng chọn thời gian bắt đầu và kết thúc trước!");
+      setIsLoading(false);
+      return;
+    }
+    if (!form.room_id) {
+      Alert.alert("Thông báo", "Vui lòng chọn một phòng học trong danh sách!");
+      setIsLoading(false);
+      return;
+    }
+    if (!form.max_attendees) {
+      Alert.alert("Thông báo", "Vui lòng nhập số lượng người tham gia (Capacity)!");
+      setIsLoading(false);
+      return;
+    }
+    if (form.event_date >= form.end_date) {
+      setErrorMsg("Ngày bắt đầu phải nhỏ hơn ngày kết thúc");
+      setIsLoading(false);
+      return;
+    }
+
+    // Check capacity
+    const selectedRoom = rooms.find((r) => r.id === form.room_id);
+    if (selectedRoom && selectedRoom.capacity && form.max_attendees > selectedRoom.capacity) {
+      Alert.alert(
+        "Vượt quá sức chứa",
+        `Phòng ${selectedRoom.name} chỉ có sức chứa tối đa là ${selectedRoom.capacity} người. Vui lòng giảm số lượng người tham gia hoặc chọn phòng khác.`
+      );
+      setIsLoading(false);
+      return;
+    }
+
+    // Check conflict
+    const conflict = allEvents.find((evt) => {
+      if (evt.room_id !== form.room_id) return false;
+      if (evt.status === "CANCELLED" || evt.status === "DRAFT") return false;
+      const evtStart = new Date(evt.event_date).getTime();
+      const evtEnd = new Date(evt.end_date).getTime();
+      const formStart = new Date(form.event_date).getTime();
+      const formEnd = new Date(form.end_date).getTime();
+      return evtStart < formEnd && evtEnd > formStart;
+    });
+
+    if (conflict) {
+      Alert.alert(
+        "Lịch trùng lặp",
+        `Phòng học ${conflict.room?.name || "đã chọn"} đã có sự kiện "${conflict.title}" đăng ký trong khung giờ từ ${new Date(conflict.event_date).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })} ${new Date(conflict.event_date).toLocaleDateString("vi-VN")} đến ${new Date(conflict.end_date).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })} ${new Date(conflict.end_date).toLocaleDateString("vi-VN")}. Vui lòng chọn phòng khác hoặc thay đổi thời gian.`
+      );
+      setIsLoading(false);
+      return;
+    }
+
     if (
       !form.title ||
       !form.end_date ||
@@ -127,12 +343,7 @@ export default function CreateEventScreen() {
       !form.max_attendees ||
       !form.location_url
     ) {
-      Alert.alert("Vui lòng nhập đầy đủ thông tin bắt buộc (gồm chọn phòng học hoặc địa điểm khác)");
-      setIsLoading(false);
-      return;
-    }
-    if (form.event_date >= form.end_date) {
-      setErrorMsg("Ngày bắt đầu phải nhỏ hơn ngày kết thúc");
+      Alert.alert("Vui lòng nhập đầy đủ thông tin bắt buộc");
       setIsLoading(false);
       return;
     }
@@ -158,6 +369,7 @@ export default function CreateEventScreen() {
       setIsLoading(false);
     }
   };
+
 
   const styles = createStyles();
 
@@ -410,68 +622,36 @@ export default function CreateEventScreen() {
                 <CustomText style={{ color: "red", marginBottom: 10 }}>{errorMsg}</CustomText>
               ) : null}
               <CustomText variant="medium" style={styles.label}>
-                Select Room / Phòng học (Bắt buộc nếu không nhập địa điểm khác)
+                Select Room / Chọn phòng học (Bắt buộc)
               </CustomText>
-              <View style={styles.roomsContainer}>
-                {rooms.map((room) => {
-                  const isSelected = form.room_id === room.id;
-                  return (
-                    <TouchableOpacity
-                      key={room.id}
-                      style={[
-                        styles.roomChip,
-                        isSelected && styles.roomChipSelected,
-                      ]}
-                      onPress={() => {
-                        if (isSelected) {
-                          setForm({
-                            ...form,
-                            room_id: undefined,
-                            location_url: "",
-                          });
-                        } else {
-                          setForm({
-                            ...form,
-                            room_id: room.id,
-                            location_url: room.name,
-                          });
-                        }
-                      }}
-                    >
-                      <Ionicons
-                        name="home-outline"
-                        size={14}
-                        color={isSelected ? "#FFF" : "#1a2a44"}
-                      />
-                      <CustomText
-                        variant="bold"
-                        style={[
-                          styles.roomChipText,
-                          isSelected && styles.roomChipTextSelected,
-                        ]}
-                      >
-                        {room.name}
-                      </CustomText>
-                    </TouchableOpacity>
-                  );
-                })}
-              </View>
-
-              <CustomText variant="medium" style={styles.label}>
-                Or Custom Location / Hoặc Địa điểm khác
-              </CustomText>
-              <View style={styles.inputWrapper}>
-                <TextInput
-                  style={styles.wrapperInput}
-                  placeholder="Venue / Location (VD: Hội trường C...)"
-                  placeholderTextColor="#BBB"
-                  value={form.location_url}
-                  onChangeText={(val) =>
-                    setForm({ ...form, location_url: val })
-                  }
+              
+              <TouchableOpacity
+                style={styles.dropdownSelector}
+                onPress={() => {
+                  setRoomSearchQuery("");
+                  setRoomModalVisible(true);
+                }}
+              >
+                <View style={styles.dropdownSelectorLeft}>
+                  <Ionicons
+                    name="home-outline"
+                    size={18}
+                    color={form.room_id ? Colors.color.primary : "#718096"}
+                  />
+                  <CustomText style={form.room_id ? styles.dropdownSelectorTextSelected : styles.dropdownSelectorTextPlaceholder}>
+                    {form.room_id
+                      ? `${rooms.find(r => r.id === form.room_id)?.name || ""} (Sức chứa: ${rooms.find(r => r.id === form.room_id)?.capacity || 0} người)`
+                      : "Chọn phòng học..."}
+                  </CustomText>
+                </View>
+                <Ionicons
+                  name="chevron-down"
+                  size={18}
+                  color="#718096"
                 />
-              </View>
+              </TouchableOpacity>
             </View>
+
 
             {/* EQUIPMENT CARD */}
             <View style={styles.card}>
@@ -591,7 +771,231 @@ export default function CreateEventScreen() {
         </TouchableWithoutFeedback>
       </ScrollView>
     </View>
-  </KeyboardAvoidingView>
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={scheduleModalVisible}
+        onRequestClose={() => setScheduleModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContainer}>
+            <View style={styles.modalHeader}>
+              <CustomText variant="bold" style={styles.modalTitle}>
+                Lịch đặt phòng {selectedRoomForSchedule?.name}
+              </CustomText>
+              <TouchableOpacity
+                onPress={() => setScheduleModalVisible(false)}
+                style={styles.modalCloseBtn}
+              >
+                <Ionicons name="close" size={24} color="#333" />
+              </TouchableOpacity>
+            </View>
+
+            {/* Horizontal ScrollView of days */}
+            <View style={styles.dateSelectorContainer}>
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.dateScrollContent}
+              >
+                {getDaysList().map((day, idx) => {
+                  const isDaySelected = selectedScheduleDate.toDateString() === day.toDateString();
+                  return (
+                    <TouchableOpacity
+                      key={idx}
+                      style={[
+                        styles.dateChip,
+                        isDaySelected && styles.dateChipSelected,
+                      ]}
+                      onPress={() => setSelectedScheduleDate(day)}
+                    >
+                      <CustomText
+                        variant="medium"
+                        style={[
+                          styles.dateChipDayName,
+                          isDaySelected && styles.dateChipTextSelected,
+                        ]}
+                      >
+                        {getShortDayName(day)}
+                      </CustomText>
+                      <CustomText
+                        variant="bold"
+                        style={[
+                          styles.dateChipDayNum,
+                          isDaySelected && styles.dateChipTextSelected,
+                        ]}
+                      >
+                        {day.getDate().toString().padStart(2, "0")}
+                      </CustomText>
+                    </TouchableOpacity>
+                  );
+                })}
+              </ScrollView>
+            </View>
+
+            {/* Date Display */}
+            <View style={styles.selectedDateTextContainer}>
+              <CustomText variant="bold" style={styles.selectedDateText}>
+                Ngày {selectedScheduleDate.toLocaleDateString("vi-VN", {
+                  weekday: "long",
+                  year: "numeric",
+                  month: "2-digit",
+                  day: "2-digit",
+                })}
+              </CustomText>
+            </View>
+
+            {/* Scrollable schedule details */}
+            <ScrollView style={styles.scheduleScroll} showsVerticalScrollIndicator={false}>
+              {/* BOOKED SLOTS */}
+              <View style={styles.scheduleSection}>
+                <View style={styles.sectionHeaderRow}>
+                  <Ionicons name="time-outline" size={18} color="#EF4444" />
+                  <CustomText variant="bold" style={[styles.sectionTitle, { color: "#EF4444" }]}>
+                    Khung giờ đã đặt
+                  </CustomText>
+                </View>
+                {getScheduleForDate(selectedRoomForSchedule, selectedScheduleDate).booked.length > 0 ? (
+                  getScheduleForDate(selectedRoomForSchedule, selectedScheduleDate).booked.map((slot, index) => (
+                    <View key={index} style={styles.bookedSlotItem}>
+                      <CustomText variant="bold" style={styles.slotTimeText}>
+                        {slot.time}
+                      </CustomText>
+                      <CustomText style={styles.slotTitleText} numberOfLines={1}>
+                        {slot.title}
+                      </CustomText>
+                    </View>
+                  ))
+                ) : (
+                  <CustomText style={styles.emptyText}>Chưa có sự kiện nào đặt vào ngày này</CustomText>
+                )}
+              </View>
+
+              {/* FREE SLOTS */}
+              <View style={[styles.scheduleSection, { marginTop: 20 }]}>
+                <View style={styles.sectionHeaderRow}>
+                  <Ionicons name="checkmark-circle-outline" size={18} color="#10B981" />
+                  <CustomText variant="bold" style={[styles.sectionTitle, { color: "#10B981" }]}>
+                    Thời gian còn trống
+                  </CustomText>
+                </View>
+                {getScheduleForDate(selectedRoomForSchedule, selectedScheduleDate).free.length > 0 ? (
+                  getScheduleForDate(selectedRoomForSchedule, selectedScheduleDate).free.map((slot, index) => (
+                    <View key={index} style={styles.freeSlotItem}>
+                      <CustomText variant="bold" style={[styles.slotTimeText, { color: "#10B981" }]}>
+                        {slot.time}
+                      </CustomText>
+                      <CustomText style={[styles.slotTitleText, { color: "#065F46" }]}>
+                        Còn trống
+                      </CustomText>
+                    </View>
+                  ))
+                ) : (
+                  <CustomText style={styles.emptyText}>Không còn thời gian trống trong ngày này</CustomText>
+                )}
+              </View>
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Room Selection Modal */}
+      <Modal
+        visible={roomModalVisible}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setRoomModalVisible(false)}
+      >
+        <TouchableWithoutFeedback onPress={() => setRoomModalVisible(false)}>
+          <View style={styles.modalOverlay}>
+            <TouchableWithoutFeedback>
+              <View style={[styles.modalContainer, { height: "70%" }]}>
+                <View style={styles.modalHeader}>
+                  <CustomText variant="bold" style={styles.modalTitle}>
+                    Chọn phòng học / Select Room
+                  </CustomText>
+                  <TouchableOpacity
+                    style={styles.modalCloseBtn}
+                    onPress={() => setRoomModalVisible(false)}
+                  >
+                    <Ionicons name="close" size={24} color="#4A5568" />
+                  </TouchableOpacity>
+                </View>
+
+                <View style={styles.dropdownSearchWrapper}>
+                  <Ionicons name="search" size={18} color="#A0AEC0" />
+                  <TextInput
+                    style={styles.dropdownSearchInput}
+                    placeholder="Tìm kiếm phòng..."
+                    placeholderTextColor="#A0AEC0"
+                    value={roomSearchQuery}
+                    onChangeText={setRoomSearchQuery}
+                  />
+                  {roomSearchQuery ? (
+                    <TouchableOpacity onPress={() => setRoomSearchQuery("")}>
+                      <Ionicons name="close-circle" size={18} color="#A0AEC0" />
+                    </TouchableOpacity>
+                  ) : null}
+                </View>
+
+                <ScrollView
+                  showsVerticalScrollIndicator={false}
+                  keyboardShouldPersistTaps="handled"
+                  contentContainerStyle={{ paddingBottom: 30 }}
+                >
+                  {filteredRooms.length === 0 ? (
+                    <CustomText style={styles.emptyRoomsText}>Không tìm thấy phòng học nào</CustomText>
+                  ) : (
+                    filteredRooms.map((room) => {
+                      const isSelected = form.room_id === room.id;
+                      return (
+                        <View key={room.id} style={[styles.dropdownRoomItem, isSelected && styles.dropdownRoomItemSelected]}>
+                          <TouchableOpacity
+                            style={styles.dropdownRoomItemLeft}
+                            onPress={() => {
+                              setForm({
+                                ...form,
+                                room_id: room.id,
+                                location_url: room.name,
+                              });
+                              setRoomModalVisible(false);
+                            }}
+                          >
+                            <Ionicons
+                              name="home-outline"
+                              size={18}
+                              color={isSelected ? Colors.color.primary : "#718096"}
+                            />
+                            <View style={styles.dropdownRoomInfo}>
+                              <CustomText variant="bold" style={[styles.dropdownRoomItemName, isSelected && styles.dropdownRoomItemNameSelected]}>
+                                {room.name}
+                              </CustomText>
+                              {room.capacity && (
+                                <CustomText style={styles.dropdownRoomItemCapacity}>
+                                  Sức chứa: {room.capacity} người
+                                </CustomText>
+                              )}
+                            </View>
+                          </TouchableOpacity>
+                          
+                          <TouchableOpacity
+                            style={styles.roomScheduleBtnCompact}
+                            onPress={() => openScheduleModal(room)}
+                          >
+                            <Ionicons name="calendar-outline" size={12} color={Colors.color.primary} style={{ marginRight: 4 }} />
+                            <CustomText style={styles.roomScheduleBtnText}>Xem lịch</CustomText>
+                          </TouchableOpacity>
+                        </View>
+                      );
+                    })
+                  )}
+                </ScrollView>
+              </View>
+            </TouchableWithoutFeedback>
+          </View>
+        </TouchableWithoutFeedback>
+      </Modal>
+    </KeyboardAvoidingView>
   );
 }
 
@@ -840,6 +1244,296 @@ function createStyles() {
       color: "#2D3748",
       textAlign: "center",
       minWidth: 30,
+    },
+    roomListContainer: {
+      gap: 10,
+      marginVertical: 10,
+    },
+    roomItemRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      backgroundColor: "#F5F7FA",
+      padding: 12,
+      borderRadius: 12,
+      borderWidth: 1,
+      borderColor: "#E2E8F0",
+    },
+    roomItemRowSelected: {
+      borderColor: Colors.color.primary,
+      backgroundColor: "#EBF8FF",
+    },
+    roomItemLeft: {
+      flex: 1,
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 10,
+    },
+    roomInfo: {
+      flex: 1,
+    },
+    roomItemName: {
+      fontSize: 15,
+      color: "#2D3748",
+    },
+    roomItemNameSelected: {
+      color: Colors.color.primary,
+    },
+    roomItemCapacity: {
+      fontSize: 12,
+      color: "#718096",
+      marginTop: 2,
+    },
+    roomScheduleBtn: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 4,
+      paddingVertical: 6,
+      paddingHorizontal: 10,
+      borderRadius: 8,
+      backgroundColor: "#FFF",
+      borderWidth: 1,
+      borderColor: Colors.color.primary,
+    },
+    roomScheduleBtnText: {
+      fontSize: 12,
+      color: Colors.color.primary,
+      fontWeight: "bold",
+    },
+    modalOverlay: {
+      flex: 1,
+      backgroundColor: "rgba(0, 0, 0, 0.5)",
+      justifyContent: "flex-end",
+    },
+    modalContainer: {
+      backgroundColor: "white",
+      borderTopLeftRadius: 24,
+      borderTopRightRadius: 24,
+      padding: 20,
+      maxHeight: "80%",
+    },
+    modalHeader: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+      marginBottom: 15,
+    },
+    modalTitle: {
+      fontSize: 18,
+      color: "#1a2a44",
+    },
+    modalCloseBtn: {
+      padding: 4,
+    },
+    dateSelectorContainer: {
+      marginBottom: 15,
+    },
+    dateScrollContent: {
+      gap: 10,
+      paddingRight: 20,
+    },
+    dateChip: {
+      width: 55,
+      height: 65,
+      borderRadius: 12,
+      backgroundColor: "#F7FAFC",
+      borderWidth: 1,
+      borderColor: "#E2E8F0",
+      justifyContent: "center",
+      alignItems: "center",
+      gap: 4,
+    },
+    dateChipSelected: {
+      backgroundColor: Colors.color.primary,
+      borderColor: Colors.color.primary,
+    },
+    dateChipDayName: {
+      fontSize: 11,
+      color: "#718096",
+    },
+    dateChipDayNum: {
+      fontSize: 16,
+      color: "#2D3748",
+    },
+    dateChipTextSelected: {
+      color: "#FFF",
+    },
+    selectedDateTextContainer: {
+      marginBottom: 15,
+      borderBottomWidth: 1,
+      borderBottomColor: "#EDF2F7",
+      paddingBottom: 10,
+    },
+    selectedDateText: {
+      fontSize: 14,
+      color: "#4A5568",
+    },
+    scheduleScroll: {
+      flexGrow: 1,
+    },
+    scheduleSection: {
+      backgroundColor: "#F7FAFC",
+      borderRadius: 12,
+      padding: 12,
+      borderWidth: 1,
+      borderColor: "#EDF2F7",
+    },
+    sectionHeaderRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 6,
+      marginBottom: 12,
+    },
+    sectionTitle: {
+      fontSize: 14,
+    },
+    bookedSlotItem: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      backgroundColor: "#FFF",
+      padding: 10,
+      borderRadius: 8,
+      borderWidth: 1,
+      borderColor: "#FEE2E2",
+      marginBottom: 8,
+    },
+    slotTimeText: {
+      fontSize: 13,
+      color: "#EF4444",
+    },
+    slotTitleText: {
+      fontSize: 13,
+      color: "#4A5568",
+      flex: 1,
+      marginLeft: 15,
+      textAlign: "right",
+    },
+    emptyText: {
+      fontSize: 12,
+      color: "#A0AEC0",
+      fontStyle: "italic",
+      textAlign: "center",
+      paddingVertical: 10,
+    },
+    freeSlotItem: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      backgroundColor: "#FFF",
+      padding: 10,
+      borderRadius: 8,
+      borderWidth: 1,
+      borderColor: "#D1FAE5",
+      marginBottom: 8,
+    },
+    dropdownSelector: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      backgroundColor: "#F5F7FA",
+      borderWidth: 1,
+      borderColor: "#E2E8F0",
+      borderRadius: 12,
+      paddingHorizontal: 16,
+      paddingVertical: 14,
+      marginTop: 8,
+      marginBottom: 10,
+    },
+    dropdownSelectorLeft: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 10,
+      flex: 1,
+    },
+    dropdownSelectorTextPlaceholder: {
+      fontSize: 14,
+      color: "#A0AEC0",
+    },
+    dropdownSelectorTextSelected: {
+      fontSize: 14,
+      color: "#1a2a44",
+      fontWeight: "bold",
+    },
+    dropdownListContainer: {
+      backgroundColor: "#FFF",
+      borderRadius: 12,
+      borderWidth: 1,
+      borderColor: "#E2E8F0",
+      padding: 8,
+      marginBottom: 15,
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.05,
+      shadowRadius: 8,
+      elevation: 2,
+    },
+    dropdownSearchWrapper: {
+      flexDirection: "row",
+      alignItems: "center",
+      backgroundColor: "#F5F7FA",
+      borderRadius: 8,
+      paddingHorizontal: 10,
+      paddingVertical: 8,
+      marginBottom: 10,
+      gap: 8,
+    },
+    dropdownSearchInput: {
+      flex: 1,
+      fontSize: 13,
+      color: "#2D3748",
+      padding: 0,
+    },
+    dropdownRoomItem: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      paddingVertical: 10,
+      paddingHorizontal: 8,
+      borderRadius: 8,
+      borderBottomWidth: 1,
+      borderBottomColor: "#F7FAFC",
+    },
+    dropdownRoomItemSelected: {
+      backgroundColor: "#EBF8FF",
+    },
+    dropdownRoomItemLeft: {
+      flex: 1,
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 8,
+    },
+    dropdownRoomInfo: {
+      flex: 1,
+    },
+    dropdownRoomItemName: {
+      fontSize: 14,
+      color: "#2D3748",
+    },
+    dropdownRoomItemNameSelected: {
+      color: Colors.color.primary,
+      fontWeight: "bold",
+    },
+    dropdownRoomItemCapacity: {
+      fontSize: 11,
+      color: "#718096",
+      marginTop: 1,
+    },
+    emptyRoomsText: {
+      textAlign: "center",
+      color: "#A0AEC0",
+      paddingVertical: 15,
+      fontSize: 13,
+    },
+    roomScheduleBtnCompact: {
+      flexDirection: "row",
+      alignItems: "center",
+      paddingVertical: 4,
+      paddingHorizontal: 8,
+      borderRadius: 6,
+      backgroundColor: "#FFF",
+      borderWidth: 1,
+      borderColor: Colors.color.primary,
     },
   });
 }

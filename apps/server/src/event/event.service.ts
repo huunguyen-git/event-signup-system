@@ -1,4 +1,4 @@
-import { Injectable, ForbiddenException, BadRequestException, NotFoundException } from '@nestjs/common';
+import { Injectable, ForbiddenException, BadRequestException, NotFoundException, OnModuleInit } from '@nestjs/common';
 import { PrismaService } from '../prisma.service.js';
 import { CreateEventDto } from './event.dto.js';
 import { Event, Prisma } from '../generated/prisma/client.js';
@@ -7,7 +7,7 @@ import { NotificationService } from '../notification/notification.service.js';
 import { RealtimeGateway } from '../realtime/realtime.gateway.js';
 
 @Injectable()
-export class EventService {
+export class EventService implements OnModuleInit {
   private supabase: ReturnType<typeof createClient>;
 
   constructor(
@@ -21,7 +21,40 @@ export class EventService {
     );
   }
 
+  onModuleInit() {
+    // Check and update completed events immediately on startup
+    this.updateCompletedEvents();
+    // Run background check every 60 seconds
+    setInterval(() => {
+      this.updateCompletedEvents();
+    }, 60000);
+  }
+
+  async updateCompletedEvents() {
+    try {
+      const now = new Date();
+      const result = await this.prisma.event.updateMany({
+        where: {
+          status: 'PUBLISHED',
+          end_date: {
+            lt: now,
+          },
+        },
+        data: {
+          status: 'COMPLETED',
+        },
+      });
+      if (result.count > 0) {
+        console.log(`Updated ${result.count} completed events.`);
+        this.realtimeGateway.broadcast('events_changed');
+      }
+    } catch (err) {
+      console.error('Error updating completed events:', err);
+    }
+  }
+
   async getEvent(where: Prisma.EventWhereUniqueInput) {
+    await this.updateCompletedEvents();
     return this.prisma.event.findUnique({
       where,
       include: {
@@ -40,6 +73,7 @@ export class EventService {
   }
 
   async getEvents() {
+    await this.updateCompletedEvents();
     return this.prisma.event.findMany({
       include: {
         host: true,
@@ -57,6 +91,7 @@ export class EventService {
   }
 
   async getEventByUserId(user_id: string) {
+    await this.updateCompletedEvents();
     return this.prisma.event.findMany({
       where: {
         host_id: user_id,
@@ -198,7 +233,7 @@ export class EventService {
         created_at: new Date(data.created_at),
         max_attendees: Number(data.max_attendees),
         form_config: data.form_config as unknown as Prisma.InputJsonValue,
-        status: 'DRAFT' as any,
+        status: (data.status as any) || 'DRAFT',
         equipments: parsedEquipments.length > 0 ? {
           createMany: {
             data: parsedEquipments,

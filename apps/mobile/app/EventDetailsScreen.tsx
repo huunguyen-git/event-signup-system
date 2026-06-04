@@ -463,7 +463,9 @@ export default function EventDetailsScreen() {
   };
 
   const handleOpenMap = () => {
-    const location = eventData?.location_url || EVENT_LOCATION_DEFAULT;
+    const location = eventData?.location_url
+      ? `${eventData.location_url}, ${EVENT_LOCATION_DEFAULT}`
+      : EVENT_LOCATION_DEFAULT;
     const url = Platform.select({
       ios: `maps:0,0?q=${encodeURIComponent(location)}`,
       android: `geo:0,0?q=${encodeURIComponent(location)}`,
@@ -635,7 +637,9 @@ export default function EventDetailsScreen() {
                             Location
                           </CustomText>
                           <CustomText style={styles.infoValue}>
-                            {eventData?.location_url || EVENT_LOCATION_DEFAULT}
+                            {eventData?.location_url
+                              ? `${eventData.location_url} - ${EVENT_LOCATION_DEFAULT}`
+                              : EVENT_LOCATION_DEFAULT}
                           </CustomText>
                         </View>
                         {eventData?.location_url && (
@@ -654,23 +658,7 @@ export default function EventDetailsScreen() {
                     </View>
                   </View>
 
-                  {eventData?.room && (
-                    <View style={styles.infoRow}>
-                      <MaterialCommunityIcons
-                        name="door-open"
-                        size={28}
-                        color={themeColor}
-                      />
-                      <View style={styles.infoTextGroup}>
-                        <CustomText variant="bold" style={styles.infoLabel}>
-                          Phòng cấp (Allocated Room)
-                        </CustomText>
-                        <CustomText style={styles.infoValue}>
-                          {eventData.room.name} {eventData.room.capacity ? `(Sức chứa: ${eventData.room.capacity} chỗ)` : ""}
-                        </CustomText>
-                      </View>
-                    </View>
-                  )}
+
 
                   {eventData?.equipments && eventData.equipments.length > 0 && (
                     <View style={styles.section}>

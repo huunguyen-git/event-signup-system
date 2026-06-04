@@ -14,5 +14,6 @@ const getBaseUrl = () => {
   return "https://api.your-production-url.com";
 };
 
-export const BASE_URL = getBaseUrl();
+export const BASE_URL = "http://192.168.1.30:3000";
+//export const BASE_URL = getBaseUrl();
 //export const BASE_URL = "https://api-eventconnect-dqbea8hndqfffbc3.southeastasia-01.azurewebsites.net";
